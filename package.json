@@ -1,0 +1,19 @@
+{
+  "name": "deepdaily",
+  "version": "1.0.0",
+  "description": "A personalized AI learning system that plans, researches, explains, and reinforces deep learning on any topic.",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eliacharfe/deepdaily.git"
+  },
+  "scripts": {
+    "dev:web": "npm run dev -w apps/web",
+    "build:web": "npm run build -w apps/web",
+    "lint:web": "npm run lint -w apps/web"
+  }
+}
