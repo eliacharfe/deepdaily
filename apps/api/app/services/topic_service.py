@@ -1,21 +1,37 @@
 #apps/api/app/services/topic_service.py
 
 from app.schemas.topic_schema import TopicResponse
+from app.services.llm.client import generate_lesson_content, generate_roadmap_steps
+from app.services.llm.prompts import build_lesson_prompt, build_roadmap_prompt
 
 
 async def generate_topic(topic: str, level: str) -> TopicResponse:
-
-    return TopicResponse(
-        topic=topic,
-        level=level,
-        roadmap=[
+    try:
+        roadmap_prompt = build_roadmap_prompt(topic=topic, level=level)
+        roadmap = await generate_roadmap_steps(
+            topic=topic,
+            level=level,
+            prompt=roadmap_prompt,
+        )
+    except Exception:
+        roadmap = [
             "Introduction to the topic",
             "Core concepts",
             "Practical applications",
             "Common mistakes",
             "Advanced ideas",
-        ],
-        lesson={
+            "Further exploration",
+        ]
+
+    try:
+        lesson_prompt = build_lesson_prompt(
+            topic=topic,
+            level=level,
+            roadmap=roadmap,
+        )
+        lesson = await generate_lesson_content(prompt=lesson_prompt)
+    except Exception:
+        lesson = {
             "title": f"Introduction to {topic}",
             "today_focus": "Understand the basic idea and why it matters",
             "summary": f"{topic} is an important concept worth understanding deeply.",
@@ -34,7 +50,13 @@ async def generate_topic(topic: str, level: str) -> TopicResponse:
                 },
             ],
             "next_step": "Tomorrow we will explore the next concept.",
-        },
+        }
+
+    return TopicResponse(
+        topic=topic,
+        level=level,
+        roadmap=roadmap,
+        lesson=lesson,
         resources=[
             {
                 "title": "Beginner article",
