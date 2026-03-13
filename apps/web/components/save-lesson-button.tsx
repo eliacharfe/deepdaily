@@ -49,11 +49,9 @@ export default function SaveLessonButton({ lesson, onSaved }: Props) {
             onSaved(data.id);
             window.dispatchEvent(new Event("lessons:refresh"));
 
-            // window.alert("Lesson saved successfully");
             toast.success("Lesson saved successfully");
         } catch (err) {
             console.error(err);
-            // window.alert("Failed to save lesson");
             toast.error("Failed to save lesson");
         } finally {
             setSaving(false);

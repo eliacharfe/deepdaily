@@ -21,12 +21,21 @@ export type LessonResource = {
     snippet?: string | null;
 };
 
+export type LessonDeepDiveItem = {
+    title: string;
+    url: string;
+    type: "book" | "guide" | "documentation" | "course" | "article";
+    reason: string;
+    snippet?: string | null;
+};
+
 export type LessonData = {
     topic: string;
     level: string;
     roadmap: string[];
     lesson: LessonContent;
     resources: LessonResource[];
+    deepDive?: LessonDeepDiveItem[];
 };
 
 export type SavedLesson = LessonData & {
@@ -39,6 +48,7 @@ export type LessonPreview = {
     level: string;
     title: string;
 };
+
 
 // export type LessonSection = {
 //     title: string;

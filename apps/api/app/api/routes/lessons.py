@@ -1,6 +1,6 @@
 #apps/api/app/api/routes/lessons.py
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -29,8 +29,8 @@ def build_lesson_response(lesson: Lesson) -> LessonResponse:
         roadmap=content.get("roadmap", []),
         lesson=content.get("lesson", {}),
         resources=content.get("resources", []),
+        deepDive=content.get("deepDive", []),
     )
-
 
 @router.post("/generate", response_model=GeneratedLessonResponse)
 async def generate_lesson(
@@ -52,48 +52,8 @@ async def generate_lesson(
         roadmap=generated.roadmap,
         lesson=generated.lesson.model_dump(),
         resources=[resource.model_dump() for resource in generated.resources],
+        deepDive=[item.model_dump() for item in generated.deepDive],
     )
-# @router.post("/generate", response_model=LessonResponse)
-# async def generate_lesson(
-#     payload: GenerateLessonRequest,
-#     db: AsyncSession = Depends(get_db),
-#     current_user=Depends(get_current_user),
-# ):
-#     user_id = current_user.get("uid")
-#     if not user_id:
-#         raise HTTPException(status_code=401, detail="Invalid user")
-
-#     topic = payload.topic.strip()
-#     level = payload.level.strip()
-
-#     existing = await get_existing_lesson(
-#         db=db,
-#         user_id=user_id,
-#         topic=topic,
-#         level=level,
-#     )
-
-#     if existing:
-#         return build_lesson_response(existing)
-
-#     generated = await generate_topic(topic=topic, level=level)
-
-#     content_json = {
-#         "roadmap": generated.roadmap,
-#         "lesson": generated.lesson.model_dump(),
-#         "resources": [resource.model_dump() for resource in generated.resources],
-#     }
-
-#     lesson = await create_lesson(
-#         db=db,
-#         user_id=user_id,
-#         topic=topic,
-#         level=level,
-#         title=generated.lesson.title,
-#         content_json=content_json,
-#     )
-
-#     return build_lesson_response(lesson)
 
 @router.post("/save", response_model=LessonResponse)
 async def save_lesson(
@@ -112,6 +72,7 @@ async def save_lesson(
         "roadmap": payload.roadmap,
         "lesson": payload.lesson.model_dump(),
         "resources": [resource.model_dump() for resource in payload.resources],
+         "deepDive": [item.model_dump() for item in payload.deepDive] if payload.deepDive else [],
     }
 
     lesson = await create_lesson(
@@ -125,6 +86,36 @@ async def save_lesson(
 
     return build_lesson_response(lesson)
 
+
+@router.delete("/{lesson_id}")
+async def delete_lesson(
+    lesson_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    user_id = current_user.get("uid")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid user")
+
+    stmt = (
+        select(Lesson)
+        .where(Lesson.id == lesson_id)
+        .where(Lesson.user_id == user_id)
+        .limit(1)
+    )
+    result = await db.execute(stmt)
+    lesson = result.scalar_one_or_none()
+
+    if not lesson:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lesson not found",
+        )
+
+    await db.delete(lesson)
+    await db.commit()
+
+    return {"ok": True, "message": "Lesson deleted"}
 
 @router.get("", response_model=list[LessonResponse])
 async def list_lessons(

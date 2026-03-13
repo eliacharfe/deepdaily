@@ -9,9 +9,14 @@ type StreamHandlers = {
     onError?: (message: string) => void;
 };
 
+type StreamLessonParams = {
+    topic: string;
+    level: string;
+    followUpPrompt?: string;
+};
+
 export async function streamLesson(
-    topic: string,
-    level: string,
+    params: StreamLessonParams,
     handlers: StreamHandlers
 ) {
     const token = await auth.currentUser?.getIdToken();
@@ -24,9 +29,13 @@ export async function streamLesson(
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ topic, level })
+        body: JSON.stringify({
+            topic: params.topic,
+            level: params.level,
+            followUpPrompt: params.followUpPrompt ?? null,
+        }),
     });
 
     if (!response.ok || !response.body) {

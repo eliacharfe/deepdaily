@@ -63,7 +63,16 @@ Use this exact JSON structure:
       "content": "string"
     }}
   ],
-  "next_step": "string"
+  "next_step": "string",
+  "deepDive": [
+    {{
+      "title": "string",
+      "url": "string",
+      "type": "book | guide | documentation | course | article",
+      "reason": "string",
+      "snippet": "string or null"
+    }}
+  ]
 }}
 
 Additional rules:
@@ -73,7 +82,14 @@ Additional rules:
 - sections must contain exactly 3 sections.
 - each section content should be 2 to 4 sentences.
 - next_step should naturally point to the next concept.
+- deepDive must contain 0 to 3 items.
+- deepDive items should be genuinely useful for someone who wants to continue learning after this lesson.
+- Prefer high-quality books, official documentation, or strong guides.
+- If a good URL is not known with confidence, omit that item instead of inventing links.
+- type must be one of: "book", "guide", "documentation", "course", "article".
+- snippet can be null.
 """.strip()
+
 
 def build_streaming_lesson_prompt(topic: str, level: str) -> str:
     return f"""

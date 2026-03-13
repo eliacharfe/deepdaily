@@ -47,6 +47,7 @@ export default function LearnPageClient({ topic, level }: Props) {
                 setError("");
 
                 const token = await user.getIdToken();
+                console.log("FIREBASE TOKEN", token);
 
                 const res = await fetch(`${config.apiBaseUrl}/lessons/generate`, {
                     method: "POST",
@@ -68,6 +69,7 @@ export default function LearnPageClient({ topic, level }: Props) {
                 }
 
                 const result = (await res.json()) as LessonData;
+                console.log("GENERATED LESSON RESULT", result);
 
                 if (!cancelled) {
                     setData(result);
@@ -283,6 +285,65 @@ export default function LearnPageClient({ topic, level }: Props) {
                                     </li>
                                 ))}
                             </ol>
+                        </div>
+
+                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
+                            <h2 className="text-2xl font-semibold">Deep dive</h2>
+                            <p className="mt-2 text-sm text-slate-600 dark:text-[#CDBFB6]">
+                                Books and advanced material to continue beyond today’s lesson.
+                            </p>
+
+                            <div className="mt-6 space-y-4">
+                                {(data.deepDive ?? []).map((item) => {
+                                    const content = (
+                                        <>
+                                            <div className="flex items-center justify-between gap-4">
+                                                <h3 className="text-lg font-semibold text-slate-900 dark:text-[#F1E7DF]">
+                                                    {item.title}
+                                                </h3>
+                                                <span className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-600 dark:border-[#5A524D] dark:text-[#D5C6BC]">
+                                                    {item.type}
+                                                </span>
+                                            </div>
+
+                                            <p className="mt-2 text-slate-600 dark:text-[#D5C6BC]">{item.reason}</p>
+
+                                            {item.snippet ? (
+                                                <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500 dark:text-[#B8AAA1]">
+                                                    {item.snippet}
+                                                </p>
+                                            ) : null}
+
+                                            {item.url ? (
+                                                <p className="mt-3 text-sm text-slate-500 dark:text-[#A89B92]">{item.url}</p>
+                                            ) : (
+                                                <p className="mt-3 text-sm italic text-slate-500 dark:text-[#A89B92]">
+                                                    No external link available
+                                                </p>
+                                            )}
+                                        </>
+                                    );
+
+                                    return item.url ? (
+                                        <a
+                                            key={`${item.title}-${item.url}`}
+                                            href={item.url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="block rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:border-slate-300 dark:border-[#4C4541] dark:bg-[#2F2A28] dark:hover:border-[#6A615B]"
+                                        >
+                                            {content}
+                                        </a>
+                                    ) : (
+                                        <div
+                                            key={item.title}
+                                            className="rounded-2xl border border-slate-100 bg-slate-50 p-5 dark:border-[#4C4541] dark:bg-[#2F2A28]"
+                                        >
+                                            {content}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">

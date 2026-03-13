@@ -49,3 +49,19 @@ export async function getSavedLessonById(
 
     return parseJson<SavedLesson>(res);
 }
+
+export async function deleteLesson(lessonId: string, token: string) {
+    const response = await fetch(`${config.apiBaseUrl}/lessons/${lessonId}`, {
+        method: "DELETE",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.detail || "Failed to delete lesson");
+    }
+
+    return response.json();
+}
