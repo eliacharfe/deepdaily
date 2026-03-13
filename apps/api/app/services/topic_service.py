@@ -1,6 +1,7 @@
 #apps/api/app/services/topic_service.py
 
 from app.schemas.topic_schema import TopicResponse
+from app.services.agents.resource_discovery_agent import ResourceDiscoveryAgent
 from app.services.llm.client import generate_lesson_content, generate_roadmap_steps
 from app.services.llm.prompts import build_lesson_prompt, build_roadmap_prompt
 
@@ -52,12 +53,11 @@ async def generate_topic(topic: str, level: str) -> TopicResponse:
             "next_step": "Tomorrow we will explore the next concept.",
         }
 
-    return TopicResponse(
-        topic=topic,
-        level=level,
-        roadmap=roadmap,
-        lesson=lesson,
-        resources=[
+    try:
+        resource_agent = ResourceDiscoveryAgent()
+        resources = await resource_agent.discover_resources(topic=topic, level=level)
+    except Exception:
+        resources = [
             {
                 "title": "Beginner article",
                 "url": "https://example.com",
@@ -70,5 +70,12 @@ async def generate_topic(topic: str, level: str) -> TopicResponse:
                 "type": "video",
                 "reason": "Visual explanation",
             },
-        ],
+        ]
+
+    return TopicResponse(
+        topic=topic,
+        level=level,
+        roadmap=roadmap,
+        lesson=lesson,
+        resources=resources,
     )

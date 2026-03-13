@@ -22,7 +22,7 @@ class Lesson(BaseModel):
     next_step: str
 
 
-class Resource(BaseModel):
+class LessonResource(BaseModel):
     title: str
     url: str
     type: str
@@ -34,4 +34,4 @@ class TopicResponse(BaseModel):
     level: str
     roadmap: List[str]
     lesson: Lesson
-    resources: List[Resource]
+    resources: List[LessonResource]
