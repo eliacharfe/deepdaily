@@ -51,8 +51,14 @@ async def generate_lesson(
         level=level,
         roadmap=generated.roadmap,
         lesson=generated.lesson.model_dump(),
-        resources=[resource.model_dump() for resource in generated.resources],
-        deepDive=[item.model_dump() for item in generated.deepDive],
+    resources=[
+        resource.model_dump() if hasattr(resource, "model_dump") else resource
+        for resource in generated.resources
+    ],
+       deepDive=[
+            item.model_dump() if hasattr(item, "model_dump") else item
+            for item in (generated.deepDive or [])
+        ],
     )
 
 @router.post("/save", response_model=LessonResponse)

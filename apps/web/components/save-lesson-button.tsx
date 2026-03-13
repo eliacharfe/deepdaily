@@ -25,13 +25,24 @@ export default function SaveLessonButton({ lesson, onSaved }: Props) {
 
             const token = await user.getIdToken();
 
+            const payload = {
+                topic: lesson.topic,
+                level: lesson.level,
+                roadmap: lesson.roadmap,
+                lesson: lesson.lesson,
+                resources: lesson.resources,
+                deepDive: lesson.deepDive ?? [],
+            };
+
+            console.log("SAVING LESSON PAYLOAD", payload);
+
             const res = await fetch(`${config.apiBaseUrl}/lessons/save`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(lesson),
+                body: JSON.stringify(payload),
             });
 
             const contentType = res.headers.get("content-type") || "";
@@ -45,6 +56,7 @@ export default function SaveLessonButton({ lesson, onSaved }: Props) {
             }
 
             const data = await res.json();
+            console.log("SAVE RESPONSE", data);
 
             onSaved(data.id);
             window.dispatchEvent(new Event("lessons:refresh"));

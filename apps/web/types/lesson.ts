@@ -1,5 +1,7 @@
 //apps/web/types/lesson.ts
 
+import type { TopicLevel } from "@/types/topic";
+
 export type LessonSection = {
     title: string;
     content: string;
@@ -23,15 +25,16 @@ export type LessonResource = {
 
 export type LessonDeepDiveItem = {
     title: string;
-    url: string;
+    url?: string | null;
     type: "book" | "guide" | "documentation" | "course" | "article";
     reason: string;
     snippet?: string | null;
 };
 
 export type LessonData = {
+    id?: string;
     topic: string;
-    level: string;
+    level: TopicLevel;
     roadmap: string[];
     lesson: LessonContent;
     resources: LessonResource[];
@@ -45,44 +48,6 @@ export type SavedLesson = LessonData & {
 export type LessonPreview = {
     id: string;
     topic: string;
-    level: string;
+    level: TopicLevel;
     title: string;
 };
-
-
-// export type LessonSection = {
-//     title: string;
-//     content: string;
-// };
-
-// export type LessonContent = {
-//     title: string;
-//     today_focus: string;
-//     summary: string;
-//     sections: LessonSection[];
-//     next_step: string;
-// };
-
-// export type LessonResource = {
-//     title: string;
-//     url: string;
-//     type: string;
-//     reason: string;
-//     snippet?: string | null;
-// };
-
-// export type SavedLesson = {
-//     id: string;
-//     topic: string;
-//     level: string;
-//     roadmap: string[];
-//     lesson: LessonContent;
-//     resources: LessonResource[];
-// };
-
-// export type LessonPreview = {
-//     id: string;
-//     topic: string;
-//     level: string;
-//     title: string;
-// };

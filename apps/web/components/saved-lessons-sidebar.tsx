@@ -29,6 +29,7 @@ export default function SavedLessonsSidebar() {
         try {
             setError("");
             setIsLoading(true);
+
             const token = await user.getIdToken();
             const data = await getSavedLessons(token);
             setLessons(data);

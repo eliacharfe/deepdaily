@@ -13,7 +13,9 @@ export default function AppShell({
     const pathname = usePathname();
 
     const showSidebar =
-        pathname.startsWith("/learn") || pathname.startsWith("/lessons/");
+        pathname === "/" ||
+        pathname.startsWith("/learn") ||
+        pathname.startsWith("/lessons/");
 
     if (!showSidebar) {
         return <>{children}</>;

@@ -1,6 +1,6 @@
 
 
-import SavedLessonPageClient from "@/components/saved-lesson-page-client";
+import LearnPageClient from "@/components/learn-page-client";
 
 type Props = {
     params: Promise<{
@@ -8,7 +8,8 @@ type Props = {
     }>;
 };
 
-export default async function SavedLessonPage({ params }: Props) {
+export default async function LessonPage({ params }: Props) {
     const { id } = await params;
-    return <SavedLessonPageClient lessonId={id} />;
+
+    return <LearnPageClient lessonId={id} />;
 }

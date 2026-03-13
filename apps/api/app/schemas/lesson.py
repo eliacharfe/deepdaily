@@ -24,12 +24,14 @@ class LessonResource(BaseModel):
     reason: str
     snippet: str | None = None
 
+
 class LessonDeepDiveItem(BaseModel):
     title: str
     url: str | None = None
     type: str
     reason: str
     snippet: str | None = None
+
 
 class GenerateLessonRequest(BaseModel):
     topic: str = Field(..., min_length=1)
@@ -42,7 +44,7 @@ class GeneratedLessonResponse(BaseModel):
     roadmap: List[str]
     lesson: LessonContent
     resources: List[LessonResource]
-    deepDive: List[LessonDeepDiveItem] | None = None
+    deepDive: List[LessonDeepDiveItem] = Field(default_factory=list)
 
 
 class SaveLessonRequest(BaseModel):
@@ -51,7 +53,7 @@ class SaveLessonRequest(BaseModel):
     roadmap: List[str]
     lesson: LessonContent
     resources: List[LessonResource]
-    deepDive: List[LessonDeepDiveItem] | None = None
+    deepDive: List[LessonDeepDiveItem] = Field(default_factory=list)
 
 
 class LessonResponse(BaseModel):
@@ -61,4 +63,4 @@ class LessonResponse(BaseModel):
     roadmap: List[str]
     lesson: LessonContent
     resources: List[LessonResource]
-    deepDive: List[LessonDeepDiveItem] | None = None
+    deepDive: List[LessonDeepDiveItem] = Field(default_factory=list)
