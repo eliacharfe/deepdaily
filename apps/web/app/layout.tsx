@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ThemeToggle from "@/components/theme-toggle";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import AppShell from "@/components/app-shell";
 
 export const metadata: Metadata = {
   title: "DeepDaily",
@@ -18,8 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <ThemeToggle />
-        <AuthProvider>{children}</AuthProvider>
+
+        <AuthProvider>
+          <ThemeToggle />
+          <AppShell>{children}</AppShell>
+        </AuthProvider>
+
       </body>
     </html>
   );

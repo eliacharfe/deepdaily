@@ -7,3 +7,9 @@ python-dotenv
 openai
 tavily-python
 firebase-admin
+
+
+sqlalchemy
+aiosqlite
+alembic
+greenlet

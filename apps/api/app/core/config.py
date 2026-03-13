@@ -18,6 +18,8 @@ class Settings(BaseSettings):
 
     firebase_admin_credentials_path: str = ""
 
+    database_url: str = "sqlite+aiosqlite:///./deepdaily.db"
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 
