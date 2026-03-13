@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = "gpt-4.1-mini"
 
+    tavily_api_key: str = ""
+    tavily_search_depth: str = "advanced"
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 

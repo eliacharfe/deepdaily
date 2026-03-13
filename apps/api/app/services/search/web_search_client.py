@@ -2,74 +2,58 @@
 
 from app.schemas.search_schema import SearchResult
 
+from urllib.parse import urlparse
+
+from tavily import TavilyClient
+
+from app.core.config import settings
+from app.schemas.search_schema import SearchResult
+
+
 class WebSearchClient:
+    def __init__(self) -> None:
+        if not settings.tavily_api_key:
+            raise ValueError("TAVILY_API_KEY is not configured")
+
+        self.client = TavilyClient(api_key=settings.tavily_api_key)
+
     async def search(self, query: str, max_results: int = 5) -> list[SearchResult]:
-        # Mocked results for now.
-        # Later this will call a real search provider.
+        response = self.client.search(
+            query=query,
+            search_depth=settings.tavily_search_depth,
+            max_results=max_results,
+            include_answer=False,
+            include_raw_content=False,
+        )
 
-        query_lower = query.lower()
+        results = response.get("results", [])
+        mapped: list[SearchResult] = []
 
-        if "rag" in query_lower:
-            return [
-                SearchResult(
-                    title="What is Retrieval-Augmented Generation (RAG)?",
-                    url="https://www.pinecone.io/learn/retrieval-augmented-generation/",
-                    snippet="A beginner-friendly introduction to RAG and how it works.",
-                    source="Pinecone",
-                ),
-                SearchResult(
-                    title="Retrieval Augmented Generation Explained",
-                    url="https://www.youtube.com/watch?v=T-D1OfcDW1M",
-                    snippet="A video introduction explaining RAG concepts visually.",
-                    source="YouTube",
-                ),
-                SearchResult(
-                    title="RAG from Scratch Tutorial",
-                    url="https://huggingface.co/learn/cookbook/rag_zephyr_langchain",
-                    snippet="A practical tutorial showing how RAG systems can be built.",
-                    source="Hugging Face",
-                ),
-            ][:max_results]
+        for item in results:
+            url = item.get("url", "").strip()
+            title = item.get("title", "").strip()
+            content = item.get("content", "").strip()
 
-        if "swift concurrency" in query_lower:
-            return [
-                SearchResult(
-                    title="Swift Concurrency",
-                    url="https://developer.apple.com/documentation/swift/swift_standard_library/concurrency",
-                    snippet="Official Apple documentation for Swift concurrency concepts.",
-                    source="Apple Developer",
-                ),
-                SearchResult(
-                    title="Meet async/await in Swift",
-                    url="https://www.hackingwithswift.com/books/ios-swiftui/introducing-async-await",
-                    snippet="A beginner-friendly explanation of async/await in Swift.",
-                    source="Hacking with Swift",
-                ),
-                SearchResult(
-                    title="Swift Concurrency explained",
-                    url="https://www.youtube.com/results?search_query=swift+concurrency+explained",
-                    snippet="Video resources to understand Swift concurrency visually.",
-                    source="YouTube",
-                ),
-            ][:max_results]
+            if not url or not title:
+                continue
 
-        return [
-            SearchResult(
-                title=f"Introduction to {query}",
-                url="https://example.com/article",
-                snippet=f"A beginner-friendly article about {query}.",
-                source="Example",
-            ),
-            SearchResult(
-                title=f"{query} explained",
-                url="https://example.com/video",
-                snippet=f"A video explanation for {query}.",
-                source="Example",
-            ),
-            SearchResult(
-                title=f"{query} practical guide",
-                url="https://example.com/guide",
-                snippet=f"A practical guide to understanding {query}.",
-                source="Example",
-            ),
-        ][:max_results]
+            source = self._extract_source(url)
+
+            mapped.append(
+                SearchResult(
+                    title=title,
+                    url=url,
+                    snippet=content,
+                    source=source,
+                )
+            )
+
+        return mapped
+
+    def _extract_source(self, url: str) -> str | None:
+        try:
+            hostname = urlparse(url).hostname or ""
+            hostname = hostname.replace("www.", "")
+            return hostname or None
+        except Exception:
+            return None
