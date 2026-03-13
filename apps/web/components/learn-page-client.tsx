@@ -9,22 +9,47 @@ import SaveLessonButton from "@/components/save-lesson-button";
 import LoginRequiredModal from "@/components/auth/login-required-modal";
 import { useAuth } from "@/components/providers/auth-provider";
 import { config } from "@/lib/config";
+import { getSavedLessonById } from "@/lib/lessons-api";
 import type { TopicLevel } from "@/types/topic";
-import type { LessonData } from "@/types/lesson";
+import type { LessonData, SavedLesson } from "@/types/lesson";
+import HomeButton from "@/components/home-button";
 
+type Props =
+    | {
+        topic: string;
+        level: TopicLevel;
+        lessonId?: never;
+    }
+    | {
+        lessonId: string;
+        topic?: never;
+        level?: never;
+    };
 
-type Props = {
-    topic: string;
-    level: TopicLevel;
-};
+function normalizeSavedLesson(savedLesson: SavedLesson): LessonData {
+    return {
+        id: savedLesson.id,
+        topic: savedLesson.topic,
+        level: savedLesson.level,
+        roadmap: savedLesson.roadmap,
+        lesson: savedLesson.lesson,
+        resources: savedLesson.resources,
+        deepDive: savedLesson.deepDive ?? [],
+    };
+}
 
-
-
-export default function LearnPageClient({ topic, level }: Props) {
+export default function LearnPageClient(props: Props) {
     const { user, loading: authLoading } = useAuth();
 
+    const isSavedLessonMode = "lessonId" in props;
+    const lessonId = "lessonId" in props ? props.lessonId : undefined;
+    const topic = "topic" in props ? props.topic : undefined;
+    const level = "level" in props ? props.level : undefined;
+
     const [data, setData] = useState<LessonData | null>(null);
-    const [savedLessonId, setSavedLessonId] = useState<string | null>(null);
+    const [savedLessonId, setSavedLessonId] = useState<string | null>(
+        lessonId ?? null
+    );
 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
@@ -47,7 +72,18 @@ export default function LearnPageClient({ topic, level }: Props) {
                 setError("");
 
                 const token = await user.getIdToken();
-                console.log("FIREBASE TOKEN", token);
+
+                if (isSavedLessonMode && lessonId) {
+                    const savedLesson = await getSavedLessonById(lessonId, token);
+                    console.log("SAVED LESSON RESULT", savedLesson);
+
+                    if (!cancelled) {
+                        setData(normalizeSavedLesson(savedLesson));
+                        setSavedLessonId(savedLesson.id);
+                    }
+
+                    return;
+                }
 
                 const res = await fetch(`${config.apiBaseUrl}/lessons/generate`, {
                     method: "POST",
@@ -69,14 +105,14 @@ export default function LearnPageClient({ topic, level }: Props) {
                 }
 
                 const result = (await res.json()) as LessonData;
-                console.log("GENERATED LESSON RESULT", result);
+                console.log("GENERATED RESULT", result);
 
                 if (!cancelled) {
                     setData(result);
                 }
             } catch (err) {
                 if (!cancelled) {
-                    setError(err instanceof Error ? err.message : "Failed to generate lesson");
+                    setError(err instanceof Error ? err.message : "Failed to load lesson");
                 }
             } finally {
                 if (!cancelled) {
@@ -90,19 +126,24 @@ export default function LearnPageClient({ topic, level }: Props) {
         return () => {
             cancelled = true;
         };
-    }, [topic, level, user, authLoading]);
+    }, [authLoading, user, isSavedLessonMode, lessonId, topic, level]);
 
     if (loading) {
         return (
             <main className="min-h-screen pt-20 px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
-                <div className="fixed right-20 top-5 z-40">
+                <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
+                    <HomeButton />
                     <AuthButton />
                 </div>
 
                 <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                    <h1 className="text-2xl font-semibold">Generating your lesson...</h1>
+                    <h1 className="text-2xl font-semibold">
+                        {isSavedLessonMode ? "Loading saved lesson..." : "Generating your lesson..."}
+                    </h1>
                     <p className="mt-3 text-slate-600 dark:text-[#CDBFB6]">
-                        Please wait while DeepDaily prepares your learning path.
+                        {isSavedLessonMode
+                            ? "Please wait while DeepDaily loads your saved lesson."
+                            : "Please wait while DeepDaily prepares your learning path."}
                     </p>
 
                     <div className="mt-8 flex justify-center">
@@ -117,14 +158,15 @@ export default function LearnPageClient({ topic, level }: Props) {
         return (
             <>
                 <main className="min-h-screen px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
-                    <div className="fixed right-20 top-5 z-40">
+                    <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
+                        <HomeButton />
                         <AuthButton />
                     </div>
 
                     <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
                         <h1 className="text-2xl font-semibold">Sign in required</h1>
                         <p className="mt-3 text-slate-600 dark:text-[#CDBFB6]">
-                            Please sign in to generate and save lessons.
+                            Please sign in to generate and view lessons.
                         </p>
                     </div>
                 </main>
@@ -140,12 +182,15 @@ export default function LearnPageClient({ topic, level }: Props) {
     if (error || !data) {
         return (
             <main className="min-h-screen px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
-                <div className="fixed right-20 top-5 z-40">
+                <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
+                    <HomeButton />
                     <AuthButton />
                 </div>
 
                 <div className="mx-auto max-w-3xl rounded-3xl border border-red-200 bg-white p-8 shadow-sm dark:border-red-900/40 dark:bg-[#3A3533]">
-                    <h1 className="text-2xl font-semibold">Could not generate lesson</h1>
+                    <h1 className="text-2xl font-semibold">
+                        {isSavedLessonMode ? "Could not load saved lesson" : "Could not generate lesson"}
+                    </h1>
                     <p className="mt-3 text-red-600 dark:text-red-400">
                         {error || "Unknown error"}
                     </p>
@@ -156,7 +201,8 @@ export default function LearnPageClient({ topic, level }: Props) {
 
     return (
         <main className="min-h-screen pt-20 px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
-            <div className="fixed right-20 top-5 z-40">
+            <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
+                <HomeButton />
                 <AuthButton />
             </div>
 
@@ -187,12 +233,6 @@ export default function LearnPageClient({ topic, level }: Props) {
                                 }}
                             />
                         ) : null}
-
-                        {/* <SaveLessonButton
-                            lesson={data}
-                            savedLessonId={savedLessonId}
-                            onSaved={(id) => setSavedLessonId(id)}
-                        /> */}
                     </div>
 
                     <div className="mt-6 rounded-2xl bg-slate-50 p-5 dark:bg-[#2F2A28]">
@@ -268,7 +308,7 @@ export default function LearnPageClient({ topic, level }: Props) {
                         </div>
                     </div>
 
-                    <aside className="space-y-8">
+                    <aside className="lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)] lg:overflow-y-auto space-y-8 pr-1">
                         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
                             <h2 className="text-2xl font-semibold">Roadmap</h2>
 
@@ -353,6 +393,92 @@ export default function LearnPageClient({ topic, level }: Props) {
                             </p>
                         </div>
                     </aside>
+
+                    {/* <aside className="space-y-8">
+                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
+                            <h2 className="text-2xl font-semibold">Roadmap</h2>
+
+                            <ol className="mt-6 space-y-3">
+                                {data.roadmap.map((item, index) => (
+                                    <li
+                                        key={`${index}-${item}`}
+                                        className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-[#2F2A28]"
+                                    >
+                                        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-medium text-white dark:bg-[#F1E7DF] dark:text-[#2D2B2B]">
+                                            {index + 1}
+                                        </span>
+                                        <span className="leading-6 text-slate-700 dark:text-[#D5C6BC]">{item}</span>
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+
+                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
+                            <h2 className="text-2xl font-semibold">Deep dive</h2>
+                            <p className="mt-2 text-sm text-slate-600 dark:text-[#CDBFB6]">
+                                Books and advanced material to continue beyond today’s lesson.
+                            </p>
+
+                            <div className="mt-6 space-y-4">
+                                {(data.deepDive ?? []).map((item) => {
+                                    const content = (
+                                        <>
+                                            <div className="flex items-center justify-between gap-4">
+                                                <h3 className="text-lg font-semibold text-slate-900 dark:text-[#F1E7DF]">
+                                                    {item.title}
+                                                </h3>
+                                                <span className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-600 dark:border-[#5A524D] dark:text-[#D5C6BC]">
+                                                    {item.type}
+                                                </span>
+                                            </div>
+
+                                            <p className="mt-2 text-slate-600 dark:text-[#D5C6BC]">{item.reason}</p>
+
+                                            {item.snippet ? (
+                                                <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500 dark:text-[#B8AAA1]">
+                                                    {item.snippet}
+                                                </p>
+                                            ) : null}
+
+                                            {item.url ? (
+                                                <p className="mt-3 text-sm text-slate-500 dark:text-[#A89B92]">{item.url}</p>
+                                            ) : (
+                                                <p className="mt-3 text-sm italic text-slate-500 dark:text-[#A89B92]">
+                                                    No external link available
+                                                </p>
+                                            )}
+                                        </>
+                                    );
+
+                                    return item.url ? (
+                                        <a
+                                            key={`${item.title}-${item.url}`}
+                                            href={item.url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="block rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:border-slate-300 dark:border-[#4C4541] dark:bg-[#2F2A28] dark:hover:border-[#6A615B]"
+                                        >
+                                            {content}
+                                        </a>
+                                    ) : (
+                                        <div
+                                            key={item.title}
+                                            className="rounded-2xl border border-slate-100 bg-slate-50 p-5 dark:border-[#4C4541] dark:bg-[#2F2A28]"
+                                        >
+                                            {content}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
+                            <h2 className="text-2xl font-semibold">Next step</h2>
+                            <p className="mt-4 leading-7 text-slate-700 dark:text-[#D5C6BC]">
+                                {data.lesson.next_step}
+                            </p>
+                        </div>
+                    </aside> */}
                 </section>
 
                 <StreamingLesson topic={data.topic} level={data.level} />

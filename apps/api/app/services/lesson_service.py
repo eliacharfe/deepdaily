@@ -1,5 +1,7 @@
 #apps/api/app/services/lesson_service.py
 
+from typing import Any
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,7 +32,7 @@ async def create_lesson(
     topic: str,
     level: str,
     title: str,
-    content_json: dict,
+    content_json: dict[str, Any],
 ) -> Lesson:
     lesson = Lesson(
         user_id=user_id,

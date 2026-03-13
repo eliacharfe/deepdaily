@@ -51,6 +51,7 @@ async def generate_topic(topic: str, level: str) -> TopicResponse:
                 },
             ],
             "next_step": "Tomorrow we will explore the next concept.",
+            "deepDive": [],
         }
 
     lesson_content = {
@@ -60,6 +61,8 @@ async def generate_topic(topic: str, level: str) -> TopicResponse:
         "sections": lesson["sections"],
         "next_step": lesson["next_step"],
     }
+
+    llm_deep_dive = lesson.get("deepDive", []) or []
 
     resource_agent = ResourceDiscoveryAgent()
 
@@ -73,23 +76,18 @@ async def generate_topic(topic: str, level: str) -> TopicResponse:
                 "url": "https://example.com",
                 "type": "article",
                 "reason": "Clear beginner explanation",
-            },
-            {
-                "title": "Intro video",
-                "url": "https://youtube.com",
-                "type": "video",
-                "reason": "Visual explanation",
-            },
+            }
         ]
 
     try:
         deep_dive = await resource_agent.discover_deep_dive(topic=topic, level=level)
         print("DEEP DIVE RESULT:", deep_dive, type(deep_dive))
-        if deep_dive is None:
-            deep_dive = []
+        deep_dive = deep_dive or []
     except Exception as e:
         print("DEEP DIVE ERROR:", e)
         deep_dive = []
+
+    final_deep_dive = deep_dive or llm_deep_dive
 
     return TopicResponse(
         topic=topic,
@@ -97,5 +95,99 @@ async def generate_topic(topic: str, level: str) -> TopicResponse:
         roadmap=roadmap,
         lesson=lesson_content,
         resources=resources,
-        deepDive=deep_dive,
+        deepDive=final_deep_dive,
     )
+
+# async def generate_topic(topic: str, level: str) -> TopicResponse:
+#     try:
+#         roadmap_prompt = build_roadmap_prompt(topic=topic, level=level)
+#         roadmap = await generate_roadmap_steps(
+#             topic=topic,
+#             level=level,
+#             prompt=roadmap_prompt,
+#         )
+#     except Exception:
+#         roadmap = [
+#             "Introduction to the topic",
+#             "Core concepts",
+#             "Practical applications",
+#             "Common mistakes",
+#             "Advanced ideas",
+#             "Further exploration",
+#         ]
+
+#     try:
+#         lesson_prompt = build_lesson_prompt(
+#             topic=topic,
+#             level=level,
+#             roadmap=roadmap,
+#         )
+#         lesson = await generate_lesson_content(prompt=lesson_prompt)
+#     except Exception:
+#         lesson = {
+#             "title": f"Introduction to {topic}",
+#             "today_focus": "Understand the basic idea and why it matters",
+#             "summary": f"{topic} is an important concept worth understanding deeply.",
+#             "sections": [
+#                 {
+#                     "title": "Core Idea",
+#                     "content": "This section explains the core idea behind the topic.",
+#                 },
+#                 {
+#                     "title": "Why it Matters",
+#                     "content": "Understanding this concept helps build deeper knowledge.",
+#                 },
+#                 {
+#                     "title": "Example",
+#                     "content": "Here we show a simple practical example.",
+#                 },
+#             ],
+#             "next_step": "Tomorrow we will explore the next concept.",
+#         }
+
+#     lesson_content = {
+#         "title": lesson["title"],
+#         "today_focus": lesson["today_focus"],
+#         "summary": lesson["summary"],
+#         "sections": lesson["sections"],
+#         "next_step": lesson["next_step"],
+#     }
+
+#     resource_agent = ResourceDiscoveryAgent()
+
+#     try:
+#         resources = await resource_agent.discover_resources(topic=topic, level=level)
+#     except Exception as e:
+#         print("RESOURCES ERROR:", e)
+#         resources = [
+#             {
+#                 "title": "Beginner article",
+#                 "url": "https://example.com",
+#                 "type": "article",
+#                 "reason": "Clear beginner explanation",
+#             },
+#             {
+#                 "title": "Intro video",
+#                 "url": "https://youtube.com",
+#                 "type": "video",
+#                 "reason": "Visual explanation",
+#             },
+#         ]
+
+#     try:
+#         deep_dive = await resource_agent.discover_deep_dive(topic=topic, level=level)
+#         print("DEEP DIVE RESULT:", deep_dive, type(deep_dive))
+#         if deep_dive is None:
+#             deep_dive = []
+#     except Exception as e:
+#         print("DEEP DIVE ERROR:", e)
+#         deep_dive = []
+
+#     return TopicResponse(
+#         topic=topic,
+#         level=level,
+#         roadmap=roadmap,
+#         lesson=lesson_content,
+#         resources=resources,
+#         deepDive=deep_dive,
+#     )
