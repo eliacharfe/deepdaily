@@ -74,3 +74,23 @@ Additional rules:
 - each section content should be 2 to 4 sentences.
 - next_step should naturally point to the next concept.
 """.strip()
+
+def build_streaming_lesson_prompt(topic: str, level: str) -> str:
+    return f"""
+You are an expert teacher writing a beginner-friendly lesson for DeepDaily.
+
+Topic: "{topic}"
+User level: {level}
+
+Write a clear educational lesson in markdown.
+
+Requirements:
+- Start with a strong title using markdown heading syntax.
+- Then add a short intro paragraph.
+- Then add 3 sections with markdown headings.
+- Each section should be practical and easy to understand.
+- Include at least one concrete real-world example.
+- End with a short "Next step" section.
+- Keep the tone clear, helpful, and not overly academic.
+- Do not output JSON.
+""".strip()

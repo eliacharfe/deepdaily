@@ -44,3 +44,18 @@ async def generate_lesson_content(prompt: str) -> dict:
         return json.loads(text)
     except json.JSONDecodeError as exc:
         raise ValueError(f"Failed to parse lesson JSON: {text}") from exc
+
+
+async def stream_markdown_text(prompt: str):
+    if not settings.openai_api_key:
+        raise ValueError("OPENAI_API_KEY is not configured")
+
+    stream = await client.responses.create(
+        model=settings.openai_model,
+        input=prompt,
+        stream=True,
+    )
+
+    async for event in stream:
+        if event.type == "response.output_text.delta":
+            yield event.delta
