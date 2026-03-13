@@ -1,0 +1,80 @@
+//apps/web/components/theme-toggle.tsx
+
+"use client";
+
+import { useEffect, useState } from "react";
+
+type Theme = "light" | "dark";
+
+function applyTheme(theme: Theme) {
+    const root = document.documentElement;
+
+    if (theme === "dark") {
+        root.classList.add("dark");
+        root.style.colorScheme = "dark";
+    } else {
+        root.classList.remove("dark");
+        root.style.colorScheme = "light";
+    }
+
+    localStorage.setItem("theme", theme);
+}
+
+export default function ThemeToggle() {
+    const [mounted, setMounted] = useState(false);
+    const [theme, setTheme] = useState<Theme>("light");
+
+    useEffect(() => {
+        const saved = localStorage.getItem("theme") as Theme | null;
+        const prefersDark =
+            typeof window !== "undefined" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+        const initialTheme: Theme = saved ?? (prefersDark ? "dark" : "light");
+
+        setTheme(initialTheme);
+        applyTheme(initialTheme);
+        setMounted(true);
+    }, []);
+
+    const toggleTheme = () => {
+        const nextTheme: Theme = theme === "dark" ? "light" : "dark";
+        setTheme(nextTheme);
+        applyTheme(nextTheme);
+    };
+
+    if (!mounted) return null;
+
+    return (
+        <button
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="fixed top-5 right-5 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white/80 shadow-sm backdrop-blur transition hover:bg-slate-100 dark:border-[#4C4541] dark:bg-[#3A3533]/80 dark:hover:bg-[#4A4441]"
+        >
+            {theme === "dark" ? (
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-[#F1E7DF]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                >
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                </svg>
+            ) : (
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-slate-700"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                >
+                    <path d="M21 12.79A9 9 0 0111.21 3c0 .34-.02.67-.05 1A7 7 0 1019 13.84c.33-.03.66-.05 1-.05z" />
+                </svg>
+            )}
+        </button>
+    );
+}
