@@ -13,7 +13,9 @@ type Props = {
 
 export default function StreamingLesson({ topic, level }: Props) {
     const [content, setContent] = useState("");
-    const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+    const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">(
+        "idle"
+    );
     const [error, setError] = useState("");
 
     async function handleGenerate() {
@@ -41,11 +43,13 @@ export default function StreamingLesson({ topic, level }: Props) {
     }
 
     return (
-        <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition-colors dark:border-[#4C4541] dark:bg-[#3A3533]">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 className="text-2xl font-semibold">Live AI lesson</h2>
-                    <p className="mt-2 text-slate-600">
+                    <h2 className="text-2xl font-semibold text-slate-900 dark:text-[#FFF7F1]">
+                        Live AI lesson
+                    </h2>
+                    <p className="mt-2 text-slate-600 dark:text-[#D5C6BC]">
                         Generate a streamed markdown lesson for this topic.
                     </p>
                 </div>
@@ -54,24 +58,24 @@ export default function StreamingLesson({ topic, level }: Props) {
                     type="button"
                     onClick={handleGenerate}
                     disabled={status === "loading"}
-                    className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#F1E7DF] dark:text-[#2D2B2B]"
                 >
                     {status === "loading" ? "Generating..." : "Stream lesson"}
                 </button>
             </div>
 
             {error ? (
-                <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
                     {error}
                 </div>
             ) : null}
 
-            <div className="prose prose-slate mt-8 max-w-none">
+            <div className="prose prose-slate mt-8 max-w-none dark:prose-invert">
                 {content ? <ReactMarkdown>{content}</ReactMarkdown> : null}
             </div>
 
             {!content && status === "idle" ? (
-                <div className="mt-8 rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-slate-500">
+                <div className="mt-8 rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-slate-500 dark:border-[#5A524D] dark:text-[#B9AAA0]">
                     No streamed lesson yet.
                 </div>
             ) : null}
