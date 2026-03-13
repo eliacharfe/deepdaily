@@ -3,6 +3,7 @@
 import { generateTopic } from "@/lib/api";
 import type { TopicLevel } from "@/types/topic";
 import StreamingLesson from "@/components/streaming-lesson";
+import AuthButton from "@/components/auth/auth-button";
 
 type LearnPageProps = {
     searchParams: Promise<{
@@ -35,7 +36,13 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
     const data = await generateTopic({ topic, level });
 
     return (
-        <main className="min-h-screen bg-slate-50 px-6 py-12 text-slate-900 transition-colors dark:bg-[#2D2B2B] dark:text-[#F1E7DF]">
+        <main className="min-h-screen bg-slate-50 pt-20 px-6 py-12 text-slate-900 transition-colors dark:bg-[#2D2B2B] dark:text-[#F1E7DF]">
+
+            <div className="fixed right-20 top-5 z-40">
+                <AuthButton />
+            </div>
+
+
             <div className="mx-auto max-w-5xl space-y-8">
                 <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
                     <p className="text-sm uppercase tracking-[0.18em] text-slate-500 dark:text-[#B9AAA0]">

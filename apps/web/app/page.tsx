@@ -2,6 +2,8 @@
 
 import TopicGeneratorForm from "@/components/topic-generator-form";
 import { getHealth } from "@/lib/api";
+import SignInButton from "@/components/auth/sign-in-button";
+import AuthButton from "@/components/auth/auth-button";
 
 export default async function HomePage() {
   let apiStatus = "unreachable";
@@ -15,6 +17,12 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 transition-colors dark:bg-[#2D2B2B] dark:text-[#F1E7DF]">
+
+
+      <div className="fixed right-20 top-5 z-40">
+        <AuthButton />
+      </div>
+
       <section className="mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center px-6 py-16 text-center">
         <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-slate-500 dark:text-[#B9AAA0]">
           DeepDaily
@@ -30,6 +38,10 @@ export default async function HomePage() {
         </p>
 
         <TopicGeneratorForm />
+
+        {/* <div className="mt-6">
+          <SignInButton />
+        </div> */}
 
         {/* <div className="mt-8 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 dark:border-[#4C4541] dark:bg-[#3A3533] dark:text-[#D8C9BF]">
           API status:{" "}

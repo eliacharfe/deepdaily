@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ThemeToggle from "@/components/theme-toggle";
+import { AuthProvider } from "@/components/providers/auth-provider";
 
 export const metadata: Metadata = {
   title: "DeepDaily",
@@ -18,7 +19,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeToggle />
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
