@@ -5,7 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.db.session import get_db
-from app.schemas.lesson import GenerateLessonRequest, LessonResponse
+from app.schemas.lesson import (
+    GenerateLessonRequest,
+    GeneratedLessonResponse,
+    SaveLessonRequest,
+    LessonResponse,
+)
 from app.services.lesson_service import get_existing_lesson, create_lesson
 from app.dependencies.auth import get_current_user
 from app.services.topic_service import generate_topic
@@ -27,9 +32,72 @@ def build_lesson_response(lesson: Lesson) -> LessonResponse:
     )
 
 
-@router.post("/generate", response_model=LessonResponse)
+@router.post("/generate", response_model=GeneratedLessonResponse)
 async def generate_lesson(
     payload: GenerateLessonRequest,
+    current_user=Depends(get_current_user),
+):
+    user_id = current_user.get("uid")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid user")
+
+    topic = payload.topic.strip()
+    level = payload.level.strip()
+
+    generated = await generate_topic(topic=topic, level=level)
+
+    return GeneratedLessonResponse(
+        topic=topic,
+        level=level,
+        roadmap=generated.roadmap,
+        lesson=generated.lesson.model_dump(),
+        resources=[resource.model_dump() for resource in generated.resources],
+    )
+# @router.post("/generate", response_model=LessonResponse)
+# async def generate_lesson(
+#     payload: GenerateLessonRequest,
+#     db: AsyncSession = Depends(get_db),
+#     current_user=Depends(get_current_user),
+# ):
+#     user_id = current_user.get("uid")
+#     if not user_id:
+#         raise HTTPException(status_code=401, detail="Invalid user")
+
+#     topic = payload.topic.strip()
+#     level = payload.level.strip()
+
+#     existing = await get_existing_lesson(
+#         db=db,
+#         user_id=user_id,
+#         topic=topic,
+#         level=level,
+#     )
+
+#     if existing:
+#         return build_lesson_response(existing)
+
+#     generated = await generate_topic(topic=topic, level=level)
+
+#     content_json = {
+#         "roadmap": generated.roadmap,
+#         "lesson": generated.lesson.model_dump(),
+#         "resources": [resource.model_dump() for resource in generated.resources],
+#     }
+
+#     lesson = await create_lesson(
+#         db=db,
+#         user_id=user_id,
+#         topic=topic,
+#         level=level,
+#         title=generated.lesson.title,
+#         content_json=content_json,
+#     )
+
+#     return build_lesson_response(lesson)
+
+@router.post("/save", response_model=LessonResponse)
+async def save_lesson(
+    payload: SaveLessonRequest,
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
@@ -40,22 +108,10 @@ async def generate_lesson(
     topic = payload.topic.strip()
     level = payload.level.strip()
 
-    existing = await get_existing_lesson(
-        db=db,
-        user_id=user_id,
-        topic=topic,
-        level=level,
-    )
-
-    if existing:
-        return build_lesson_response(existing)
-
-    generated = await generate_topic(topic=topic, level=level)
-
     content_json = {
-        "roadmap": generated.roadmap,
-        "lesson": generated.lesson.model_dump(),
-        "resources": [resource.model_dump() for resource in generated.resources],
+        "roadmap": payload.roadmap,
+        "lesson": payload.lesson.model_dump(),
+        "resources": [resource.model_dump() for resource in payload.resources],
     }
 
     lesson = await create_lesson(
@@ -63,7 +119,7 @@ async def generate_lesson(
         user_id=user_id,
         topic=topic,
         level=level,
-        title=generated.lesson.title,
+        title=payload.lesson.title,
         content_json=content_json,
     )
 

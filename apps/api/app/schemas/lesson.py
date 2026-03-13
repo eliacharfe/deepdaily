@@ -30,6 +30,22 @@ class GenerateLessonRequest(BaseModel):
     level: str = Field(..., min_length=1)
 
 
+class GeneratedLessonResponse(BaseModel):
+    topic: str
+    level: str
+    roadmap: List[str]
+    lesson: LessonContent
+    resources: List[LessonResource]
+
+
+class SaveLessonRequest(BaseModel):
+    topic: str = Field(..., min_length=1)
+    level: str = Field(..., min_length=1)
+    roadmap: List[str]
+    lesson: LessonContent
+    resources: List[LessonResource]
+
+
 class LessonResponse(BaseModel):
     id: str
     topic: str

@@ -5,6 +5,7 @@ import "./globals.css";
 import ThemeToggle from "@/components/theme-toggle";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import AppShell from "@/components/app-shell";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "DeepDaily",
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <Toaster richColors position="top-center" />
 
         <AuthProvider>
           <ThemeToggle />
