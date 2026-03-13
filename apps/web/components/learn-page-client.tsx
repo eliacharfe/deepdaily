@@ -11,6 +11,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { config } from "@/lib/config";
 import type { TopicLevel } from "@/types/topic";
 import type { LessonData } from "@/types/lesson";
+import HomeButton from "@/components/home-button";
 
 
 type Props = {
@@ -95,7 +96,8 @@ export default function LearnPageClient({ topic, level }: Props) {
     if (loading) {
         return (
             <main className="min-h-screen pt-20 px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
-                <div className="fixed right-20 top-5 z-40">
+                <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
+                    <HomeButton />
                     <AuthButton />
                 </div>
 
@@ -117,7 +119,8 @@ export default function LearnPageClient({ topic, level }: Props) {
         return (
             <>
                 <main className="min-h-screen px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
-                    <div className="fixed right-20 top-5 z-40">
+                    <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
+                        <HomeButton />
                         <AuthButton />
                     </div>
 
@@ -140,7 +143,8 @@ export default function LearnPageClient({ topic, level }: Props) {
     if (error || !data) {
         return (
             <main className="min-h-screen px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
-                <div className="fixed right-20 top-5 z-40">
+                <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
+                    <HomeButton />
                     <AuthButton />
                 </div>
 
@@ -156,7 +160,8 @@ export default function LearnPageClient({ topic, level }: Props) {
 
     return (
         <main className="min-h-screen pt-20 px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
-            <div className="fixed right-20 top-5 z-40">
+            <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
+                <HomeButton />
                 <AuthButton />
             </div>
 
