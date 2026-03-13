@@ -2,6 +2,7 @@
 
 import { generateTopic } from "@/lib/api";
 import type { TopicLevel } from "@/types/topic";
+import StreamingLesson from "@/components/streaming-lesson";
 
 type LearnPageProps = {
     searchParams: Promise<{
@@ -100,6 +101,13 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
                                         </div>
 
                                         <p className="mt-2 text-slate-600">{resource.reason}</p>
+
+                                        {resource.snippet ? (
+                                            <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500">
+                                                {resource.snippet}
+                                            </p>
+                                        ) : null}
+
                                         <p className="mt-3 text-sm text-slate-500">{resource.url}</p>
                                     </a>
                                 ))}
@@ -132,6 +140,8 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
                         </div>
                     </aside>
                 </section>
+
+                <StreamingLesson topic={data.topic} level={data.level} />
             </div>
         </main>
     );

@@ -17,6 +17,7 @@ export type LessonResource = {
     url: string;
     type: string;
     reason: string;
+    snippet?: string | null;
 };
 
 export type TopicGenerateResponse = {

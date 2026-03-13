@@ -3,16 +3,37 @@
 from app.schemas.topic_schema import LessonResource
 from app.services.search.web_search_client import WebSearchClient
 
+from urllib.parse import urlparse
 
 class ResourceDiscoveryAgent:
     def __init__(self, search_client: WebSearchClient | None = None):
         self.search_client = search_client or WebSearchClient()
+
+        self.preferred_domains = {
+            "developer.apple.com": 4,
+            "docs.python.org": 4,
+            "react.dev": 4,
+            "nextjs.org": 4,
+            "fastapi.tiangolo.com": 4,
+            "platform.openai.com": 4,
+            "huggingface.co": 3,
+            "pinecone.io": 3,
+            "langchain.com": 3,
+            "langchain.dev": 3,
+            "youtube.com": 2,
+            "coursera.org": 2,
+            "udemy.com": 1,
+            "medium.com": -1,
+            "reddit.com": -3,
+            "quora.com": -3,
+        }
 
     def build_queries(self, topic: str, level: str) -> list[str]:
         return [
             f"{topic} {level} tutorial",
             f"{topic} beginner guide",
             f"{topic} explained video",
+            f"{topic} practical example",
         ]
 
     def infer_resource_type(self, url: str, title: str) -> str:
@@ -35,9 +56,47 @@ class ResourceDiscoveryAgent:
             "course catalog",
             "reddit",
             "quora",
+            "job",
+            "jobs",
         ]
 
         return not any(term in value for term in blocked)
+
+    def extract_domain(self, url: str) -> str:
+        try:
+            hostname = urlparse(url).hostname or ""
+            return hostname.replace("www.", "").lower()
+        except Exception:
+            return ""
+
+    def domain_score(self, url: str) -> int:
+        domain = self.extract_domain(url)
+        return self.preferred_domains.get(domain, 0)
+
+    def title_score(self, title: str, level: str) -> int:
+        title_lower = title.lower()
+        score = 0
+
+        positive_terms = ["beginner", "introduction", "guide", "tutorial", "explained", "basics"]
+        advanced_terms = ["advanced", "benchmark", "research paper", "arxiv", "optimization"]
+
+        for term in positive_terms:
+            if term in title_lower:
+                score += 1
+
+        if level == "beginner":
+            for term in advanced_terms:
+                if term in title_lower:
+                    score -= 2
+
+        return score
+
+    def type_bonus(self, resource_type: str) -> int:
+        if resource_type == "documentation":
+            return 2
+        if resource_type == "video":
+            return 1
+        return 0
 
     def build_reason(self, resource_type: str, source: str | None) -> str:
         source_label = source or "a trusted source"
@@ -48,10 +107,17 @@ class ResourceDiscoveryAgent:
             return f"Helpful reference from {source_label}"
         return f"Good learning resource from {source_label}"
 
+    def score_result(self, title: str, url: str, resource_type: str, level: str) -> int:
+        return (
+            self.domain_score(url)
+            + self.title_score(title, level)
+            + self.type_bonus(resource_type)
+        )
+
     async def discover_resources(self, topic: str, level: str) -> list[LessonResource]:
         queries = self.build_queries(topic=topic, level=level)
 
-        collected: list[LessonResource] = []
+        collected: list[tuple[int, LessonResource]] = []
         seen_urls: set[str] = set()
 
         for query in queries:
@@ -67,22 +133,36 @@ class ResourceDiscoveryAgent:
                 seen_urls.add(result.url)
 
                 resource_type = self.infer_resource_type(result.url, result.title)
+                score = self.score_result(
+                    title=result.title,
+                    url=result.url,
+                    resource_type=resource_type,
+                    level=level,
+                )
 
                 collected.append(
-                    LessonResource(
-                        title=result.title,
-                        url=result.url,
-                        type=resource_type,
-                        reason=self.build_reason(resource_type, result.source),
+                    (
+                        score,
+                        LessonResource(
+                            title=result.title,
+                            url=result.url,
+                            type=resource_type,
+                            reason=self.build_reason(resource_type, result.source),
+                            snippet=result.snippet,
+                        ),
                     )
                 )
 
-        # try to keep a balanced set
-        videos = [r for r in collected if r.type == "video"]
-        docs = [r for r in collected if r.type == "documentation"]
-        articles = [r for r in collected if r.type == "article"]
+        collected.sort(key=lambda item: item[0], reverse=True)
+
+        ranked = [resource for _, resource in collected]
+
+        videos = [r for r in ranked if r.type == "video"]
+        docs = [r for r in ranked if r.type == "documentation"]
+        articles = [r for r in ranked if r.type == "article"]
 
         balanced: list[LessonResource] = []
+
         if articles:
             balanced.append(articles[0])
         if videos:
@@ -90,7 +170,10 @@ class ResourceDiscoveryAgent:
         if docs:
             balanced.append(docs[0])
 
-        remaining = [r for r in collected if r not in balanced]
-        balanced.extend(remaining[: max(0, 4 - len(balanced))])
+        for resource in ranked:
+            if resource not in balanced:
+                balanced.append(resource)
+            if len(balanced) >= 4:
+                break
 
         return balanced[:4]
