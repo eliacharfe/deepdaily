@@ -24,7 +24,15 @@ class Lesson(BaseModel):
 
 class LessonResource(BaseModel):
     title: str
-    url: str
+    url: str | None = None
+    type: str
+    reason: str
+    snippet: str | None = None
+
+
+class LessonDeepDiveItem(BaseModel):
+    title: str
+    url: str | None = None
     type: str
     reason: str
     snippet: str | None = None
@@ -36,3 +44,4 @@ class TopicResponse(BaseModel):
     roadmap: List[str]
     lesson: Lesson
     resources: List[LessonResource]
+    deepDive: List[LessonDeepDiveItem] | None = None

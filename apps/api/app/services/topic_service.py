@@ -53,10 +53,20 @@ async def generate_topic(topic: str, level: str) -> TopicResponse:
             "next_step": "Tomorrow we will explore the next concept.",
         }
 
+    lesson_content = {
+        "title": lesson["title"],
+        "today_focus": lesson["today_focus"],
+        "summary": lesson["summary"],
+        "sections": lesson["sections"],
+        "next_step": lesson["next_step"],
+    }
+
+    resource_agent = ResourceDiscoveryAgent()
+
     try:
-        resource_agent = ResourceDiscoveryAgent()
         resources = await resource_agent.discover_resources(topic=topic, level=level)
-    except Exception:
+    except Exception as e:
+        print("RESOURCES ERROR:", e)
         resources = [
             {
                 "title": "Beginner article",
@@ -72,10 +82,20 @@ async def generate_topic(topic: str, level: str) -> TopicResponse:
             },
         ]
 
+    try:
+        deep_dive = await resource_agent.discover_deep_dive(topic=topic, level=level)
+        print("DEEP DIVE RESULT:", deep_dive, type(deep_dive))
+        if deep_dive is None:
+            deep_dive = []
+    except Exception as e:
+        print("DEEP DIVE ERROR:", e)
+        deep_dive = []
+
     return TopicResponse(
         topic=topic,
         level=level,
         roadmap=roadmap,
-        lesson=lesson,
+        lesson=lesson_content,
         resources=resources,
+        deepDive=deep_dive,
     )
