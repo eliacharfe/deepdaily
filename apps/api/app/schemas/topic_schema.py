@@ -27,6 +27,7 @@ class LessonResource(BaseModel):
     url: str
     type: str
     reason: str
+    snippet: str | None = None
 
 
 class TopicResponse(BaseModel):
