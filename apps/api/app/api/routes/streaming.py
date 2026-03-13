@@ -1,9 +1,10 @@
 #apps/api/app/api/routes/streaming.py
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from app.dependencies.auth import get_current_user
 from app.services.streaming.lesson_stream_service import stream_lesson_text
 
 router = APIRouter(prefix="/stream", tags=["streaming"])
@@ -15,7 +16,10 @@ class LessonStreamRequest(BaseModel):
 
 
 @router.post("/lesson")
-async def stream_lesson(request: LessonStreamRequest):
+async def stream_lesson(
+    request: LessonStreamRequest,
+    current_user=Depends(get_current_user),
+):
     generator = stream_lesson_text(topic=request.topic, level=request.level)
 
     return StreamingResponse(

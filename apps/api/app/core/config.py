@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     tavily_api_key: str = ""
     tavily_search_depth: str = "advanced"
 
+    firebase_admin_credentials_path: str = ""
+
+    database_url: str = "sqlite+aiosqlite:///./deepdaily.db"
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 
