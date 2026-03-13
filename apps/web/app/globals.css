@@ -1,6 +1,7 @@
 /*apps/web/app/globals.css*/
 
 @import "tailwindcss";
+@import "prismjs/themes/prism-tomorrow.css";
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
