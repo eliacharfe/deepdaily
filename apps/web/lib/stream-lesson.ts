@@ -1,5 +1,6 @@
 //apps/web/lib/stream-lesson.ts
 
+import { auth } from "./firebase";
 import { config } from "./config";
 
 type StreamHandlers = {
@@ -13,10 +14,17 @@ export async function streamLesson(
     level: string,
     handlers: StreamHandlers
 ) {
+    const token = await auth.currentUser?.getIdToken();
+
+    if (!token) {
+        throw new Error("User is not authenticated");
+    }
+
     const response = await fetch(`${config.apiBaseUrl}/stream/lesson`, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ topic, level })
     });
