@@ -9,10 +9,15 @@ import SaveLessonButton from "@/components/save-lesson-button";
 import LoginRequiredModal from "@/components/auth/login-required-modal";
 import { useAuth } from "@/components/providers/auth-provider";
 import { config } from "@/lib/config";
-import { getSavedLessonById } from "@/lib/lessons-api";
+import { getSavedLessonById, saveLesson } from "@/lib/lessons-api";
 import type { TopicLevel } from "@/types/topic";
 import type { LessonData, SavedLesson } from "@/types/lesson";
 import HomeButton from "@/components/home-button";
+import CurriculumCtaCard from "@/components/curriculum-cta-card";
+import { useRouter } from "next/navigation";
+import { createCurriculum, getCurriculaByLesson } from "@/lib/curricula-api";
+import ResumeCurriculumCard from "@/components/resume-curriculum-card";
+import type { Curriculum } from "@/types/curriculum";
 
 type Props =
     | {
@@ -46,6 +51,7 @@ export default function LearnPageClient(props: Props) {
     const lessonId = "lessonId" in props ? props.lessonId : undefined;
     const topic = "topic" in props ? props.topic : undefined;
     const level = "level" in props ? props.level : undefined;
+
     const [streamedLesson, setStreamedLesson] = useState("");
     const [data, setData] = useState<LessonData | null>(null);
     const [savedLessonId, setSavedLessonId] = useState<string | null>(
@@ -55,6 +61,13 @@ export default function LearnPageClient(props: Props) {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
     const [showLoginModal, setShowLoginModal] = useState(false);
+
+    const [isCreatingCurriculum, setIsCreatingCurriculum] = useState(false);
+    const [selectedDuration, setSelectedDuration] = useState<7 | 30 | null>(null);
+    const [curriculumMessage, setCurriculumMessage] = useState("");
+    const [existingCurricula, setExistingCurricula] = useState<Curriculum[]>([]);
+
+    const router = useRouter();
 
     useEffect(() => {
         let cancelled = false;
@@ -76,13 +89,15 @@ export default function LearnPageClient(props: Props) {
 
                 if (isSavedLessonMode && lessonId) {
                     const savedLesson = await getSavedLessonById(lessonId, token);
-                    console.log("SAVED LESSON RESULT", savedLesson);
 
                     if (!cancelled) {
                         const normalized = normalizeSavedLesson(savedLesson);
                         setData(normalized);
                         setStreamedLesson(normalized.streamedLesson ?? "");
                         setSavedLessonId(savedLesson.id);
+
+                        const curricula = await getCurriculaByLesson(savedLesson.id, token);
+                        setExistingCurricula(curricula);
                     }
 
                     return;
@@ -108,11 +123,15 @@ export default function LearnPageClient(props: Props) {
                 }
 
                 const result = (await res.json()) as LessonData;
-                console.log("GENERATED RESULT", result);
 
                 if (!cancelled) {
                     setData(result);
                     setStreamedLesson(result.streamedLesson ?? "");
+
+                    if (result.id) {
+                        const curricula = await getCurriculaByLesson(result.id, token);
+                        setExistingCurricula(curricula);
+                    }
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -131,6 +150,51 @@ export default function LearnPageClient(props: Props) {
             cancelled = true;
         };
     }, [authLoading, user, isSavedLessonMode, lessonId, topic, level]);
+
+    async function handleCreateCurriculum(durationDays: 7 | 30) {
+        if (!user || !data || isCreatingCurriculum) return;
+
+        try {
+            setCurriculumMessage("");
+            setIsCreatingCurriculum(true);
+            setSelectedDuration(durationDays);
+
+            const token = await user.getIdToken();
+
+            let effectiveLessonId = savedLessonId ?? data.id;
+
+            if (!effectiveLessonId) {
+                setCurriculumMessage("Saving lesson before creating your curriculum...");
+
+                const savedLesson = await saveLesson(
+                    {
+                        ...data,
+                        streamedLesson,
+                    },
+                    token
+                );
+
+                effectiveLessonId = savedLesson.id;
+                setSavedLessonId(savedLesson.id);
+                setData((prev) => (prev ? { ...prev, id: savedLesson.id } : prev));
+            }
+
+            setCurriculumMessage(`Creating your ${durationDays}-day curriculum...`);
+
+            const curriculum = await createCurriculum(token, {
+                lessonId: effectiveLessonId,
+                durationDays,
+            });
+
+            router.push(`/curriculum/${curriculum.id}`);
+        } catch (err) {
+            setCurriculumMessage(
+                err instanceof Error ? err.message : "Failed to create curriculum"
+            );
+        } finally {
+            setIsCreatingCurriculum(false);
+        }
+    }
 
     if (loading) {
         return (
@@ -223,9 +287,15 @@ export default function LearnPageClient(props: Props) {
                             </h1>
 
                             <p className="mt-4 text-sm text-slate-500 dark:text-[#CDBFB6]">
-                                Topic: <span className="font-medium text-slate-800 dark:text-[#F1E7DF]">{data.topic}</span>
+                                Topic:{" "}
+                                <span className="font-medium text-slate-800 dark:text-[#F1E7DF]">
+                                    {data.topic}
+                                </span>
                                 {" · "}
-                                Level: <span className="font-medium capitalize text-slate-800 dark:text-[#F1E7DF]">{data.level}</span>
+                                Level:{" "}
+                                <span className="font-medium capitalize text-slate-800 dark:text-[#F1E7DF]">
+                                    {data.level}
+                                </span>
                             </p>
                         </div>
 
@@ -258,6 +328,10 @@ export default function LearnPageClient(props: Props) {
                         </p>
                     </div>
                 </section>
+
+                {existingCurricula.length > 0 ? (
+                    <ResumeCurriculumCard curricula={existingCurricula} />
+                ) : null}
 
                 <section className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
                     <div className="space-y-8">
@@ -300,7 +374,9 @@ export default function LearnPageClient(props: Props) {
                                             </span>
                                         </div>
 
-                                        <p className="mt-2 text-slate-600 dark:text-[#D5C6BC]">{resource.reason}</p>
+                                        <p className="mt-2 text-slate-600 dark:text-[#D5C6BC]">
+                                            {resource.reason}
+                                        </p>
 
                                         {resource.snippet ? (
                                             <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500 dark:text-[#B8AAA1]">
@@ -308,14 +384,16 @@ export default function LearnPageClient(props: Props) {
                                             </p>
                                         ) : null}
 
-                                        <p className="mt-3 text-sm text-slate-500 dark:text-[#A89B92]">{resource.url}</p>
+                                        <p className="mt-3 text-sm text-slate-500 dark:text-[#A89B92]">
+                                            {resource.url}
+                                        </p>
                                     </a>
                                 ))}
                             </div>
                         </div>
                     </div>
 
-                    <aside className="lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)] lg:overflow-y-auto space-y-8 pr-1">
+                    <aside className="space-y-8 pr-1 lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)] lg:overflow-y-auto">
                         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
                             <h2 className="text-2xl font-semibold">Roadmap</h2>
 
@@ -328,11 +406,21 @@ export default function LearnPageClient(props: Props) {
                                         <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-medium text-white dark:bg-[#F1E7DF] dark:text-[#2D2B2B]">
                                             {index + 1}
                                         </span>
-                                        <span className="leading-6 text-slate-700 dark:text-[#D5C6BC]">{item}</span>
+                                        <span className="leading-6 text-slate-700 dark:text-[#D5C6BC]">
+                                            {item}
+                                        </span>
                                     </li>
                                 ))}
                             </ol>
                         </div>
+
+                        <CurriculumCtaCard
+                            compact
+                            isCreatingCurriculum={isCreatingCurriculum}
+                            selectedDuration={selectedDuration}
+                            curriculumMessage={curriculumMessage}
+                            onCreateCurriculum={handleCreateCurriculum}
+                        />
 
                         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
                             <h2 className="text-2xl font-semibold">Deep dive</h2>
@@ -353,7 +441,9 @@ export default function LearnPageClient(props: Props) {
                                                 </span>
                                             </div>
 
-                                            <p className="mt-2 text-slate-600 dark:text-[#D5C6BC]">{item.reason}</p>
+                                            <p className="mt-2 text-slate-600 dark:text-[#D5C6BC]">
+                                                {item.reason}
+                                            </p>
 
                                             {item.snippet ? (
                                                 <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500 dark:text-[#B8AAA1]">
@@ -362,7 +452,9 @@ export default function LearnPageClient(props: Props) {
                                             ) : null}
 
                                             {item.url ? (
-                                                <p className="mt-3 text-sm text-slate-500 dark:text-[#A89B92]">{item.url}</p>
+                                                <p className="mt-3 text-sm text-slate-500 dark:text-[#A89B92]">
+                                                    {item.url}
+                                                </p>
                                             ) : (
                                                 <p className="mt-3 text-sm italic text-slate-500 dark:text-[#A89B92]">
                                                     No external link available
@@ -400,7 +492,6 @@ export default function LearnPageClient(props: Props) {
                             </p>
                         </div>
                     </aside>
-
                 </section>
 
                 <StreamingLesson
@@ -409,6 +500,13 @@ export default function LearnPageClient(props: Props) {
                     level={data.level}
                     initialContent={streamedLesson}
                     onContentChange={setStreamedLesson}
+                />
+
+                <CurriculumCtaCard
+                    isCreatingCurriculum={isCreatingCurriculum}
+                    selectedDuration={selectedDuration}
+                    curriculumMessage={curriculumMessage}
+                    onCreateCurriculum={handleCreateCurriculum}
                 />
             </div>
         </main>

@@ -13,6 +13,7 @@ from app.api.routes.auth import router as auth_router
 from app.api.routes.lessons import router as lessons_router
 from app.db.base import Base
 from app.db.session import engine
+from app.api.routes.curriculum import router as curriculum_router
 
 # IMPORTANT: import models so SQLAlchemy knows about them
 from app.models.lesson import Lesson
@@ -44,6 +45,7 @@ app.include_router(health_router)
 app.include_router(topics_router)
 app.include_router(streaming_router)
 app.include_router(lessons_router)
+app.include_router(curriculum_router)
 
 
 @app.get("/")
