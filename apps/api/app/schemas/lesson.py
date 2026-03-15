@@ -45,6 +45,7 @@ class GeneratedLessonResponse(BaseModel):
     lesson: LessonContent
     resources: List[LessonResource]
     deepDive: List[LessonDeepDiveItem] = Field(default_factory=list)
+    streamedLesson: str | None = None
 
 
 class SaveLessonRequest(BaseModel):
@@ -54,6 +55,7 @@ class SaveLessonRequest(BaseModel):
     lesson: LessonContent
     resources: List[LessonResource]
     deepDive: List[LessonDeepDiveItem] = Field(default_factory=list)
+    streamedLesson: str | None = None
 
 
 class LessonResponse(BaseModel):
@@ -64,3 +66,4 @@ class LessonResponse(BaseModel):
     lesson: LessonContent
     resources: List[LessonResource]
     deepDive: List[LessonDeepDiveItem] = Field(default_factory=list)
+    streamedLesson: str | None = None

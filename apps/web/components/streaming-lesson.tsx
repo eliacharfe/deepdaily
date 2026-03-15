@@ -12,6 +12,8 @@ import { streamLesson } from "@/lib/stream-lesson";
 type Props = {
     topic: string;
     level: string;
+    initialContent?: string;
+    onContentChange?: (content: string) => void;
 };
 
 type Status = "idle" | "loading" | "done" | "error";
@@ -41,8 +43,13 @@ function normalizeStreamingMarkdown(text: string): string {
     return normalized;
 }
 
-export default function StreamingLesson({ topic, level }: Props) {
-    const [content, setContent] = useState("");
+export default function StreamingLesson({
+    topic,
+    level,
+    initialContent = "",
+    onContentChange,
+}: Props) {
+    const [content, setContent] = useState(initialContent);
     const [status, setStatus] = useState<Status>("idle");
     const [error, setError] = useState("");
     const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
@@ -51,6 +58,10 @@ export default function StreamingLesson({ topic, level }: Props) {
 
     const scrollContainerRef = useRef<HTMLDivElement | null>(null);
     const bottomRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        onContentChange?.(content);
+    }, [content, onContentChange]);
 
     function scrollToBottom(behavior: ScrollBehavior = "smooth") {
         if (!scrollContainerRef.current) return;
@@ -122,8 +133,6 @@ export default function StreamingLesson({ topic, level }: Props) {
                             const next = prev + chunk;
 
                             if (isFirstChunk) {
-                                // Use a slight timeout or requestAnimationFrame to ensure 
-                                // React has rendered the streamAreaRef div
                                 setTimeout(() => {
                                     scrollPageToStreamArea();
                                 }, 50);
@@ -132,19 +141,6 @@ export default function StreamingLesson({ topic, level }: Props) {
                             return next;
                         });
                     },
-                    // onChunk: (chunk) => {
-                    //     setContent((prev) => {
-                    //         const next = prev + chunk;
-
-                    //         if (!prev) {
-                    //             requestAnimationFrame(() => {
-                    //                 scrollPageToStreamArea();
-                    //             });
-                    //         }
-
-                    //         return next;
-                    //     });
-                    // },
                     onDone: () => {
                         setStatus("done");
 
@@ -204,15 +200,12 @@ export default function StreamingLesson({ topic, level }: Props) {
     }
 
     function scrollPageToStreamArea() {
-        // We want to target the streamAreaRef if content exists, 
-        // otherwise the sectionRef (the container).
         const target = streamAreaRef.current ?? sectionRef.current;
         if (!target) return;
 
-        // Calculate position relative to the document
         const rect = target.getBoundingClientRect();
         const absoluteTop = window.pageYOffset + rect.top;
-        const offset = 80; // Adjusted offset for a tighter look
+        const offset = 80;
 
         window.scrollTo({
             top: Math.max(0, absoluteTop - offset),
@@ -244,7 +237,11 @@ export default function StreamingLesson({ topic, level }: Props) {
                     disabled={status === "loading"}
                     className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#F1E7DF] dark:text-[#2D2B2B]"
                 >
-                    {status === "loading" ? "Generating..." : "Stream lesson"}
+                    {status === "loading"
+                        ? "Generating..."
+                        : content
+                            ? "Regenerate stream"
+                            : "Stream lesson"}
                 </button>
             </div>
 
@@ -362,4 +359,3 @@ export default function StreamingLesson({ topic, level }: Props) {
         </section>
     );
 }
-

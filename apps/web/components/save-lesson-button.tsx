@@ -32,6 +32,7 @@ export default function SaveLessonButton({ lesson, onSaved }: Props) {
                 lesson: lesson.lesson,
                 resources: lesson.resources,
                 deepDive: lesson.deepDive ?? [],
+                streamedLesson: lesson.streamedLesson ?? null,
             };
 
             console.log("SAVING LESSON PAYLOAD", payload);

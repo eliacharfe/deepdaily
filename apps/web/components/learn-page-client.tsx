@@ -1,4 +1,4 @@
-// //apps/web/components/learn-page-client.tsx
+// apps/web/components/learn-page-client.tsx
 
 "use client";
 
@@ -35,6 +35,7 @@ function normalizeSavedLesson(savedLesson: SavedLesson): LessonData {
         lesson: savedLesson.lesson,
         resources: savedLesson.resources,
         deepDive: savedLesson.deepDive ?? [],
+        streamedLesson: savedLesson.streamedLesson ?? "",
     };
 }
 
@@ -45,7 +46,7 @@ export default function LearnPageClient(props: Props) {
     const lessonId = "lessonId" in props ? props.lessonId : undefined;
     const topic = "topic" in props ? props.topic : undefined;
     const level = "level" in props ? props.level : undefined;
-
+    const [streamedLesson, setStreamedLesson] = useState("");
     const [data, setData] = useState<LessonData | null>(null);
     const [savedLessonId, setSavedLessonId] = useState<string | null>(
         lessonId ?? null
@@ -78,7 +79,9 @@ export default function LearnPageClient(props: Props) {
                     console.log("SAVED LESSON RESULT", savedLesson);
 
                     if (!cancelled) {
-                        setData(normalizeSavedLesson(savedLesson));
+                        const normalized = normalizeSavedLesson(savedLesson);
+                        setData(normalized);
+                        setStreamedLesson(normalized.streamedLesson ?? "");
                         setSavedLessonId(savedLesson.id);
                     }
 
@@ -109,6 +112,7 @@ export default function LearnPageClient(props: Props) {
 
                 if (!cancelled) {
                     setData(result);
+                    setStreamedLesson(result.streamedLesson ?? "");
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -225,14 +229,17 @@ export default function LearnPageClient(props: Props) {
                             </p>
                         </div>
 
-                        {!savedLessonId ? (
-                            <SaveLessonButton
-                                lesson={data}
-                                onSaved={(id) => {
-                                    setSavedLessonId(id);
-                                }}
-                            />
-                        ) : null}
+                        {/* {!savedLessonId ? ( */}
+                        <SaveLessonButton
+                            lesson={{
+                                ...data,
+                                streamedLesson,
+                            }}
+                            onSaved={(id) => {
+                                setSavedLessonId(id);
+                            }}
+                        />
+                        {/* ) : null} */}
                     </div>
 
                     <div className="mt-6 rounded-2xl bg-slate-50 p-5 dark:bg-[#2F2A28]">
@@ -394,94 +401,15 @@ export default function LearnPageClient(props: Props) {
                         </div>
                     </aside>
 
-                    {/* <aside className="space-y-8">
-                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                            <h2 className="text-2xl font-semibold">Roadmap</h2>
-
-                            <ol className="mt-6 space-y-3">
-                                {data.roadmap.map((item, index) => (
-                                    <li
-                                        key={`${index}-${item}`}
-                                        className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-[#2F2A28]"
-                                    >
-                                        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-medium text-white dark:bg-[#F1E7DF] dark:text-[#2D2B2B]">
-                                            {index + 1}
-                                        </span>
-                                        <span className="leading-6 text-slate-700 dark:text-[#D5C6BC]">{item}</span>
-                                    </li>
-                                ))}
-                            </ol>
-                        </div>
-
-                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                            <h2 className="text-2xl font-semibold">Deep dive</h2>
-                            <p className="mt-2 text-sm text-slate-600 dark:text-[#CDBFB6]">
-                                Books and advanced material to continue beyond today’s lesson.
-                            </p>
-
-                            <div className="mt-6 space-y-4">
-                                {(data.deepDive ?? []).map((item) => {
-                                    const content = (
-                                        <>
-                                            <div className="flex items-center justify-between gap-4">
-                                                <h3 className="text-lg font-semibold text-slate-900 dark:text-[#F1E7DF]">
-                                                    {item.title}
-                                                </h3>
-                                                <span className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-600 dark:border-[#5A524D] dark:text-[#D5C6BC]">
-                                                    {item.type}
-                                                </span>
-                                            </div>
-
-                                            <p className="mt-2 text-slate-600 dark:text-[#D5C6BC]">{item.reason}</p>
-
-                                            {item.snippet ? (
-                                                <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500 dark:text-[#B8AAA1]">
-                                                    {item.snippet}
-                                                </p>
-                                            ) : null}
-
-                                            {item.url ? (
-                                                <p className="mt-3 text-sm text-slate-500 dark:text-[#A89B92]">{item.url}</p>
-                                            ) : (
-                                                <p className="mt-3 text-sm italic text-slate-500 dark:text-[#A89B92]">
-                                                    No external link available
-                                                </p>
-                                            )}
-                                        </>
-                                    );
-
-                                    return item.url ? (
-                                        <a
-                                            key={`${item.title}-${item.url}`}
-                                            href={item.url}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="block rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:border-slate-300 dark:border-[#4C4541] dark:bg-[#2F2A28] dark:hover:border-[#6A615B]"
-                                        >
-                                            {content}
-                                        </a>
-                                    ) : (
-                                        <div
-                                            key={item.title}
-                                            className="rounded-2xl border border-slate-100 bg-slate-50 p-5 dark:border-[#4C4541] dark:bg-[#2F2A28]"
-                                        >
-                                            {content}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                            <h2 className="text-2xl font-semibold">Next step</h2>
-                            <p className="mt-4 leading-7 text-slate-700 dark:text-[#D5C6BC]">
-                                {data.lesson.next_step}
-                            </p>
-                        </div>
-                    </aside> */}
                 </section>
 
-                <StreamingLesson topic={data.topic} level={data.level} />
+                <StreamingLesson
+                    key={data.id ?? `${data.topic}-${data.level}`}
+                    topic={data.topic}
+                    level={data.level}
+                    initialContent={streamedLesson}
+                    onContentChange={setStreamedLesson}
+                />
             </div>
         </main>
     );

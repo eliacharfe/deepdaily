@@ -39,6 +39,7 @@ export type LessonData = {
     lesson: LessonContent;
     resources: LessonResource[];
     deepDive?: LessonDeepDiveItem[];
+    streamedLesson?: string | null;
 };
 
 export type SavedLesson = LessonData & {

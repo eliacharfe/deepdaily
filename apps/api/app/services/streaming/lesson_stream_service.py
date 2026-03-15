@@ -14,7 +14,10 @@ async def stream_lesson_text(topic: str, level: str):
     prompt = build_streaming_lesson_prompt(topic=topic, level=level)
 
     try:
-        async for chunk in stream_markdown_text(prompt=prompt):
+        async for chunk in stream_markdown_text(
+            prompt=prompt,
+            level=level,
+        ):
             yield format_sse({
                 "type": "chunk",
                 "content": chunk,

@@ -40,9 +40,14 @@ Create the first lesson for this topic.
 Requirements:
 - Write clearly for the user's level.
 - Be educational, concrete, and easy to follow.
-- Focus on the beginning of the journey, not advanced material.
+- Match the depth to the user's level.
 - Return valid JSON only.
 - Do not wrap the JSON in markdown fences.
+
+Level guidance:
+- beginner: explain core ideas simply, define terms, and use intuitive examples.
+- intermediate: assume the user knows the basics and focus on structure, practical usage, and important distinctions.
+- advanced: assume strong familiarity and focus on deeper mechanics, tradeoffs, patterns, and non-obvious insights.
 
 Use this exact JSON structure:
 {{
@@ -93,18 +98,23 @@ Additional rules:
 
 def build_streaming_lesson_prompt(topic: str, level: str) -> str:
     return f"""
-You are an expert teacher writing a beginner-friendly lesson for DeepDaily.
+You are an expert teacher writing a lesson for DeepDaily.
 
 Topic: "{topic}"
 User level: {level}
 
 Write a clear educational lesson in markdown.
 
+Level guidance:
+- beginner: explain fundamentals simply, define important terms, and use easy examples.
+- intermediate: assume basic familiarity and teach deeper structure, practical usage, and key distinctions.
+- advanced: assume strong familiarity and focus on nuance, tradeoffs, deeper mechanisms, and expert insights.
+
 Requirements:
 - Start with a strong title using markdown heading syntax.
 - Then add a short intro paragraph.
 - Then add 3 sections with markdown headings.
-- Each section should be practical and easy to understand.
+- Each section should match the user's level.
 - Include at least one concrete real-world example.
 - End with a short "Next step" section.
 - Keep the tone clear, helpful, and not overly academic.

@@ -7,12 +7,27 @@ from app.core.config import settings
 client = AsyncOpenAI(api_key=settings.openai_api_key)
 
 
+def get_model_for_level(level: str) -> str:
+    normalized = level.strip().lower()
+
+    if normalized == "beginner":
+        return "gpt-4.1-mini"
+    if normalized == "intermediate":
+        return "gpt-5-nano"
+    if normalized == "advanced":
+        return "gpt-5"
+
+    return "gpt-4.1-mini"
+
+
 async def generate_roadmap_steps(topic: str, level: str, prompt: str) -> list[str]:
     if not settings.openai_api_key:
         raise ValueError("OPENAI_API_KEY is not configured")
 
+    model = get_model_for_level(level)
+
     response = await client.responses.create(
-        model=settings.openai_model,
+        model=model,
         input=prompt,
     )
 
@@ -29,12 +44,14 @@ async def generate_roadmap_steps(topic: str, level: str, prompt: str) -> list[st
     return cleaned[:6]
 
 
-async def generate_lesson_content(prompt: str) -> dict:
+async def generate_lesson_content(prompt: str, level: str) -> dict:
     if not settings.openai_api_key:
         raise ValueError("OPENAI_API_KEY is not configured")
 
+    model = get_model_for_level(level)
+
     response = await client.responses.create(
-        model=settings.openai_model,
+        model=model,
         input=prompt,
     )
 
@@ -46,12 +63,14 @@ async def generate_lesson_content(prompt: str) -> dict:
         raise ValueError(f"Failed to parse lesson JSON: {text}") from exc
 
 
-async def stream_markdown_text(prompt: str):
+async def stream_markdown_text(prompt: str, level: str):
     if not settings.openai_api_key:
         raise ValueError("OPENAI_API_KEY is not configured")
 
+    model = get_model_for_level(level)
+
     stream = await client.responses.create(
-        model=settings.openai_model,
+        model=model,
         input=prompt,
         stream=True,
     )
