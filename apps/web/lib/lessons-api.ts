@@ -1,7 +1,7 @@
 // apps/web/lib/lessons-api.ts
 
 import { config } from "@/lib/config";
-import type { SavedLesson, LessonPreview } from "@/types/lesson";
+import type { SavedLesson, LessonPreview, LessonData } from "@/types/lesson";
 
 async function parseJson<T>(res: Response): Promise<T> {
     const contentType = res.headers.get("content-type") || "";
@@ -45,6 +45,56 @@ export async function getSavedLessonById(
             Authorization: `Bearer ${token}`,
         },
         cache: "no-store",
+    });
+
+    return parseJson<SavedLesson>(res);
+}
+
+export async function saveLesson(lesson: LessonData, token: string): Promise<SavedLesson> {
+    const payload = {
+        topic: lesson.topic,
+        level: lesson.level,
+        roadmap: lesson.roadmap,
+        lesson: lesson.lesson,
+        resources: lesson.resources,
+        deepDive: lesson.deepDive ?? [],
+        streamedLesson: lesson.streamedLesson ?? null,
+    };
+
+    const res = await fetch(`${config.apiBaseUrl}/lessons/save`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+    });
+
+    return parseJson<SavedLesson>(res);
+}
+
+export async function updateLesson(
+    lessonId: string,
+    lesson: LessonData,
+    token: string
+): Promise<SavedLesson> {
+    const payload = {
+        topic: lesson.topic,
+        level: lesson.level,
+        roadmap: lesson.roadmap,
+        lesson: lesson.lesson,
+        resources: lesson.resources,
+        deepDive: lesson.deepDive ?? [],
+        streamedLesson: lesson.streamedLesson ?? null,
+    };
+
+    const res = await fetch(`${config.apiBaseUrl}/lessons/${lessonId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
     });
 
     return parseJson<SavedLesson>(res);

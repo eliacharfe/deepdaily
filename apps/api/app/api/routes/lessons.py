@@ -95,6 +95,48 @@ async def save_lesson(
 
     return build_lesson_response(lesson)
 
+@router.put("/{lesson_id}", response_model=LessonResponse)
+async def update_lesson(
+    lesson_id: str,
+    payload: SaveLessonRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    user_id = current_user.get("uid")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid user")
+
+    stmt = (
+        select(Lesson)
+        .where(Lesson.id == lesson_id)
+        .where(Lesson.user_id == user_id)
+        .limit(1)
+    )
+    result = await db.execute(stmt)
+    lesson = result.scalar_one_or_none()
+
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+
+    topic = payload.topic.strip()
+    level = payload.level.strip()
+
+    lesson.topic = topic
+    lesson.level = level
+    lesson.title = payload.lesson.title
+    lesson.content_json = {
+        "roadmap": payload.roadmap,
+        "lesson": payload.lesson.model_dump(),
+        "resources": [resource.model_dump() for resource in payload.resources],
+        "deepDive": [item.model_dump() for item in payload.deepDive] if payload.deepDive else [],
+        "streamedLesson": payload.streamedLesson,
+    }
+
+    await db.commit()
+    await db.refresh(lesson)
+
+    return build_lesson_response(lesson)
+
 
 @router.delete("/{lesson_id}")
 async def delete_lesson(

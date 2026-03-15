@@ -50,7 +50,9 @@ export default function StreamingLesson({
     onContentChange,
 }: Props) {
     const [content, setContent] = useState(initialContent);
-    const [status, setStatus] = useState<Status>("idle");
+    const [status, setStatus] = useState<Status>(
+        initialContent ? "done" : "idle"
+    );
     const [error, setError] = useState("");
     const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
     const sectionRef = useRef<HTMLElement | null>(null);

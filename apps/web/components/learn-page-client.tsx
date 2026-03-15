@@ -229,17 +229,17 @@ export default function LearnPageClient(props: Props) {
                             </p>
                         </div>
 
-                        {/* {!savedLessonId ? ( */}
                         <SaveLessonButton
                             lesson={{
                                 ...data,
+                                id: savedLessonId ?? data.id,
                                 streamedLesson,
                             }}
                             onSaved={(id) => {
                                 setSavedLessonId(id);
+                                setData((prev) => (prev ? { ...prev, id } : prev));
                             }}
                         />
-                        {/* ) : null} */}
                     </div>
 
                     <div className="mt-6 rounded-2xl bg-slate-50 p-5 dark:bg-[#2F2A28]">
