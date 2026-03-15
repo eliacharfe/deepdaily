@@ -78,3 +78,22 @@ async def stream_markdown_text(prompt: str, level: str):
     async for event in stream:
         if event.type == "response.output_text.delta":
             yield event.delta
+
+
+async def generate_json_response(prompt: str, level: str) -> dict:
+    if not settings.openai_api_key:
+        raise ValueError("OPENAI_API_KEY is not configured")
+
+    model = get_model_for_level(level)
+
+    response = await client.responses.create(
+        model=model,
+        input=prompt,
+    )
+
+    text = response.output_text.strip()
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Failed to parse JSON response: {text}") from exc

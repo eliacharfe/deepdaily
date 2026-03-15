@@ -130,3 +130,30 @@ export async function getCurriculaByLesson(
 
     return res.json();
 }
+
+export async function generateCurriculumDay(
+    curriculumId: string,
+    dayNumber: number,
+    token: string
+): Promise<Curriculum> {
+    const res = await fetch(`${config.apiBaseUrl}/curricula/${curriculumId}/generate-day`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ dayNumber }),
+    });
+
+    const contentType = res.headers.get("content-type") || "";
+
+    if (!res.ok) {
+        if (contentType.includes("application/json")) {
+            const err = await res.json();
+            throw new Error(err.detail || "Failed to generate day");
+        }
+        throw new Error("Failed to generate day");
+    }
+
+    return res.json();
+}

@@ -23,6 +23,7 @@ class CurriculumDayResponse(BaseModel):
     sections: list[CurriculumSectionResponse]
     exercise: str | None = None
     resources: list[CurriculumDayResourceResponse]
+    isGenerated: bool
 
 
 class CreateCurriculumRequest(BaseModel):
@@ -51,4 +52,8 @@ class CompleteCurriculumDayRequest(BaseModel):
 
 
 class UpdateLastOpenedDayRequest(BaseModel):
+    dayNumber: int
+
+
+class GenerateCurriculumDayRequest(BaseModel):
     dayNumber: int

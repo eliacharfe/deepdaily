@@ -3,24 +3,49 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from typing import List
+import logging
+import time
 
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user
 from app.models.curriculum import Curriculum
 from app.models.lesson import Lesson
-from typing import List
 from app.schemas.curriculum import (
     CurriculumResponse,
     CreateCurriculumRequest,
     CompleteCurriculumDayRequest,
     UpdateLastOpenedDayRequest,
+    GenerateCurriculumDayRequest,
 )
+from app.services.curriculum_service import (
+    generate_curriculum_outline,
+    generate_curriculum_day,
+)
+
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/curricula", tags=["curricula"])
 
-
 def build_curriculum_response(curriculum: Curriculum) -> CurriculumResponse:
     content = curriculum.content_json or {}
+    raw_days = content.get("days", [])
+
+    normalized_days = []
+    for day in raw_days:
+        normalized_days.append(
+            {
+                "dayNumber": day.get("dayNumber"),
+                "title": day.get("title", ""),
+                "objective": day.get("objective", ""),
+                "summary": day.get("summary", ""),
+                "sections": day.get("sections", []),
+                "exercise": day.get("exercise", ""),
+                "resources": day.get("resources", []),
+                "isGenerated": day.get("isGenerated", True),
+            }
+        )
 
     return CurriculumResponse(
         id=curriculum.id,
@@ -33,11 +58,10 @@ def build_curriculum_response(curriculum: Curriculum) -> CurriculumResponse:
         currentDay=curriculum.current_day,
         lastOpenedDay=curriculum.last_opened_day,
         completedDays=curriculum.completed_days_json or [],
-        days=content.get("days", []),
+        days=normalized_days,
         createdAt=curriculum.created_at.isoformat(),
         updatedAt=curriculum.updated_at.isoformat(),
     )
-
 
 def build_mock_days(topic: str, duration_days: int) -> list[dict]:
     return [
@@ -58,6 +82,7 @@ def build_mock_days(topic: str, duration_days: int) -> list[dict]:
             ],
             "exercise": f"Write 3 takeaways from day {day}.",
             "resources": [],
+            "isGenerated": True,
         }
         for day in range(1, duration_days + 1)
     ]
@@ -69,6 +94,19 @@ async def create_curriculum(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+
+    logger.info(
+        "Creating curriculum request: lesson_id=%s duration=%s user=%s",
+        payload.lessonId,
+        payload.durationDays,
+        current_user["uid"],
+    )
+
+    start_time = time.perf_counter()
+
+    # -------------------------
+    # Load lesson
+    # -------------------------
     lesson_result = await db.execute(
         select(Lesson).where(
             Lesson.id == payload.lessonId,
@@ -78,11 +116,21 @@ async def create_curriculum(
     lesson = lesson_result.scalar_one_or_none()
 
     if not lesson:
+        logger.warning("Lesson not found for lesson_id=%s", payload.lessonId)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Lesson not found",
         )
 
+    logger.info(
+        "Lesson found topic=%s level=%s",
+        lesson.topic,
+        lesson.level,
+    )
+
+    # -------------------------
+    # Check if curriculum exists
+    # -------------------------
     existing_result = await db.execute(
         select(Curriculum).where(
             Curriculum.lesson_id == lesson.id,
@@ -93,30 +141,112 @@ async def create_curriculum(
     existing_curriculum = existing_result.scalar_one_or_none()
 
     if existing_curriculum:
+        logger.info(
+            "Returning existing curriculum id=%s",
+            existing_curriculum.id,
+        )
         return build_curriculum_response(existing_curriculum)
 
-    days = build_mock_days(lesson.topic, payload.durationDays)
+    # -------------------------
+    # Generate curriculum with agents
+    # -------------------------
+    logger.info(
+        "Starting curriculum generation via agents topic=%s duration=%s",
+        lesson.topic,
+        payload.durationDays,
+    )
 
+    generation_start = time.perf_counter()
+
+    try:
+        generated = await generate_curriculum_outline(
+            topic=lesson.topic,
+            level=lesson.level,
+            duration_days=payload.durationDays,
+            lesson_summary=lesson.content_json.get("lesson", {}).get("summary", ""),
+            roadmap=lesson.content_json.get("roadmap", []),
+        )
+
+        generated_days = generated.get("days", [])
+
+        if not isinstance(generated_days, list) or len(generated_days) != payload.durationDays:
+            generated_days = [
+                {
+                    "dayNumber": day,
+                    "title": f"Day {day}: {lesson.topic}",
+                    "objective": f"Understand the core ideas for day {day}.",
+                    "summary": "",
+                    "sections": [],
+                    "exercise": "",
+                    "resources": [],
+                    "isGenerated": False,
+                }
+                for day in range(1, payload.durationDays + 1)
+            ]
+
+        generated["days"] = generated_days
+    except Exception:
+        logger.exception("Curriculum generation failed")
+        raise
+
+    generation_time = time.perf_counter() - generation_start
+
+    logger.info(
+        "Curriculum generation finished in %.2fs topic=%s",
+        generation_time,
+        lesson.topic,
+    )
+
+    # -------------------------
+    # Validate generated days
+    # -------------------------
+    generated_days = generated.get("days", [])
+
+    if not isinstance(generated_days, list) or len(generated_days) != payload.durationDays:
+        logger.warning(
+            "Generated curriculum invalid days. Using mock fallback. expected=%s got=%s",
+            payload.durationDays,
+            len(generated_days) if isinstance(generated_days, list) else "invalid",
+        )
+        generated_days = build_mock_days(lesson.topic, payload.durationDays)
+
+    generated["days"] = generated_days
+
+    # -------------------------
+    # Create DB object
+    # -------------------------
     curriculum = Curriculum(
         user_id=current_user["uid"],
         lesson_id=lesson.id,
         topic=lesson.topic,
         level=lesson.level,
         duration_days=payload.durationDays,
-        title=f"{lesson.topic} {'7-Day Sprint' if payload.durationDays == 7 else '30-Day Deep Dive'}",
-        overview=(
-            f"A structured {payload.durationDays}-day curriculum for {lesson.topic}, "
-            f"designed for {lesson.level} learners."
+        title=generated.get(
+            "title",
+            f"{lesson.topic} {'7-Day Sprint' if payload.durationDays == 7 else '30-Day Deep Dive'}",
+        ),
+        overview=generated.get(
+            "overview",
+            f"A structured {payload.durationDays}-day curriculum for {lesson.topic}, designed for {lesson.level} learners.",
         ),
         current_day=1,
         last_opened_day=1,
         completed_days_json=[],
-        content_json={"days": days},
+        content_json={"days": generated["days"]},
     )
+
+    logger.info("Saving curriculum to database")
 
     db.add(curriculum)
     await db.commit()
     await db.refresh(curriculum)
+
+    logger.info(
+        "Curriculum saved successfully id=%s topic=%s total_time=%.2fs",
+        curriculum.id,
+        lesson.topic,
+        time.perf_counter() - start_time,
+    )
 
     return build_curriculum_response(curriculum)
 
@@ -127,6 +257,8 @@ async def get_curricula_for_lesson(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    logger.info("Fetching curricula for lesson_id=%s", lesson_id)
+
     result = await db.execute(
         select(Curriculum).where(
             Curriculum.lesson_id == lesson_id,
@@ -144,6 +276,9 @@ async def get_curriculum(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+
+    logger.info("Fetching curriculum id=%s", curriculum_id)
+
     result = await db.execute(
         select(Curriculum).where(
             Curriculum.id == curriculum_id,
@@ -153,6 +288,7 @@ async def get_curriculum(
     curriculum = result.scalar_one_or_none()
 
     if not curriculum:
+        logger.warning("Curriculum not found id=%s", curriculum_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Curriculum not found",
@@ -168,6 +304,13 @@ async def complete_curriculum_day(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+
+    logger.info(
+        "Completing curriculum day curriculum_id=%s day=%s",
+        curriculum_id,
+        payload.dayNumber,
+    )
+
     result = await db.execute(
         select(Curriculum).where(
             Curriculum.id == curriculum_id,
@@ -216,6 +359,13 @@ async def update_last_opened_day(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+
+    logger.info(
+        "Updating last opened day curriculum_id=%s day=%s",
+        curriculum_id,
+        payload.dayNumber,
+    )
+
     result = await db.execute(
         select(Curriculum).where(
             Curriculum.id == curriculum_id,
@@ -243,4 +393,89 @@ async def update_last_opened_day(
 
     return build_curriculum_response(curriculum)
 
+
+@router.post("/{curriculum_id}/generate-day", response_model=CurriculumResponse)
+async def generate_day_for_curriculum(
+    curriculum_id: str,
+    payload: GenerateCurriculumDayRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    logger.info(
+        "Generating on-demand day curriculum_id=%s day=%s",
+        curriculum_id,
+        payload.dayNumber,
+    )
+
+    result = await db.execute(
+        select(Curriculum).where(
+            Curriculum.id == curriculum_id,
+            Curriculum.user_id == current_user["uid"],
+        )
+    )
+    curriculum = result.scalar_one_or_none()
+
+    if not curriculum:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Curriculum not found",
+        )
+
+    if payload.dayNumber < 1 or payload.dayNumber > curriculum.duration_days:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid day number",
+        )
+
+    content = curriculum.content_json or {}
+    days = content.get("days", [])
+
+    target_day = next((day for day in days if day.get("dayNumber") == payload.dayNumber), None)
+    if not target_day:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Day not found in curriculum",
+        )
+
+    if target_day.get("isGenerated") is True:
+        logger.info(
+            "Day already generated curriculum_id=%s day=%s",
+            curriculum_id,
+            payload.dayNumber,
+        )
+        return build_curriculum_response(curriculum)
+
+    previous_generated_days = [
+        day for day in days
+        if day.get("isGenerated") is True and day.get("dayNumber", 0) < payload.dayNumber
+    ]
+
+    generated_day = await generate_curriculum_day(
+        topic=curriculum.topic,
+        level=curriculum.level,
+        duration_days=curriculum.duration_days,
+        day_outline=target_day,
+        previous_days=previous_generated_days,
+    )
+
+    updated_days = [
+        generated_day if day.get("dayNumber") == payload.dayNumber else day
+        for day in days
+    ]
+
+    curriculum.content_json = {
+        **content,
+        "days": updated_days,
+    }
+
+    await db.commit()
+    await db.refresh(curriculum)
+
+    logger.info(
+        "Generated and saved day curriculum_id=%s day=%s",
+        curriculum_id,
+        payload.dayNumber,
+    )
+
+    return build_curriculum_response(curriculum)
 

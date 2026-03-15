@@ -14,8 +14,8 @@ import {
     updateCurriculumLastOpenedDay,
 } from "@/lib/curricula-api";
 import type { Curriculum } from "@/types/curriculum";
-import { useRouter } from "next/navigation";
 import BackButton from "@/components/back-button";
+import { generateCurriculumDay } from "@/lib/curricula-api";
 
 type Props = {
     curriculumId: string;
@@ -23,7 +23,7 @@ type Props = {
 
 export default function CurriculumPageClient({ curriculumId }: Props) {
     const { user, loading: authLoading } = useAuth();
-    const router = useRouter();
+    const [isGeneratingDay, setIsGeneratingDay] = useState(false);
 
     const [curriculum, setCurriculum] = useState<Curriculum | null>(null);
     const [selectedDayNumber, setSelectedDayNumber] = useState<number>(1);
@@ -34,6 +34,12 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 
     const [isCompletingDay, setIsCompletingDay] = useState(false);
     const [isUpdatingOpenedDay, setIsUpdatingOpenedDay] = useState(false);
+
+
+    useEffect(() => {
+        if (!curriculum) return;
+        void ensureDayGenerated(selectedDayNumber);
+    }, [curriculum?.id, selectedDayNumber]);
 
     useEffect(() => {
         let cancelled = false;
@@ -55,8 +61,9 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                 const data = await getCurriculum(curriculumId, token);
 
                 if (!cancelled) {
+                    const initialDay = data.lastOpenedDay || data.currentDay || 1;
                     setCurriculum(data);
-                    setSelectedDayNumber(data.lastOpenedDay || data.currentDay || 1);
+                    setSelectedDayNumber(initialDay);
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -107,6 +114,8 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         } finally {
             setIsUpdatingOpenedDay(false);
         }
+
+        await ensureDayGenerated(dayNumber);
     }
 
     async function handleCompleteDay() {
@@ -134,9 +143,30 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         }
     }
 
+    async function ensureDayGenerated(dayNumber: number) {
+        if (!user || !curriculum || isGeneratingDay) return;
+
+        const day = curriculum.days.find((item) => item.dayNumber === dayNumber);
+        if (!day || day.isGenerated) return;
+
+        try {
+            setIsGeneratingDay(true);
+            setError("");
+
+            const token = await user.getIdToken();
+            const updated = await generateCurriculumDay(curriculum.id, dayNumber, token);
+
+            setCurriculum(updated);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to generate day");
+        } finally {
+            setIsGeneratingDay(false);
+        }
+    }
+
     if (loading) {
         return (
-            <main className="min-h-screen px-6 py-12 pt-20 text-slate-900 dark:text-[#F1E7DF]">
+            <main className="min-h-screen bg-slate-50 px-6 py-12 pt-20 text-slate-900 dark:bg-[#2D2B2B] dark:text-[#F1E7DF]">
 
                 <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
 
@@ -161,7 +191,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
     if (!user) {
         return (
             <>
-                <main className="min-h-screen px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
+                <main className="min-h-screen bg-slate-50 px-6 py-12 pt-20 text-slate-900 dark:bg-[#2D2B2B] dark:text-[#F1E7DF]">
                     <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
 
                         <HomeButton />
@@ -186,7 +216,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 
     if (error && !curriculum) {
         return (
-            <main className="min-h-screen px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
+            <main className="min-h-screen bg-slate-50 px-6 py-12 pt-20 text-slate-900 dark:bg-[#2D2B2B] dark:text-[#F1E7DF]">
                 <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
 
                     <HomeButton />
@@ -306,6 +336,8 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
                             <h2 className="text-2xl font-semibold">Days</h2>
 
+
+
                             <div className="mt-5 space-y-3">
                                 {curriculum.days.map((day) => {
                                     const isCompleted = curriculum.completedDays.includes(
@@ -315,6 +347,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                         curriculum.currentDay === day.dayNumber;
                                     const isSelected =
                                         selectedDayNumber === day.dayNumber;
+                                    const isGenerated = day.isGenerated;
 
                                     return (
                                         <button
@@ -343,6 +376,10 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                                         <span className="rounded-full border border-slate-300 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-600 dark:border-[#5A524D] dark:text-[#D5C6BC]">
                                                             Done
                                                         </span>
+                                                    ) : !isGenerated ? (
+                                                        <span className="rounded-full border border-slate-300 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-600 dark:border-[#5A524D] dark:text-[#D5C6BC]">
+                                                            Ready
+                                                        </span>
                                                     ) : isCurrent ? (
                                                         <span className="rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-white dark:bg-[#F1E7DF] dark:text-[#2D2B2B]">
                                                             Current
@@ -358,91 +395,112 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                     </aside>
 
                     <div className="space-y-8">
-                        <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                            <p className="text-sm uppercase tracking-[0.18em] text-slate-500 dark:text-[#CDBFB6]">
-                                Day {selectedDay.dayNumber}
-                            </p>
-
-                            <h2 className="mt-3 text-3xl font-semibold tracking-tight">
-                                {selectedDay.title}
-                            </h2>
-
-                            <p className="mt-4 text-sm font-medium text-slate-600 dark:text-[#CDBFB6]">
-                                Objective
-                            </p>
-                            <p className="mt-2 leading-7 text-slate-700 dark:text-[#D5C6BC]">
-                                {selectedDay.objective}
-                            </p>
-
-                            <div className="mt-6 rounded-2xl bg-slate-50 p-5 dark:bg-[#2F2A28]">
-                                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CDBFB6]">
-                                    Summary
-                                </h3>
-                                <p className="mt-2 leading-7 text-slate-700 dark:text-[#D5C6BC]">
-                                    {selectedDay.summary}
-                                </p>
-                            </div>
-                        </section>
-
-                        <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                            <h2 className="text-2xl font-semibold">Lesson sections</h2>
-
-                            <div className="mt-6 space-y-6">
-                                {selectedDay.sections.map((section) => (
-                                    <article
-                                        key={section.title}
-                                        className="rounded-2xl border border-slate-100 bg-slate-50 p-5 dark:border-[#4C4541] dark:bg-[#2F2A28]"
-                                    >
-                                        <h3 className="text-lg font-semibold">
-                                            {section.title}
-                                        </h3>
-                                        <p className="mt-2 leading-7 text-slate-700 dark:text-[#D5C6BC]">
-                                            {section.content}
-                                        </p>
-                                    </article>
-                                ))}
-                            </div>
-                        </section>
-
-                        {selectedDay.exercise ? (
+                        {!selectedDay.isGenerated || isGeneratingDay ? (
                             <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                                <h2 className="text-2xl font-semibold">Practice</h2>
-                                <div className="mt-6 rounded-2xl bg-slate-50 p-5 dark:bg-[#2F2A28]">
-                                    <p className="leading-7 text-slate-700 dark:text-[#D5C6BC]">
-                                        {selectedDay.exercise}
-                                    </p>
+                                <p className="text-sm uppercase tracking-[0.18em] text-slate-500 dark:text-[#CDBFB6]">
+                                    Day {selectedDay.dayNumber}
+                                </p>
+
+                                <h2 className="mt-3 text-3xl font-semibold tracking-tight">
+                                    Preparing this lesson...
+                                </h2>
+
+                                <p className="mt-4 leading-7 text-slate-700 dark:text-[#D5C6BC]">
+                                    DeepDaily is generating the content for this day.
+                                </p>
+
+                                <div className="mt-8 flex items-center gap-3 text-sm text-slate-600 dark:text-[#D5C6BC]">
+                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900 dark:border-[#5A524D] dark:border-t-[#F1E7DF]" />
+                                    Generating day {selectedDay.dayNumber}...
                                 </div>
                             </section>
-                        ) : null}
-
-                        <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <h2 className="text-2xl font-semibold">Actions</h2>
-                                    <p className="mt-2 text-sm text-slate-600 dark:text-[#CDBFB6]">
-                                        Mark this day complete when you finish studying it.
+                        ) : (
+                            <>
+                                <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
+                                    <p className="text-sm uppercase tracking-[0.18em] text-slate-500 dark:text-[#CDBFB6]">
+                                        Day {selectedDay.dayNumber}
                                     </p>
-                                </div>
 
-                                <button
-                                    type="button"
-                                    onClick={handleCompleteDay}
-                                    disabled={
-                                        isCompletingDay ||
-                                        curriculum.completedDays.includes(
-                                            selectedDay.dayNumber
-                                        )
-                                    }
-                                    className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#F1E7DF] dark:text-[#2D2B2B]"
-                                >
-                                    {curriculum.completedDays.includes(selectedDay.dayNumber)
-                                        ? "Completed"
-                                        : isCompletingDay
-                                            ? "Saving..."
-                                            : "Mark day complete"}
-                                </button>
-                            </div>
-                        </section>
+                                    <h2 className="mt-3 text-3xl font-semibold tracking-tight">
+                                        {selectedDay.title}
+                                    </h2>
+
+                                    <p className="mt-4 text-sm font-medium text-slate-600 dark:text-[#CDBFB6]">
+                                        Objective
+                                    </p>
+                                    <p className="mt-2 leading-7 text-slate-700 dark:text-[#D5C6BC]">
+                                        {selectedDay.objective}
+                                    </p>
+
+                                    <div className="mt-6 rounded-2xl bg-slate-50 p-5 dark:bg-[#2F2A28]">
+                                        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CDBFB6]">
+                                            Summary
+                                        </h3>
+                                        <p className="mt-2 leading-7 text-slate-700 dark:text-[#D5C6BC]">
+                                            {selectedDay.summary}
+                                        </p>
+                                    </div>
+                                </section>
+
+                                <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
+                                    <h2 className="text-2xl font-semibold">Lesson sections</h2>
+
+                                    <div className="mt-6 space-y-6">
+                                        {selectedDay.sections.map((section) => (
+                                            <article
+                                                key={section.title}
+                                                className="rounded-2xl border border-slate-100 bg-slate-50 p-5 dark:border-[#4C4541] dark:bg-[#2F2A28]"
+                                            >
+                                                <h3 className="text-lg font-semibold">
+                                                    {section.title}
+                                                </h3>
+                                                <p className="mt-2 leading-7 text-slate-700 dark:text-[#D5C6BC]">
+                                                    {section.content}
+                                                </p>
+                                            </article>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                {selectedDay.exercise ? (
+                                    <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
+                                        <h2 className="text-2xl font-semibold">Practice</h2>
+                                        <div className="mt-6 rounded-2xl bg-slate-50 p-5 dark:bg-[#2F2A28]">
+                                            <p className="leading-7 text-slate-700 dark:text-[#D5C6BC]">
+                                                {selectedDay.exercise}
+                                            </p>
+                                        </div>
+                                    </section>
+                                ) : null}
+
+                                <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
+                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                        <div>
+                                            <h2 className="text-2xl font-semibold">Actions</h2>
+                                            <p className="mt-2 text-sm text-slate-600 dark:text-[#CDBFB6]">
+                                                Mark this day complete when you finish studying it.
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={handleCompleteDay}
+                                            disabled={
+                                                isCompletingDay ||
+                                                curriculum.completedDays.includes(selectedDay.dayNumber)
+                                            }
+                                            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#F1E7DF] dark:text-[#2D2B2B]"
+                                        >
+                                            {curriculum.completedDays.includes(selectedDay.dayNumber)
+                                                ? "Completed"
+                                                : isCompletingDay
+                                                    ? "Saving..."
+                                                    : "Mark day complete"}
+                                        </button>
+                                    </div>
+                                </section>
+                            </>
+                        )}
                     </div>
                 </section>
             </div>
