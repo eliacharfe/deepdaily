@@ -1,13 +1,29 @@
-#apps/api/app/services/topic_service.py
+# apps/api/app/services/topic_service.py
+
+from collections.abc import Awaitable, Callable
 
 from app.schemas.topic_schema import TopicResponse
 from app.services.agents.resource_discovery_agent import ResourceDiscoveryAgent
 from app.services.llm.client import generate_lesson_content, generate_roadmap_steps
 from app.services.llm.prompts import build_lesson_prompt, build_roadmap_prompt
 
+ProgressCallback = Callable[[str], Awaitable[None]]
 
-async def generate_topic(topic: str, level: str) -> TopicResponse:
+
+async def generate_topic(
+    topic: str,
+    level: str,
+    on_progress: ProgressCallback | None = None,
+) -> TopicResponse:
+    async def progress(message: str):
+        if on_progress:
+            await on_progress(message)
+
+    await progress("Understanding your topic and level...")
+
     try:
+        await progress("Building your learning roadmap...")
+
         roadmap_prompt = build_roadmap_prompt(topic=topic, level=level)
         roadmap = await generate_roadmap_steps(
             topic=topic,
@@ -25,6 +41,8 @@ async def generate_topic(topic: str, level: str) -> TopicResponse:
         ]
 
     try:
+        await progress("Writing your lesson content...")
+
         lesson_prompt = build_lesson_prompt(
             topic=topic,
             level=level,
@@ -67,6 +85,8 @@ async def generate_topic(topic: str, level: str) -> TopicResponse:
     resource_agent = ResourceDiscoveryAgent()
 
     try:
+        await progress("Searching for helpful resources...")
+
         resources = await resource_agent.discover_resources(topic=topic, level=level)
     except Exception as e:
         print("RESOURCES ERROR:", e)
@@ -80,6 +100,8 @@ async def generate_topic(topic: str, level: str) -> TopicResponse:
         ]
 
     try:
+        await progress("Finding advanced deep-dive material...")
+
         deep_dive = await resource_agent.discover_deep_dive(topic=topic, level=level)
         print("DEEP DIVE RESULT:", deep_dive, type(deep_dive))
         deep_dive = deep_dive or []
@@ -88,6 +110,8 @@ async def generate_topic(topic: str, level: str) -> TopicResponse:
         deep_dive = []
 
     final_deep_dive = deep_dive or llm_deep_dive
+
+    await progress("Finalizing your lesson...")
 
     return TopicResponse(
         topic=topic,

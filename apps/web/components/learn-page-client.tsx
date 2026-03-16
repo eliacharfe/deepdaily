@@ -67,6 +67,8 @@ export default function LearnPageClient(props: Props) {
     const [curriculumMessage, setCurriculumMessage] = useState("");
     const [existingCurricula, setExistingCurricula] = useState<Curriculum[]>([]);
 
+    const [currentGenerationMessage, setCurrentGenerationMessage] = useState("");
+
     const router = useRouter();
 
     useEffect(() => {
@@ -84,6 +86,7 @@ export default function LearnPageClient(props: Props) {
             try {
                 setLoading(true);
                 setError("");
+                setCurrentGenerationMessage("");
 
                 const token = await user.getIdToken();
 
@@ -108,6 +111,7 @@ export default function LearnPageClient(props: Props) {
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
+                        Accept: "text/event-stream",
                     },
                     body: JSON.stringify({ topic, level }),
                 });
@@ -122,14 +126,68 @@ export default function LearnPageClient(props: Props) {
                     throw new Error(`Failed to generate lesson (${res.status})`);
                 }
 
-                const result = (await res.json()) as LessonData;
+                if (!res.body) {
+                    throw new Error("No response body returned from lesson generation");
+                }
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = "";
+                let finalResult: LessonData | null = null;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+
+                    const events = buffer.split("\n\n");
+                    buffer = events.pop() || "";
+
+                    for (const eventChunk of events) {
+                        const lines = eventChunk.split("\n");
+                        const dataLine = lines.find((line) => line.startsWith("data: "));
+                        if (!dataLine) continue;
+
+                        const raw = dataLine.replace(/^data:\s*/, "");
+
+                        try {
+                            const event = JSON.parse(raw) as
+                                | { type: "status"; message: string }
+                                | { type: "done"; data: LessonData }
+                                | { type: "error"; message: string };
+
+                            if (event.type === "status") {
+                                if (!cancelled) {
+                                    setCurrentGenerationMessage(event.message);
+                                }
+                                continue;
+                            }
+
+                            if (event.type === "done") {
+                                finalResult = event.data;
+                                continue;
+                            }
+
+                            if (event.type === "error") {
+                                throw new Error(event.message || "Failed to generate lesson");
+                            }
+                        } catch (parseError) {
+                            console.error("Failed to parse lesson stream event:", parseError, raw);
+                        }
+                    }
+                }
+
+                if (!finalResult) {
+                    throw new Error("Lesson generation ended without a final result");
+                }
 
                 if (!cancelled) {
-                    setData(result);
-                    setStreamedLesson(result.streamedLesson ?? "");
+                    setData(finalResult);
+                    setStreamedLesson(finalResult.streamedLesson ?? "");
 
-                    if (result.id) {
-                        const curricula = await getCurriculaByLesson(result.id, token);
+                    if (finalResult.id) {
+                        const curricula = await getCurriculaByLesson(finalResult.id, token);
                         setExistingCurricula(curricula);
                     }
                 }
@@ -217,6 +275,19 @@ export default function LearnPageClient(props: Props) {
                     <div className="mt-8 flex justify-center">
                         <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-300 border-t-slate-900 dark:border-[#5A524D] dark:border-t-[#F1E7DF]" />
                     </div>
+
+                    {!isSavedLessonMode && currentGenerationMessage ? (
+                        <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-[#4C4541] dark:bg-[#2F2A28]">
+                            <p className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CDBFB6]">
+                                Live progress
+                            </p>
+
+                            <div className="mt-3 rounded-xl bg-white px-4 py-3 text-sm text-slate-700 dark:bg-[#3A3533] dark:text-[#D5C6BC]">
+                                {currentGenerationMessage}
+                            </div>
+                        </div>
+                    ) : null}
+
                 </div>
             </main>
         );

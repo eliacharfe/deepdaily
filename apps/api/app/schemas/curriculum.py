@@ -1,6 +1,6 @@
 # apps/api/app/schemas/curriculum.py
 
-from pydantic import BaseModel
+from pydantic import BaseModel  # pyright: ignore[reportMissingImports]
 from typing import Literal
 
 

@@ -1,11 +1,14 @@
 # apps/api/app/api/routes/curriculum.py
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, status  # pyright: ignore[reportMissingImports]
+from sqlalchemy.ext.asyncio import AsyncSession  # pyright: ignore[reportMissingImports]
+from sqlalchemy import select  # pyright: ignore[reportMissingImports]
 from typing import List
 import logging
 import time
+import asyncio
+import json
+from fastapi.responses import StreamingResponse  # pyright: ignore[reportMissingImports]
 
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user
@@ -22,7 +25,6 @@ from app.services.curriculum_service import (
     generate_curriculum_outline,
     generate_curriculum_day,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -394,7 +396,7 @@ async def update_last_opened_day(
     return build_curriculum_response(curriculum)
 
 
-@router.post("/{curriculum_id}/generate-day", response_model=CurriculumResponse)
+@router.post("/{curriculum_id}/generate-day")
 async def generate_day_for_curriculum(
     curriculum_id: str,
     payload: GenerateCurriculumDayRequest,
@@ -430,7 +432,10 @@ async def generate_day_for_curriculum(
     content = curriculum.content_json or {}
     days = content.get("days", [])
 
-    target_day = next((day for day in days if day.get("dayNumber") == payload.dayNumber), None)
+    target_day = next(
+        (day for day in days if day.get("dayNumber") == payload.dayNumber),
+        None,
+    )
     if not target_day:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -446,36 +451,96 @@ async def generate_day_for_curriculum(
         return build_curriculum_response(curriculum)
 
     previous_generated_days = [
-        day for day in days
+        day
+        for day in days
         if day.get("isGenerated") is True and day.get("dayNumber", 0) < payload.dayNumber
     ]
 
-    generated_day = await generate_curriculum_day(
-        topic=curriculum.topic,
-        level=curriculum.level,
-        duration_days=curriculum.duration_days,
-        day_outline=target_day,
-        previous_days=previous_generated_days,
+    async def event_stream():
+        queue: asyncio.Queue[str | None] = asyncio.Queue()
+
+        async def on_progress(message: str):
+            await queue.put(
+                json.dumps(
+                    {
+                        "type": "status",
+                        "message": message,
+                    }
+                )
+            )
+
+        async def run_generation():
+            try:
+                generated_day = await generate_curriculum_day(
+                    topic=curriculum.topic,
+                    level=curriculum.level,
+                    duration_days=curriculum.duration_days,
+                    day_outline=target_day,
+                    previous_days=previous_generated_days,
+                    on_progress=on_progress,
+                )
+
+                updated_days = [
+                    generated_day if day.get("dayNumber") == payload.dayNumber else day
+                    for day in days
+                ]
+
+                curriculum.content_json = {
+                    **content,
+                    "days": updated_days,
+                }
+
+                await db.commit()
+                await db.refresh(curriculum)
+
+                logger.info(
+                    "Generated and saved day curriculum_id=%s day=%s",
+                    curriculum_id,
+                    payload.dayNumber,
+                )
+
+                await queue.put(
+                    json.dumps(
+                        {
+                            "type": "done",
+                            "data": build_curriculum_response(curriculum).model_dump(),
+                        }
+                    )
+                )
+            except Exception as e:
+                logger.exception(
+                    "Failed generating curriculum day curriculum_id=%s day=%s",
+                    curriculum_id,
+                    payload.dayNumber,
+                )
+                await queue.put(
+                    json.dumps(
+                        {
+                            "type": "error",
+                            "message": str(e),
+                        }
+                    )
+                )
+            finally:
+                await queue.put(None)
+
+        task = asyncio.create_task(run_generation())
+
+        try:
+            while True:
+                item = await queue.get()
+                if item is None:
+                    break
+                yield f"data: {item}\n\n"
+        finally:
+            task.cancel()
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )
-
-    updated_days = [
-        generated_day if day.get("dayNumber") == payload.dayNumber else day
-        for day in days
-    ]
-
-    curriculum.content_json = {
-        **content,
-        "days": updated_days,
-    }
-
-    await db.commit()
-    await db.refresh(curriculum)
-
-    logger.info(
-        "Generated and saved day curriculum_id=%s day=%s",
-        curriculum_id,
-        payload.dayNumber,
-    )
-
-    return build_curriculum_response(curriculum)
-

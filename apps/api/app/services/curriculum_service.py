@@ -4,10 +4,13 @@
 import json
 import logging
 from typing import Any
+from collections.abc import Awaitable, Callable
 
 from app.services.llm.client import generate_json_response
 
 logger = logging.getLogger(__name__)
+
+ProgressCallback = Callable[[str], Awaitable[None]]
 
 
 def _planner_prompt(
@@ -237,13 +240,22 @@ async def generate_curriculum_day(
     duration_days: int,
     day_outline: dict[str, Any],
     previous_days: list[dict[str, Any]],
+    on_progress: ProgressCallback | None = None,
 ) -> dict[str, Any]:
+    async def progress(message: str):
+        if on_progress:
+            await on_progress(message)
+
     logger.info(
         "Generating curriculum day %s/%s for topic=%s",
         day_outline.get("dayNumber"),
         duration_days,
         topic,
     )
+
+    await progress("Understanding this study day...")
+    await progress("Reviewing previous generated days...")
+    await progress("Writing the lesson content...")
 
     try:
         result = await generate_json_response(
@@ -262,12 +274,15 @@ async def generate_curriculum_day(
             day_outline.get("dayNumber"),
             topic,
         )
+        await progress("Using a fallback lesson structure...")
         return build_mock_generated_day(
             topic=topic,
             day_number=day_outline["dayNumber"],
             title=day_outline["title"],
             objective=day_outline["objective"],
         )
+
+    await progress("Checking the lesson structure...")
 
     sections = result.get("sections", [])
     if not isinstance(sections, list) or len(sections) == 0:
@@ -276,12 +291,15 @@ async def generate_curriculum_day(
             day_outline.get("dayNumber"),
             topic,
         )
+        await progress("Rebuilding this day with a fallback structure...")
         return build_mock_generated_day(
             topic=topic,
             day_number=day_outline["dayNumber"],
             title=day_outline["title"],
             objective=day_outline["objective"],
         )
+
+    await progress("Finalizing this study day...")
 
     return {
         "dayNumber": result.get("dayNumber", day_outline["dayNumber"]),

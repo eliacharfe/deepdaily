@@ -1,7 +1,7 @@
 #apps/api/app/services/llm/client.py
 
 import json
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI  # pyright: ignore[reportMissingImports]
 from app.core.config import settings
 
 client = AsyncOpenAI(api_key=settings.openai_api_key)

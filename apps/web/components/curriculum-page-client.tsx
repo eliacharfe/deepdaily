@@ -15,7 +15,8 @@ import {
 } from "@/lib/curricula-api";
 import type { Curriculum } from "@/types/curriculum";
 import BackButton from "@/components/back-button";
-import { generateCurriculumDay } from "@/lib/curricula-api";
+// import { generateCurriculumDay } from "@/lib/curricula-api";
+import { generateCurriculumDayWithProgress } from "@/lib/curricula-api";
 
 type Props = {
     curriculumId: string;
@@ -35,6 +36,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
     const [isCompletingDay, setIsCompletingDay] = useState(false);
     const [isUpdatingOpenedDay, setIsUpdatingOpenedDay] = useState(false);
 
+    const [currentDayGenerationMessage, setCurrentDayGenerationMessage] = useState("");
 
     useEffect(() => {
         if (!curriculum) return;
@@ -152,17 +154,30 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         try {
             setIsGeneratingDay(true);
             setError("");
+            setCurrentDayGenerationMessage("");
 
             const token = await user.getIdToken();
-            const updated = await generateCurriculumDay(curriculum.id, dayNumber, token);
+
+            const updated = await generateCurriculumDayWithProgress(
+                curriculum.id,
+                dayNumber,
+                token,
+                {
+                    onStatus: (message) => {
+                        setCurrentDayGenerationMessage(message);
+                    },
+                }
+            );
 
             setCurriculum(updated);
+            setCurrentDayGenerationMessage("");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to generate day");
         } finally {
             setIsGeneratingDay(false);
         }
     }
+
 
     if (loading) {
         return (
@@ -409,10 +424,17 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                     DeepDaily is generating the content for this day.
                                 </p>
 
-                                <div className="mt-8 flex items-center gap-3 text-sm text-slate-600 dark:text-[#D5C6BC]">
-                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900 dark:border-[#5A524D] dark:border-t-[#F1E7DF]" />
-                                    Generating day {selectedDay.dayNumber}...
+                                <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-[#4C4541] dark:bg-[#2F2A28]">
+                                    <p className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CDBFB6]">
+                                        Live progress
+                                    </p>
+
+                                    <div className="mt-3 flex items-center gap-3 rounded-xl bg-white px-4 py-3 text-sm text-slate-700 dark:bg-[#3A3533] dark:text-[#D5C6BC]">
+                                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900 dark:border-[#5A524D] dark:border-t-[#F1E7DF]" />
+                                        <span>{currentDayGenerationMessage || `Generating day ${selectedDay.dayNumber}...`}</span>
+                                    </div>
                                 </div>
+
                             </section>
                         ) : (
                             <>

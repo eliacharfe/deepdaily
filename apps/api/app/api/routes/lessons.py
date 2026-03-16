@@ -1,8 +1,11 @@
 #apps/api/app/api/routes/lessons.py
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, status  # pyright: ignore[reportMissingImports]
+from fastapi.responses import StreamingResponse  # pyright: ignore[reportMissingImports]
+from sqlalchemy.ext.asyncio import AsyncSession  # pyright: ignore[reportMissingImports]
+from sqlalchemy import select  # pyright: ignore[reportMissingImports]
+import asyncio
+import json
 
 from app.db.session import get_db
 from app.schemas.lesson import (
@@ -33,7 +36,8 @@ def build_lesson_response(lesson: Lesson) -> LessonResponse:
         streamedLesson=content.get("streamedLesson"),
     )
 
-@router.post("/generate", response_model=GeneratedLessonResponse)
+
+@router.post("/generate")
 async def generate_lesson(
     payload: GenerateLessonRequest,
     current_user=Depends(get_current_user),
@@ -45,22 +49,82 @@ async def generate_lesson(
     topic = payload.topic.strip()
     level = payload.level.strip()
 
-    generated = await generate_topic(topic=topic, level=level)
+    async def event_stream():
+        queue: asyncio.Queue[str | None] = asyncio.Queue()
 
-    return GeneratedLessonResponse(
-        topic=topic,
-        level=level,
-        roadmap=generated.roadmap,
-        lesson=generated.lesson.model_dump(),
-        resources=[
-            resource.model_dump() if hasattr(resource, "model_dump") else resource
-            for resource in generated.resources
-        ],
-        deepDive=[
-            item.model_dump() if hasattr(item, "model_dump") else item
-            for item in (generated.deepDive or [])
-        ],
-        streamedLesson=None,
+        async def on_progress(message: str):
+            await queue.put(
+                json.dumps(
+                    {
+                        "type": "status",
+                        "message": message,
+                    }
+                )
+            )
+
+        async def run_generation():
+            try:
+                generated = await generate_topic(
+                    topic=topic,
+                    level=level,
+                    on_progress=on_progress,
+                )
+
+                response = GeneratedLessonResponse(
+                    topic=topic,
+                    level=level,
+                    roadmap=generated.roadmap,
+                    lesson=generated.lesson.model_dump(),
+                    resources=[
+                        resource.model_dump() if hasattr(resource, "model_dump") else resource
+                        for resource in generated.resources
+                    ],
+                    deepDive=[
+                        item.model_dump() if hasattr(item, "model_dump") else item
+                        for item in (generated.deepDive or [])
+                    ],
+                    streamedLesson=None,
+                )
+
+                await queue.put(
+                    json.dumps(
+                        {
+                            "type": "done",
+                            "data": response.model_dump(),
+                        }
+                    )
+                )
+            except Exception as e:
+                await queue.put(
+                    json.dumps(
+                        {
+                            "type": "error",
+                            "message": str(e),
+                        }
+                    )
+                )
+            finally:
+                await queue.put(None)
+
+        task = asyncio.create_task(run_generation())
+
+        try:
+            while True:
+                item = await queue.get()
+                if item is None:
+                    break
+                yield f"data: {item}\n\n"
+        finally:
+            task.cancel()
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 @router.post("/save", response_model=LessonResponse)
