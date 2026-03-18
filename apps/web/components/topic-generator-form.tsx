@@ -62,15 +62,16 @@ export default function TopicGeneratorForm() {
 
     return (
         <>
+            <div className="absolute inset-0 -z-10 rounded-[36px] bg-(--accent-soft) blur-3xl opacity-40" />
             <form
                 onSubmit={handleSubmit}
-                className="mt-10 w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition-colors dark:border-[#4C4541] dark:bg-[#3A3533]"
+                className="mt-10 w-full max-w-2xl rounded-[28px] border p-4 shadow-[0_10px_40px_rgba(15,23,42,0.06)] dd-surface"
             >
                 <div className="flex flex-col gap-4">
                     <div>
                         <label
                             htmlFor="topic"
-                            className="mb-2 block text-sm font-medium text-slate-700 dark:text-[#D5C6BC]"
+                            className="mb-2 block text-sm font-medium text-(--text-soft)"
                         >
                             What do you want to learn?
                         </label>
@@ -81,14 +82,15 @@ export default function TopicGeneratorForm() {
                             value={topic}
                             onChange={(e) => setTopic(e.target.value)}
                             placeholder="e.g. RAG systems, investing, Swift concurrency"
-                            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-500 dark:border-[#5A524D] dark:bg-[#2F2A28] dark:text-[#F1E7DF] dark:placeholder-[#A89B92] dark:focus:border-[#8A7F78]"
+                            className="dd-focus w-full rounded-2xl border bg-(--surface) px-4 py-3 text-(--text) placeholder:text-slate-400 transition"
+                            style={{ borderColor: "var(--border)" }}
                         />
                     </div>
 
                     <div>
                         <label
                             htmlFor="level"
-                            className="mb-2 block text-sm font-medium text-slate-700 dark:text-[#D5C6BC]"
+                            className="mb-2 block text-sm font-medium text-(--text-soft)"
                         >
                             Level
                         </label>
@@ -97,7 +99,8 @@ export default function TopicGeneratorForm() {
                             id="level"
                             value={level}
                             onChange={(e) => setLevel(e.target.value as TopicLevel)}
-                            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-500 dark:border-[#5A524D] dark:bg-[#2F2A28] dark:text-[#F1E7DF] dark:focus:border-[#8A7F78]"
+                            className="dd-focus w-full rounded-2xl border bg-(--surface) px-4 py-3 text-(--text) transition"
+                            style={{ borderColor: "var(--border)" }}
                         >
                             <option value="beginner">Beginner</option>
                             <option value="intermediate">Intermediate</option>
@@ -108,7 +111,11 @@ export default function TopicGeneratorForm() {
                     <button
                         type="submit"
                         disabled={isSubmitting || loading || !topic.trim()}
-                        className="rounded-2xl bg-slate-900 px-6 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#F1E7DF] dark:text-[#2D2B2B]"
+                        className="rounded-2xl px-6 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
+                        style={{
+                            background: "var(--accent)",
+                            color: "white",
+                        }}
                     >
                         {loading ? "Checking session..." : isSubmitting ? "Preparing..." : "Generate lesson"}
                     </button>

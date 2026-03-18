@@ -5,7 +5,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { Trash2, BookOpen, ChevronRight } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getSavedLessons, deleteLesson } from "@/lib/lessons-api";
 import type { LessonPreview } from "@/types/lesson";
@@ -84,19 +84,34 @@ export default function SavedLessonsSidebar() {
     }
 
     return (
-        <aside className="hidden w-[320px] shrink-0 border-r border-slate-200 bg-white/70 backdrop-blur dark:border-[#4C4541] dark:bg-[#332F2D] lg:block">
-            <div className="sticky top-0 h-screen overflow-y-auto px-4 py-6">
-                <div className="mb-6">
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-[#FFF7F1]">
-                        Saved lessons
-                    </h2>
-                    <p className="mt-1 text-sm text-slate-600 dark:text-[#CDBFB6]">
-                        Revisit and continue learning.
-                    </p>
+        <aside className="hidden w-[380px] shrink-0 border-r border-slate-200 bg-slate-50/80 backdrop-blur dark:border-slate-800 dark:bg-[#0F1720]/90 lg:block">
+            <div className="sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto px-4 py-6">
+                <div className="mb-5 px-1">
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 dark:bg-teal-950/30 dark:text-teal-300">
+                            <BookOpen className="h-5 w-5" />
+                        </div>
+
+                        <div className="min-w-0">
+                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-700 dark:text-teal-300">
+                                Library
+                            </p>
+
+                            <h2 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">
+                                Saved lessons
+                            </h2>
+
+                            <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                Revisit and continue learning.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 border-b border-slate-200 dark:border-slate-700" />
                 </div>
 
                 {!user ? (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-[#4C4541] dark:bg-[#3A3533] dark:text-[#CDBFB6]">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
                         Sign in to save lessons and see them here.
                     </div>
                 ) : isLoading ? (
@@ -104,16 +119,16 @@ export default function SavedLessonsSidebar() {
                         {Array.from({ length: 6 }).map((_, i) => (
                             <div
                                 key={i}
-                                className="h-20 animate-pulse rounded-2xl bg-slate-100 dark:bg-[#423C39]"
+                                className="h-24 animate-pulse rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
                             />
                         ))}
                     </div>
                 ) : error ? (
-                    <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
+                    <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-sm dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
                         {error}
                     </div>
                 ) : lessons.length === 0 ? (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-[#4C4541] dark:bg-[#3A3533] dark:text-[#CDBFB6]">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
                         No saved lessons yet.
                     </div>
                 ) : (
@@ -126,24 +141,56 @@ export default function SavedLessonsSidebar() {
                             return (
                                 <div
                                     key={lesson.id}
-                                    className={`rounded-2xl border p-4 transition ${isActive
-                                        ? "border-slate-900 bg-slate-100 dark:border-[#F1E7DF] dark:bg-[#3D3735]"
-                                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-[#4C4541] dark:bg-[#3A3533] dark:hover:bg-[#413B39]"
-                                        }`}
+                                    className={[
+                                        "group rounded-2xl border p-4 shadow-sm transition",
+                                        isActive
+                                            ? "border-teal-200 bg-teal-50/70 dark:border-teal-500/30 dark:bg-teal-950/20"
+                                            : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-teal-500/20 dark:hover:bg-slate-900",
+                                    ].join(" ")}
                                 >
-                                    <Link href={href} className="block">
-                                        <p className="line-clamp-1 text-xs font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-[#B9AAA0]">
-                                            {lesson.level}
-                                        </p>
+                                    <div className="flex items-start gap-3">
+                                        <Link href={href} className="min-w-0 flex-1">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <p
+                                                            className={[
+                                                                "rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]",
+                                                                isActive
+                                                                    ? "border-teal-200 bg-white text-teal-700 dark:border-teal-400/30 dark:bg-teal-950/20 dark:text-teal-300"
+                                                                    : "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
+                                                            ].join(" ")}
+                                                        >
+                                                            {lesson.level}
+                                                        </p>
 
-                                        <h3 className="mt-2 line-clamp-2 text-sm font-semibold text-slate-900 dark:text-[#FFF7F1]">
-                                            {lesson.title}
-                                        </h3>
+                                                        {isActive ? (
+                                                            <span className="rounded-full bg-teal-600 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white dark:bg-teal-400 dark:text-slate-900">
+                                                                Open
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
 
-                                        <p className="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-[#CDBFB6]">
-                                            {lesson.topic}
-                                        </p>
-                                    </Link>
+                                                    <h3 className="mt-3 line-clamp-2 text-sm font-semibold text-slate-900 dark:text-white">
+                                                        {lesson.title}
+                                                    </h3>
+
+                                                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                                        {lesson.topic}
+                                                    </p>
+                                                </div>
+
+                                                <ChevronRight
+                                                    className={[
+                                                        "mt-0.5 h-4 w-4 shrink-0 transition",
+                                                        isActive
+                                                            ? "text-teal-600 dark:text-teal-300"
+                                                            : "text-slate-400 group-hover:translate-x-0.5 group-hover:text-teal-600 dark:text-slate-500 dark:group-hover:text-teal-300",
+                                                    ].join(" ")}
+                                                />
+                                            </div>
+                                        </Link>
+                                    </div>
 
                                     <div className="mt-4 flex justify-end">
                                         <button
@@ -151,7 +198,7 @@ export default function SavedLessonsSidebar() {
                                             onClick={(e) => handleDeleteLesson(e, lesson.id)}
                                             disabled={isDeleting}
                                             aria-label={`Delete ${lesson.title}`}
-                                            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#4C4541] dark:text-[#CDBFB6] dark:hover:border-red-900/40 dark:hover:bg-red-950/20 dark:hover:text-red-300"
+                                            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:border-red-900/40 dark:hover:bg-red-950/20 dark:hover:text-red-300"
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </button>

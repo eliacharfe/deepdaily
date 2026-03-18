@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import StreamingLesson from "@/components/streaming-lesson";
-import AuthButton from "@/components/auth/auth-button";
+// import AuthButton from "@/components/auth/auth-button";
 import SaveLessonButton from "@/components/save-lesson-button";
 import LoginRequiredModal from "@/components/auth/login-required-modal";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -12,12 +12,13 @@ import { config } from "@/lib/config";
 import { getSavedLessonById, saveLesson } from "@/lib/lessons-api";
 import type { TopicLevel } from "@/types/topic";
 import type { LessonData, SavedLesson } from "@/types/lesson";
-import HomeButton from "@/components/home-button";
+// import HomeButton from "@/components/home-button";
 import CurriculumCtaCard from "@/components/curriculum-cta-card";
 import { useRouter } from "next/navigation";
 import { createCurriculum, getCurriculaByLesson } from "@/lib/curricula-api";
 import ResumeCurriculumCard from "@/components/resume-curriculum-card";
 import type { Curriculum } from "@/types/curriculum";
+import PageShell from "@/components/page-shell";
 
 type Props =
     | {
@@ -173,7 +174,11 @@ export default function LearnPageClient(props: Props) {
                                 throw new Error(event.message || "Failed to generate lesson");
                             }
                         } catch (parseError) {
-                            console.error("Failed to parse lesson stream event:", parseError, raw);
+                            console.error(
+                                "Failed to parse lesson stream event:",
+                                parseError,
+                                raw
+                            );
                         }
                     }
                 }
@@ -256,59 +261,62 @@ export default function LearnPageClient(props: Props) {
 
     if (loading) {
         return (
-            <main className="min-h-screen pt-20 px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
-                <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
-                    <HomeButton />
-                    <AuthButton />
-                </div>
+            <PageShell className="px-6 py-12 pt-20 dark:bg-[#1F2428] dark:text-[#ECFDF5]">
 
-                <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                    <h1 className="text-2xl font-semibold">
-                        {isSavedLessonMode ? "Loading saved lesson..." : "Generating your lesson..."}
+                <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
+                        DeepDaily
+                    </p>
+
+                    <h1 className="mt-3 text-2xl font-semibold">
+                        {isSavedLessonMode
+                            ? "Loading saved lesson..."
+                            : "Generating your lesson..."}
                     </h1>
-                    <p className="mt-3 text-slate-600 dark:text-[#CDBFB6]">
+
+                    <p className="mt-3 text-slate-600 dark:text-slate-300">
                         {isSavedLessonMode
                             ? "Please wait while DeepDaily loads your saved lesson."
                             : "Please wait while DeepDaily prepares your learning path."}
                     </p>
 
                     <div className="mt-8 flex justify-center">
-                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-300 border-t-slate-900 dark:border-[#5A524D] dark:border-t-[#F1E7DF]" />
+                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-300 border-t-teal-600 dark:border-slate-700 dark:border-t-teal-300" />
                     </div>
 
                     {!isSavedLessonMode && currentGenerationMessage ? (
-                        <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-[#4C4541] dark:bg-[#2F2A28]">
-                            <p className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CDBFB6]">
+                        <div className="mt-8 rounded-2xl border border-teal-100 bg-teal-50/70 p-4 dark:border-teal-900/30 dark:bg-teal-950/10">
+                            <p className="text-sm font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">
                                 Live progress
                             </p>
 
-                            <div className="mt-3 rounded-xl bg-white px-4 py-3 text-sm text-slate-700 dark:bg-[#3A3533] dark:text-[#D5C6BC]">
-                                {currentGenerationMessage}
+                            <div className="mt-3 flex items-center gap-3 rounded-xl border border-white/60 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-teal-600 dark:border-slate-700 dark:border-t-teal-300" />
+                                <span>{currentGenerationMessage}</span>
                             </div>
                         </div>
                     ) : null}
-
                 </div>
-            </main>
+            </PageShell>
         );
     }
 
     if (!user) {
         return (
             <>
-                <main className="min-h-screen px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
-                    <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
-                        <HomeButton />
-                        <AuthButton />
-                    </div>
+                <PageShell className="px-6 py-12 pt-20 dark:bg-[#1F2428] dark:text-[#ECFDF5]">
 
-                    <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                        <h1 className="text-2xl font-semibold">Sign in required</h1>
-                        <p className="mt-3 text-slate-600 dark:text-[#CDBFB6]">
+                    <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
+                            DeepDaily
+                        </p>
+
+                        <h1 className="mt-3 text-2xl font-semibold">Sign in required</h1>
+                        <p className="mt-3 text-slate-600 dark:text-slate-300">
                             Please sign in to generate and view lessons.
                         </p>
                     </div>
-                </main>
+                </PageShell>
 
                 <LoginRequiredModal
                     open={showLoginModal}
@@ -320,83 +328,82 @@ export default function LearnPageClient(props: Props) {
 
     if (error || !data) {
         return (
-            <main className="min-h-screen px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
-                <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
-                    <HomeButton />
-                    <AuthButton />
-                </div>
+            <PageShell className="px-6 py-12 pt-20 dark:bg-[#1F2428] dark:text-[#ECFDF5]">
 
-                <div className="mx-auto max-w-3xl rounded-3xl border border-red-200 bg-white p-8 shadow-sm dark:border-red-900/40 dark:bg-[#3A3533]">
+                <div className="mx-auto max-w-3xl rounded-3xl border border-red-200 bg-white p-8 shadow-sm dark:border-red-900/40 dark:bg-[#111827]">
                     <h1 className="text-2xl font-semibold">
-                        {isSavedLessonMode ? "Could not load saved lesson" : "Could not generate lesson"}
+                        {isSavedLessonMode
+                            ? "Could not load saved lesson"
+                            : "Could not generate lesson"}
                     </h1>
                     <p className="mt-3 text-red-600 dark:text-red-400">
                         {error || "Unknown error"}
                     </p>
                 </div>
-            </main>
+            </PageShell>
         );
     }
 
     return (
-        <main className="min-h-screen pt-20 px-6 py-12 text-slate-900 dark:text-[#F1E7DF]">
-            <div className="fixed right-20 top-5 z-40 flex items-center gap-3">
-                <HomeButton />
-                <AuthButton />
-            </div>
+        <PageShell className="px-6 py-12 pt-20 dark:bg-[#1F2428] dark:text-[#ECFDF5]">
+            <div className="mx-auto max-w-6xl space-y-8">
+                <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                    <div className="border-b border-teal-100 bg-linear-to-r from-teal-50 via-white to-cyan-50 p-8 dark:border-teal-900/30 dark:from-teal-950/30 dark:via-[#111827] dark:to-cyan-950/20">
+                        <div className="flex items-start justify-between gap-6">
+                            <div>
+                                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
+                                    DeepDaily lesson
+                                </p>
 
-            <div className="mx-auto max-w-5xl space-y-8">
-                <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                    <div className="flex items-start justify-between gap-6">
-                        <div>
-                            <p className="text-sm uppercase tracking-[0.18em] text-slate-500 dark:text-[#CDBFB6]">
-                                DeepDaily lesson
-                            </p>
+                                <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
+                                    {data.lesson.title}
+                                </h1>
 
-                            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-                                {data.lesson.title}
-                            </h1>
+                                <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+                                    Topic:{" "}
+                                    <span className="font-medium text-slate-800 dark:text-slate-100">
+                                        {data.topic}
+                                    </span>
+                                    {" · "}
+                                    Level:{" "}
+                                    <span className="font-medium capitalize text-slate-800 dark:text-slate-100">
+                                        {data.level}
+                                    </span>
+                                </p>
+                            </div>
 
-                            <p className="mt-4 text-sm text-slate-500 dark:text-[#CDBFB6]">
-                                Topic:{" "}
-                                <span className="font-medium text-slate-800 dark:text-[#F1E7DF]">
-                                    {data.topic}
-                                </span>
-                                {" · "}
-                                Level:{" "}
-                                <span className="font-medium capitalize text-slate-800 dark:text-[#F1E7DF]">
-                                    {data.level}
-                                </span>
+                            <SaveLessonButton
+                                lesson={{
+                                    ...data,
+                                    id: savedLessonId ?? data.id,
+                                    streamedLesson,
+                                }}
+                                onSaved={(id) => {
+                                    setSavedLessonId(id);
+                                    setData((prev) => (prev ? { ...prev, id } : prev));
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="p-8">
+                        <div className="rounded-2xl border border-teal-100 bg-teal-50/60 p-5 dark:border-teal-900/30 dark:bg-teal-950/10">
+                            <h2 className="text-sm font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">
+                                Today&apos;s focus
+                            </h2>
+                            <p className="mt-2 text-base text-slate-900 dark:text-slate-100">
+                                {data.lesson.today_focus}
                             </p>
                         </div>
 
-                        <SaveLessonButton
-                            lesson={{
-                                ...data,
-                                id: savedLessonId ?? data.id,
-                                streamedLesson,
-                            }}
-                            onSaved={(id) => {
-                                setSavedLessonId(id);
-                                setData((prev) => (prev ? { ...prev, id } : prev));
-                            }}
-                        />
-                    </div>
-
-                    <div className="mt-6 rounded-2xl bg-slate-50 p-5 dark:bg-[#2F2A28]">
-                        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CDBFB6]">
-                            Today&apos;s focus
-                        </h2>
-                        <p className="mt-2 text-base text-slate-700 dark:text-[#F1E7DF]">
-                            {data.lesson.today_focus}
-                        </p>
-                    </div>
-
-                    <div className="mt-6">
-                        <h2 className="text-xl font-semibold">Summary</h2>
-                        <p className="mt-3 leading-7 text-slate-700 dark:text-[#D5C6BC]">
-                            {data.lesson.summary}
-                        </p>
+                        <div className="mt-6">
+                            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                                Summary
+                            </h2>
+                            <p className="mt-3 leading-7 text-slate-700 dark:text-slate-300">
+                                {data.lesson.summary}
+                            </p>
+                        </div>
                     </div>
                 </section>
 
@@ -406,17 +413,21 @@ export default function LearnPageClient(props: Props) {
 
                 <section className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
                     <div className="space-y-8">
-                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                            <h2 className="text-2xl font-semibold">Lesson sections</h2>
+                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+                                Lesson sections
+                            </h2>
 
                             <div className="mt-6 space-y-6">
                                 {data.lesson.sections.map((section) => (
                                     <article
                                         key={section.title}
-                                        className="rounded-2xl border border-slate-100 bg-slate-50 p-5 dark:border-[#4C4541] dark:bg-[#2F2A28]"
+                                        className="rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:border-teal-200 hover:bg-teal-50/40 dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-500/30 dark:hover:bg-teal-950/10"
                                     >
-                                        <h3 className="text-lg font-semibold">{section.title}</h3>
-                                        <p className="mt-2 leading-7 text-slate-700 dark:text-[#D5C6BC]">
+                                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                                            {section.title}
+                                        </h3>
+                                        <p className="mt-2 leading-7 text-slate-700 dark:text-slate-300">
                                             {section.content}
                                         </p>
                                     </article>
@@ -424,8 +435,10 @@ export default function LearnPageClient(props: Props) {
                             </div>
                         </div>
 
-                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                            <h2 className="text-2xl font-semibold">Resources</h2>
+                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+                                Resources
+                            </h2>
 
                             <div className="mt-6 space-y-4">
                                 {data.resources.map((resource) => (
@@ -434,28 +447,35 @@ export default function LearnPageClient(props: Props) {
                                         href={resource.url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="block rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:border-slate-300 dark:border-[#4C4541] dark:bg-[#2F2A28] dark:hover:border-[#6A615B]"
+                                        className="block rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-500/30 dark:hover:bg-slate-900"
                                     >
                                         <div className="flex items-center justify-between gap-4">
-                                            <h3 className="text-lg font-semibold text-slate-900 dark:text-[#F1E7DF]">
+                                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                                                 {resource.title}
                                             </h3>
-                                            <span className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-600 dark:border-[#5A524D] dark:text-[#D5C6BC]">
+                                            <span
+                                                className="rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+                                                style={{
+                                                    borderColor: "var(--accent-border)",
+                                                    background: "var(--accent-soft)",
+                                                    color: "var(--accent)",
+                                                }}
+                                            >
                                                 {resource.type}
                                             </span>
                                         </div>
 
-                                        <p className="mt-2 text-slate-600 dark:text-[#D5C6BC]">
+                                        <p className="mt-2 text-slate-600 dark:text-slate-300">
                                             {resource.reason}
                                         </p>
 
                                         {resource.snippet ? (
-                                            <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500 dark:text-[#B8AAA1]">
+                                            <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
                                                 {resource.snippet}
                                             </p>
                                         ) : null}
 
-                                        <p className="mt-3 text-sm text-slate-500 dark:text-[#A89B92]">
+                                        <p className="mt-3 break-all text-sm text-slate-500 dark:text-slate-400">
                                             {resource.url}
                                         </p>
                                     </a>
@@ -465,19 +485,27 @@ export default function LearnPageClient(props: Props) {
                     </div>
 
                     <aside className="space-y-8 pr-1 lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)] lg:overflow-y-auto">
-                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                            <h2 className="text-2xl font-semibold">Roadmap</h2>
+                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+                                Roadmap
+                            </h2>
 
                             <ol className="mt-6 space-y-3">
                                 {data.roadmap.map((item, index) => (
                                     <li
                                         key={`${index}-${item}`}
-                                        className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-[#2F2A28]"
+                                        className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60"
                                     >
-                                        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-medium text-white dark:bg-[#F1E7DF] dark:text-[#2D2B2B]">
+                                        <span
+                                            className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
+                                            style={{
+                                                background: "var(--accent)",
+                                                color: "white",
+                                            }}
+                                        >
                                             {index + 1}
                                         </span>
-                                        <span className="leading-6 text-slate-700 dark:text-[#D5C6BC]">
+                                        <span className="leading-6 text-slate-700 dark:text-slate-300">
                                             {item}
                                         </span>
                                     </li>
@@ -493,9 +521,11 @@ export default function LearnPageClient(props: Props) {
                             onCreateCurriculum={handleCreateCurriculum}
                         />
 
-                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                            <h2 className="text-2xl font-semibold">Deep dive</h2>
-                            <p className="mt-2 text-sm text-slate-600 dark:text-[#CDBFB6]">
+                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+                                Deep dive
+                            </h2>
+                            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                                 Books and advanced material to continue beyond today’s lesson.
                             </p>
 
@@ -504,30 +534,30 @@ export default function LearnPageClient(props: Props) {
                                     const content = (
                                         <>
                                             <div className="flex items-center justify-between gap-4">
-                                                <h3 className="text-lg font-semibold text-slate-900 dark:text-[#F1E7DF]">
+                                                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                                                     {item.title}
                                                 </h3>
-                                                <span className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-600 dark:border-[#5A524D] dark:text-[#D5C6BC]">
+                                                <span className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:text-slate-300">
                                                     {item.type}
                                                 </span>
                                             </div>
 
-                                            <p className="mt-2 text-slate-600 dark:text-[#D5C6BC]">
+                                            <p className="mt-2 text-slate-600 dark:text-slate-300">
                                                 {item.reason}
                                             </p>
 
                                             {item.snippet ? (
-                                                <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500 dark:text-[#B8AAA1]">
+                                                <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
                                                     {item.snippet}
                                                 </p>
                                             ) : null}
 
                                             {item.url ? (
-                                                <p className="mt-3 text-sm text-slate-500 dark:text-[#A89B92]">
+                                                <p className="mt-3 break-all text-sm text-slate-500 dark:text-slate-400">
                                                     {item.url}
                                                 </p>
                                             ) : (
-                                                <p className="mt-3 text-sm italic text-slate-500 dark:text-[#A89B92]">
+                                                <p className="mt-3 text-sm italic text-slate-500 dark:text-slate-400">
                                                     No external link available
                                                 </p>
                                             )}
@@ -540,14 +570,14 @@ export default function LearnPageClient(props: Props) {
                                             href={item.url}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="block rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:border-slate-300 dark:border-[#4C4541] dark:bg-[#2F2A28] dark:hover:border-[#6A615B]"
+                                            className="block rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-500/30 dark:hover:bg-slate-900"
                                         >
                                             {content}
                                         </a>
                                     ) : (
                                         <div
                                             key={item.title}
-                                            className="rounded-2xl border border-slate-100 bg-slate-50 p-5 dark:border-[#4C4541] dark:bg-[#2F2A28]"
+                                            className="rounded-2xl border border-slate-100 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-900/60"
                                         >
                                             {content}
                                         </div>
@@ -556,9 +586,11 @@ export default function LearnPageClient(props: Props) {
                             </div>
                         </div>
 
-                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
-                            <h2 className="text-2xl font-semibold">Next step</h2>
-                            <p className="mt-4 leading-7 text-slate-700 dark:text-[#D5C6BC]">
+                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+                                Next step
+                            </h2>
+                            <p className="mt-4 leading-7 text-slate-700 dark:text-slate-300">
                                 {data.lesson.next_step}
                             </p>
                         </div>
@@ -580,6 +612,6 @@ export default function LearnPageClient(props: Props) {
                     onCreateCurriculum={handleCreateCurriculum}
                 />
             </div>
-        </main>
+        </PageShell>
     );
 }

@@ -4,9 +4,41 @@
 @import "prismjs/themes/prism-tomorrow.css";
 @custom-variant dark (&:where(.dark, .dark *));
 
-:root {
+/* :root {
   --background: #ffffff;
   --foreground: #171717;
+} */
+
+:root {
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-soft: #f3f6f8;
+  --border: #d8e1e7;
+  --text: #0f172a;
+  --text-soft: #475569;
+
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --accent-soft: #ccfbf1;
+  --accent-border: #99f6e4;
+
+  --ring: rgba(15, 118, 110, 0.22);
+}
+
+.dark {
+  --bg: #1f1f23;
+  --surface: #2a2d31;
+  --surface-soft: #23262a;
+  --border: #3b4148;
+  --text: #f4f7f8;
+  --text-soft: #b7c1c8;
+
+  --accent: #2dd4bf;
+  --accent-hover: #5eead4;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --accent-border: rgba(45, 212, 191, 0.35);
+
+  --ring: rgba(45, 212, 191, 0.24);
 }
 
 @theme inline {
@@ -32,4 +64,39 @@ body {
 html,
 body {
   overscroll-behavior-y: none;
+}
+
+.dd-surface {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.dd-surface-soft {
+  background: var(--surface-soft);
+  border-color: var(--border);
+}
+
+.dd-accent-text {
+  color: var(--accent);
+}
+
+.dd-accent-bg {
+  background: var(--accent);
+  color: white;
+}
+
+.dark .dd-accent-bg {
+  color: #0f172a;
+}
+
+.dd-accent-soft {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.dd-focus:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--ring);
 }

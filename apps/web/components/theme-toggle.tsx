@@ -1,8 +1,9 @@
-//apps/web/components/theme-toggle.tsx
+// apps/web/components/theme-toggle.tsx
 
 "use client";
 
 import { useEffect, useState } from "react";
+import IconButton from "@/components/ui/icon-button";
 
 type Theme = "light" | "dark";
 
@@ -46,15 +47,11 @@ export default function ThemeToggle() {
     if (!mounted) return null;
 
     return (
-        <button
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="fixed top-5 right-5 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white/80 shadow-sm backdrop-blur transition hover:bg-slate-100 dark:border-[#4C4541] dark:bg-[#3A3533]/80 dark:hover:bg-[#4A4441]"
-        >
+        <IconButton onClick={toggleTheme} ariaLabel="Toggle theme">
             {theme === "dark" ? (
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-[#F1E7DF]"
+                    className="h-5 w-5 text-white"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -75,6 +72,6 @@ export default function ThemeToggle() {
                     <path d="M21 12.79A9 9 0 0111.21 3c0 .34-.02.67-.05 1A7 7 0 1019 13.84c.33-.03.66-.05 1-.05z" />
                 </svg>
             )}
-        </button>
+        </IconButton>
     );
 }
