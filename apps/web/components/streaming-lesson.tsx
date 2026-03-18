@@ -169,7 +169,18 @@ export default function StreamingLesson({
                     type="button"
                     onClick={handleGenerate}
                     disabled={status === "loading"}
-                    className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-slate-900"
+                    className="
+        inline-flex items-center justify-center
+        rounded-full
+        bg-teal-600
+        px-5 py-3
+        text-sm font-semibold text-white
+        transition
+        hover:bg-teal-700
+        active:scale-[0.98]
+        disabled:cursor-not-allowed disabled:opacity-60
+        dark:bg-teal-400 dark:text-slate-900 dark:hover:bg-teal-300
+    "
                 >
                     {status === "loading"
                         ? "Generating..."

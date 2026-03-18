@@ -48,9 +48,26 @@ export default function SaveLessonButton({ lesson, onSaved }: Props) {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60 dark:bg-[#F1E7DF] dark:text-[#2D2B2B]"
+            className="
+                inline-flex items-center justify-center
+                rounded-full
+                bg-teal-600
+                px-5 py-3
+                text-sm font-semibold text-white
+                transition
+                hover:bg-teal-700
+                active:scale-[0.98]
+                disabled:cursor-not-allowed disabled:opacity-60
+                dark:bg-teal-400 dark:text-slate-900 dark:hover:bg-teal-300
+            "
         >
-            {saving ? (isUpdate ? "Updating..." : "Saving...") : isUpdate ? "Update lesson" : "Save lesson"}
+            {saving
+                ? isUpdate
+                    ? "Updating..."
+                    : "Saving..."
+                : isUpdate
+                    ? "Update lesson"
+                    : "Save lesson"}
         </button>
     );
 }
