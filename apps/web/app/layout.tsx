@@ -9,6 +9,11 @@ import { Toaster } from "sonner";
 export const metadata: Metadata = {
   title: "DeepDaily",
   description: "Learn any topic deeply, one day at a time.",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
