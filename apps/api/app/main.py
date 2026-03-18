@@ -47,6 +47,8 @@ app.include_router(streaming_router)
 app.include_router(lessons_router)
 app.include_router(curriculum_router)
 
+print("DB URL:", settings.database_url)
+
 
 @app.get("/")
 async def root():
