@@ -17,6 +17,7 @@ import type { Curriculum } from "@/types/curriculum";
 import BackButton from "@/components/back-button";
 // import { generateCurriculumDay } from "@/lib/curricula-api";
 import { generateCurriculumDayWithProgress } from "@/lib/curricula-api";
+import MarkdownContent from "@/components/markdown-content";
 
 type Props = {
     curriculumId: string;
@@ -106,7 +107,10 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                 token
             );
 
-            setCurriculum(updated);
+            console.log("updated.currentDay", updated.currentDay);
+            console.log("updated.completedDays", updated.completedDays);
+
+            setCurriculum((prev) => mergeCurriculumState(prev, updated));
         } catch (err) {
             setError(
                 err instanceof Error
@@ -116,9 +120,39 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         } finally {
             setIsUpdatingOpenedDay(false);
         }
-
-        await ensureDayGenerated(dayNumber);
     }
+
+    // async function handleSelectDay(dayNumber: number) {
+    //     if (!user || !curriculum || isUpdatingOpenedDay) return;
+
+    //     setSelectedDayNumber(dayNumber);
+
+    //     try {
+    //         setIsUpdatingOpenedDay(true);
+
+    //         const token = await user.getIdToken();
+    //         const updated = await updateCurriculumLastOpenedDay(
+    //             curriculum.id,
+    //             dayNumber,
+    //             token
+    //         );
+
+    //         console.log("updated.currentDay", updated.currentDay);
+    //         console.log("updated.completedDays", updated.completedDays);
+
+    //         setCurriculum((prev) => mergeCurriculumState(prev, updated));
+    //     } catch (err) {
+    //         setError(
+    //             err instanceof Error
+    //                 ? err.message
+    //                 : "Failed to update selected day"
+    //         );
+    //     } finally {
+    //         setIsUpdatingOpenedDay(false);
+    //     }
+
+    //     await ensureDayGenerated(dayNumber);
+    // }
 
     async function handleCompleteDay() {
         if (!user || !curriculum || !selectedDay || isCompletingDay) return;
@@ -134,7 +168,19 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                 token
             );
 
-            setCurriculum(updated);
+            console.log("updated.currentDay", updated.currentDay);
+            console.log("updated.completedDays", updated.completedDays);
+
+            console.log("before merge curriculum.completedDays", curriculum.completedDays);
+
+            setCurriculum((prev) => {
+                const merged = mergeCurriculumState(prev, updated);
+                console.log("prev.completedDays", prev?.completedDays);
+                console.log("merged.completedDays", merged.completedDays);
+                return merged;
+            });
+
+            console.log("after merge curriculum.completedDays", curriculum.completedDays);
             setSelectedDayNumber(updated.currentDay);
         } catch (err) {
             setError(
@@ -169,13 +215,37 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                 }
             );
 
-            setCurriculum(updated);
+            console.log("updated.currentDay", updated.currentDay);
+            console.log("updated.completedDays", updated.completedDays);
+
+            setCurriculum((prev) => mergeCurriculumState(prev, updated));
             setCurrentDayGenerationMessage("");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to generate day");
         } finally {
             setIsGeneratingDay(false);
         }
+    }
+
+
+    function mergeCurriculumState(
+        prev: Curriculum | null,
+        next: Curriculum
+    ): Curriculum {
+        if (!prev) return next;
+
+        const mergedCompletedDays = Array.from(
+            new Set([...(prev.completedDays ?? []), ...(next.completedDays ?? [])])
+        ).sort((a, b) => a - b);
+
+        return {
+            ...prev,
+            ...next,
+            completedDays: mergedCompletedDays,
+            currentDay: Math.max(prev.currentDay ?? 1, next.currentDay ?? 1),
+            lastOpenedDay: next.lastOpenedDay ?? prev.lastOpenedDay,
+            days: next.days,
+        };
     }
 
 
@@ -458,9 +528,12 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CDBFB6]">
                                             Summary
                                         </h3>
-                                        <p className="mt-2 leading-7 text-slate-700 dark:text-[#D5C6BC]">
-                                            {selectedDay.summary}
-                                        </p>
+                                        <div className="mt-2">
+                                            <MarkdownContent
+                                                content={selectedDay.summary}
+                                                className="text-slate-700 dark:text-[#D5C6BC]"
+                                            />
+                                        </div>
                                     </div>
                                 </section>
 
@@ -476,21 +549,69 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                                 <h3 className="text-lg font-semibold">
                                                     {section.title}
                                                 </h3>
-                                                <p className="mt-2 leading-7 text-slate-700 dark:text-[#D5C6BC]">
-                                                    {section.content}
-                                                </p>
+                                                <div className="mt-2">
+                                                    <MarkdownContent
+                                                        content={section.content}
+                                                        className="text-slate-700 dark:text-[#D5C6BC]"
+                                                    />
+                                                </div>
                                             </article>
                                         ))}
                                     </div>
                                 </section>
 
+                                {selectedDay.resources?.length ? (
+                                    <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
+                                        <h2 className="text-2xl font-semibold">Resources</h2>
+
+                                        <div className="mt-6 space-y-4">
+                                            {selectedDay.resources.map((resource) => (
+                                                <a
+                                                    key={`${resource.title}-${resource.url}`}
+                                                    href={resource.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="block rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:border-slate-300 dark:border-[#4C4541] dark:bg-[#2F2A28] dark:hover:border-[#6A615B]"
+                                                >
+                                                    <div className="flex items-center justify-between gap-4">
+                                                        <h3 className="text-lg font-semibold text-slate-900 dark:text-[#F1E7DF]">
+                                                            {resource.title}
+                                                        </h3>
+
+                                                        <span className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-600 dark:border-[#5A524D] dark:text-[#D5C6BC]">
+                                                            {resource.type}
+                                                        </span>
+                                                    </div>
+
+                                                    {resource.reason ? (
+                                                        <p className="mt-2 text-slate-600 dark:text-[#D5C6BC]">
+                                                            {resource.reason}
+                                                        </p>
+                                                    ) : null}
+
+                                                    {resource.snippet ? (
+                                                        <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-[#B8AAA1]">
+                                                            {resource.snippet}
+                                                        </p>
+                                                    ) : null}
+
+                                                    <p className="mt-3 text-sm text-slate-500 dark:text-[#A89B92]">
+                                                        {resource.url}
+                                                    </p>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </section>
+                                ) : null}
+
                                 {selectedDay.exercise ? (
                                     <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#4C4541] dark:bg-[#3A3533]">
                                         <h2 className="text-2xl font-semibold">Practice</h2>
                                         <div className="mt-6 rounded-2xl bg-slate-50 p-5 dark:bg-[#2F2A28]">
-                                            <p className="leading-7 text-slate-700 dark:text-[#D5C6BC]">
-                                                {selectedDay.exercise}
-                                            </p>
+                                            <MarkdownContent
+                                                content={selectedDay.exercise}
+                                                className="text-slate-700 dark:text-[#D5C6BC]"
+                                            />
                                         </div>
                                     </section>
                                 ) : null}

@@ -1,8 +1,17 @@
 #apps/api/app/services/agents/resource_discovery_agent.py
 
+from typing import Any
+from urllib.parse import urlparse
+
 from app.schemas.topic_schema import LessonResource, LessonDeepDiveItem
 from app.services.search.web_search_client import WebSearchClient
-from urllib.parse import urlparse
+
+TRUSTED_VIDEO_DOMAINS = (
+    "youtube.com",
+    "www.youtube.com",
+    "youtu.be",
+    "m.youtube.com",
+)
 
 
 class ResourceDiscoveryAgent:
@@ -28,6 +37,21 @@ class ResourceDiscoveryAgent:
             "reddit.com": -3,
             "quora.com": -3,
         }
+
+    async def search(self, query: str, max_results: int = 5) -> list[dict[str, Any]]:
+        results = await self.search_client.search(query=query, max_results=max_results)
+
+        normalized: list[dict[str, Any]] = []
+        for result in results:
+            normalized.append(
+                {
+                    "title": getattr(result, "title", "") or "",
+                    "url": getattr(result, "url", "") or "",
+                    "snippet": getattr(result, "snippet", "") or "",
+                    "source": getattr(result, "source", "") or "",
+                }
+            )
+        return normalized
 
     def build_queries(self, topic: str, level: str) -> list[str]:
         return [
@@ -179,7 +203,6 @@ class ResourceDiscoveryAgent:
 
         return balanced[:4]
 
-
     def build_deep_dive_queries(self, topic: str, level: str) -> list[str]:
         return [
             f"best books for {topic} beginners",
@@ -290,3 +313,67 @@ class ResourceDiscoveryAgent:
                 break
 
         return balanced[:3]
+
+    async def discover_day_resources(
+        self,
+        *,
+        topic: str,
+        level: str,
+        day_title: str,
+        day_objective: str,
+        day_summary: str,
+        sections: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        query = f"{topic} {day_title} {day_objective} {level} tutorial OR lecture OR guide"
+
+        results = await self.search(query=query, max_results=8)
+
+        resources: list[dict[str, Any]] = []
+        seen_urls: set[str] = set()
+        added_video = False
+
+        for item in results:
+            url = (item.get("url") or "").strip()
+            title = (item.get("title") or "").strip()
+            snippet = (item.get("snippet") or "").strip()
+
+            if not url or not title or url in seen_urls:
+                continue
+
+            if not self.is_good_result(title, url):
+                continue
+
+            lower_url = url.lower()
+
+            if any(domain in lower_url for domain in TRUSTED_VIDEO_DOMAINS):
+                if added_video:
+                    continue
+
+                resources.append(
+                    {
+                        "title": title,
+                        "url": url,
+                        "type": "video",
+                        "reason": f"Relevant video for {day_title}",
+                        "snippet": snippet,
+                    }
+                )
+                seen_urls.add(url)
+                added_video = True
+                continue
+
+            resources.append(
+                {
+                    "title": title,
+                    "url": url,
+                    "type": self.infer_resource_type(url, title),
+                    "reason": f"Helpful supporting resource for {day_title}",
+                    "snippet": snippet,
+                }
+            )
+            seen_urls.add(url)
+
+            if len(resources) >= 3:
+                break
+
+        return resources

@@ -306,7 +306,6 @@ async def complete_curriculum_day(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-
     logger.info(
         "Completing curriculum day curriculum_id=%s day=%s",
         curriculum_id,
@@ -333,13 +332,12 @@ async def complete_curriculum_day(
             detail="Invalid day number",
         )
 
-    completed_days = curriculum.completed_days_json or []
+    existing_completed_days = list(curriculum.completed_days_json or [])
 
-    if payload.dayNumber not in completed_days:
-        completed_days.append(payload.dayNumber)
-        completed_days.sort()
+    if payload.dayNumber not in existing_completed_days:
+        existing_completed_days.append(payload.dayNumber)
 
-    curriculum.completed_days_json = completed_days
+    curriculum.completed_days_json = sorted(existing_completed_days)
 
     if payload.dayNumber >= curriculum.current_day and payload.dayNumber < curriculum.duration_days:
         curriculum.current_day = payload.dayNumber + 1
@@ -350,6 +348,13 @@ async def complete_curriculum_day(
 
     await db.commit()
     await db.refresh(curriculum)
+
+    logger.info(
+        "After complete-day curriculum_id=%s completed_days=%s current_day=%s",
+        curriculum_id,
+        curriculum.completed_days_json,
+        curriculum.current_day,
+    )
 
     return build_curriculum_response(curriculum)
 
