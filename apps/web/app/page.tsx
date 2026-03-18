@@ -3,6 +3,7 @@
 import TopicGeneratorForm from "@/components/topic-generator-form";
 import { getHealth } from "@/lib/api";
 import PageShell from "@/components/page-shell";
+import AppFooter from "@/components/app-footer";
 
 export default async function HomePage() {
   let apiStatus = "unreachable";
@@ -16,7 +17,7 @@ export default async function HomePage() {
 
   return (
     <PageShell showHome={false}>
-      <section className="mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center px-6 py-16 text-center">
+      <section className="mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center px-6 pt-4 pb-16 text-center sm:min-h-[calc(100vh-6rem)]">
         <p className="dd-accent-text mb-3 text-sm font-semibold uppercase tracking-[0.24em]">
           DeepDaily
         </p>
@@ -31,7 +32,12 @@ export default async function HomePage() {
         </p>
 
         <TopicGeneratorForm />
+
+        <div className="pt-4">
+          <AppFooter />
+        </div>
       </section>
+
     </PageShell>
   );
 }
