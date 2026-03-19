@@ -2,6 +2,8 @@
 
 > Learn anything deeply — one day at a time.
 
+🌐 **Live App:** https://deepdaily.net/
+
 DeepDaily is an AI-powered learning platform that generates structured, day-by-day learning experiences for any topic. It is powered by a system of custom-built AI agents developed from scratch, combining LLM-driven lesson generation, intelligent resource discovery, and personalized curricula into a seamless learning journey.
 
 ---
@@ -17,10 +19,18 @@ DeepDaily is an AI-powered learning platform that generates structured, day-by-d
   - Progressive difficulty and topic breakdown
   - Resume where you left off
 
+- 🎯 **Level-Adaptive Learning**
+  - Choose your level: Beginner / Intermediate / Advanced
+  - Content dynamically adapts in depth and complexity
+
 - 🔍 **Smart Resource Discovery**
   - Automatically curated learning resources per day
   - Domain scoring system (docs > tutorials > noise)
   - High-quality links (React docs, Python docs, etc.)
+
+- 🌐 **Real Web Search Integration**
+  - Uses live web search to enrich learning content
+  - Avoids hallucinated or outdated resources
 
 - 💾 **Save & Update Lessons**
   - Save generated lessons to your account
@@ -37,12 +47,14 @@ DeepDaily is an AI-powered learning platform that generates structured, day-by-d
 - 🎯 **Modern UI**
   - Built with TailwindCSS
   - Dark mode support
-  - Responsive design (mobile-first)
+  - Fully responsive (mobile-first)
 
+---
 
 ## 🤖 Agent Architecture
 
-DeepDaily is powered by a system of **custom-built AI agents developed from scratch**, each responsible for a specific part of the learning pipeline.  
+DeepDaily is powered by a system of **custom-built AI agents developed from scratch**, each responsible for a specific part of the learning pipeline. :contentReference[oaicite:0]{index=0}  
+
 These agents collaborate to transform a user-defined topic into a structured, level-adapted, multi-day learning experience.
 
 ---
@@ -57,9 +69,6 @@ Designs the overall learning journey based on the **topic and user level**.
 - Defines daily learning objectives
 - Ensures logical progression and concept coverage
 
-**Output:**
-- A personalized learning roadmap tailored to topic + level
-
 ---
 
 ### 📘 Lesson Generation Agent
@@ -72,9 +81,6 @@ Generates the core learning content for each day.
 - Adds examples, analogies, and practical context
 - Builds deep-dive sections for advanced understanding
 
-**Output:**
-- Full lesson content (streamed in real-time)
-
 ---
 
 ### 🔍 Resource Discovery Agent
@@ -84,12 +90,8 @@ Enriches lessons with high-quality external knowledge using **real web search**.
 **Responsibilities:**
 - Performs web search to find relevant learning materials
 - Scores sources using a custom domain-ranking system  
-  (e.g., official docs > trusted platforms > low-quality sites)
-- Filters out noisy or low-value sources (e.g., forums, spam)
+- Filters out noisy or low-value sources
 - Selects the most relevant resources based on topic and difficulty level
-
-**Output:**
-- Curated list of high-quality, context-aware resources
 
 ---
 
@@ -99,14 +101,11 @@ Assembles each individual learning day into a cohesive experience.
 
 **Responsibilities:**
 - Combines:
-  - Learning objectives (Planner)
-  - Lesson content (Lesson Agent)
-  - Resources (Resource Agent)
+  - Learning objectives
+  - Lesson content
+  - Resources
 - Ensures consistency across all days
 - Aligns content with topic scope and user level
-
-**Output:**
-- A complete, structured “Day” in the curriculum
 
 ---
 
@@ -118,37 +117,33 @@ Ensures quality, clarity, and coherence across all generated content.
 - Reviews outputs for clarity and completeness
 - Detects gaps, inconsistencies, or redundancy
 - Refines content when needed
-- Ensures alignment with topic and difficulty level
-
-**Output:**
-- Validated and improved lesson content
 
 ---
 
-## 🔄 How It All Works Together
+## 🔄 How It Works
 
 1. User inputs a **topic** and selects a **difficulty level**  
-2. Planner Agent creates a level-adapted multi-day roadmap  
+2. Planner Agent generates a structured multi-day roadmap  
 3. For each day:
-   - Lesson Agent generates the lesson (adapted to level)  
-   - Resource Discovery Agent performs web search and curates resources  
-   - Daily Agent assembles the final structured day  
-4. Evaluation Agent reviews and refines the output  
-5. Content is streamed to the frontend in real-time  
+   - Lesson Agent generates content (streamed)
+   - Resource Agent fetches real-world resources
+   - Daily Agent assembles the final lesson
+4. Evaluation Agent refines the output  
+5. Content is delivered in real-time to the user  
 
 ---
 
-## 💡 Why This Matters
+## 🚀 Why DeepDaily is Different
 
-Unlike simple prompt-based systems, DeepDaily uses a **modular multi-agent architecture**, enabling:
+Unlike typical AI tools that generate one-off answers, DeepDaily:
 
-- Level-adaptive learning (beginner → advanced)  
-- Real web-based knowledge integration  
-- Higher-quality and more structured outputs  
-- Clear separation of responsibilities  
-- Scalable and extensible system design  
+- 🧠 Builds **structured learning journeys**, not just responses  
+- 🔄 Uses a **multi-agent system**, not a single prompt  
+- 🌐 Integrates **real web knowledge**, not just model memory  
+- 🎯 Adapts to **user level dynamically**  
+- 📅 Encourages **daily consistency → long-term mastery**
 
-> DeepDaily is not just generating content — it is orchestrating a full, adaptive learning system.
+> This is closer to an AI-powered “learning system” than a chatbot.
 
 ---
 
@@ -159,7 +154,7 @@ Unlike simple prompt-based systems, DeepDaily uses a **modular multi-agent archi
 - React 19
 - TypeScript
 - TailwindCSS
-- Sonner (toasts)
+- Sonner
 
 ### Backend
 - FastAPI
@@ -171,13 +166,21 @@ Unlike simple prompt-based systems, DeepDaily uses a **modular multi-agent archi
 ### AI Layer
 - Multi-LLM support (OpenAI, etc.)
 - Structured JSON outputs
-- Streaming responses
+- Streaming responses (SSE)
 
 ### Infrastructure
 - Vercel (Frontend)
 - Render (Backend)
 - Firebase Auth
-- Docker (optional)
+- Docker
+
+---
+
+## 🌍 Deployment
+
+- **Frontend:** Vercel  
+- **Backend:** Render  
+- **Live URL:** https://deepdaily.net/  
 
 ---
 
@@ -202,97 +205,41 @@ Unlike simple prompt-based systems, DeepDaily uses a **modular multi-agent archi
     │       │   ├── models/
     │       │   └── schemas/
     │       └── main.py
-    │
-    └── README.md
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Clone the repo
-
-    [git clone https://github.com/your-username/deepdaily.git](https://github.com/eliacharfe/deepdaily.git)
-    cd deepdaily
-
----
-
-### 2. Backend Setup (FastAPI)
+### Backend
 
     cd apps/api
-
     python -m venv .venv
     source .venv/bin/activate
-
     pip install -r requirements.txt
-
-Run the server:
-
     python -m uvicorn app.main:app --reload
-
-API will be available at:
-
-    http://127.0.0.1:8000
 
 ---
 
-### 3. Frontend Setup (Next.js)
+### Frontend
 
     cd apps/web
-
     npm install
     npm run dev
-
-App will run at:
-
-    http://localhost:3000
 
 ---
 
 ## 🔑 Environment Variables
 
-### Backend (`apps/api/.env`)
+### Backend
 
     OPENAI_API_KEY=your_key
     DATABASE_URL=your_db_url
 
----
-
-### Frontend (`apps/web/.env.local`)
+### Frontend
 
     NEXT_PUBLIC_API_URL=http://localhost:8000
     NEXT_PUBLIC_FIREBASE_API_KEY=...
     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
-
----
-
-## 🧠 Core Concepts
-
-### 1. Lesson Generation
-
-- User inputs a topic
-- Backend generates:
-  - Summary
-  - Structured lesson
-  - Deep dive sections
-- Streamed to frontend in real-time
-
----
-
-### 2. Curriculum System
-
-- Converts a topic into a multi-day roadmap
-- Each day includes:
-  - Learning objectives
-  - Lesson content
-  - Resources
-
----
-
-### 3. Resource Discovery Agent
-
-- Searches the web for relevant content
-- Scores domains based on quality
-- Filters low-value sources (Reddit, Quora, etc.)
 
 ---
 
@@ -314,12 +261,12 @@ App will run at:
 
 ## 💡 Future Improvements
 
-- [ ] Spaced repetition system
-- [ ] Daily push notifications
-- [ ] Mobile app (Flutter)
-- [ ] Social / shared learning
-- [ ] Offline mode
-- [ ] Advanced personalization (AI tutor memory)
+- [ ] Spaced repetition system  
+- [ ] Daily push notifications  
+- [ ] Mobile app (Flutter)  
+- [ ] Social learning  
+- [ ] Offline mode  
+- [ ] AI tutor memory  
 
 ---
 
@@ -337,8 +284,6 @@ Eliachar Feig
 
 Pull requests are welcome!
 
-If you have ideas for improvements, feel free to open an issue.
-
 ---
 
 ## 📄 License
@@ -348,7 +293,5 @@ MIT License
 ---
 
 ## ❤️ Philosophy
-
-DeepDaily is built on one core belief:
 
 > Consistent, structured daily learning compounds into mastery.
