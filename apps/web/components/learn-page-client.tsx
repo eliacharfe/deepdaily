@@ -106,7 +106,7 @@ function ResourceCard({
 
     return (
         <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:p-5 transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-500/30 dark:hover:bg-slate-900">
-            {isYouTube && youtubeThumbnail ? (
+            {/* {isYouTube && youtubeThumbnail ? (
                 <div className="mb-4 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
                     <img
                         src={youtubeThumbnail}
@@ -114,7 +114,7 @@ function ResourceCard({
                         className="aspect-video w-full object-cover"
                     />
                 </div>
-            ) : null}
+            ) : null} */}
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white leading-tight">
