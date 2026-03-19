@@ -405,20 +405,60 @@ export default function LearnPageClient(props: Props) {
 
     if (loading) {
         return (
+            <PageShell className="px-6 py-12 pt-20 dark:bg-[#1F2428] dark:text-[#ECFDF5]">
+
+                <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
+                        DeepDaily
+                    </p>
+
+                    <h1 className="mt-3 text-2xl font-semibold">
+                        {isSavedLessonMode
+                            ? "Loading saved lesson..."
+                            : "Generating your lesson..."}
+                    </h1>
+
+                    <p className="mt-3 text-slate-600 dark:text-slate-300">
+                        {isSavedLessonMode
+                            ? "Please wait while DeepDaily loads your saved lesson."
+                            : "Please wait while DeepDaily prepares your learning path."}
+                    </p>
+
+                    <div className="mt-8 flex justify-center">
+                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-300 border-t-teal-600 dark:border-slate-700 dark:border-t-teal-300" />
+                    </div>
+
+                    {!isSavedLessonMode && currentGenerationMessage ? (
+                        <div className="mt-8 rounded-2xl border border-teal-100 bg-teal-50/70 p-4 dark:border-teal-900/30 dark:bg-teal-950/10">
+                            <p className="text-sm font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">
+                                Live progress
+                            </p>
+
+                            <div className="mt-3 flex items-center gap-3 rounded-xl border border-white/60 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-teal-600 dark:border-slate-700 dark:border-t-teal-300" />
+                                <span>{currentGenerationMessage}</span>
+                            </div>
+                        </div>
+                    ) : null}
+                </div>
+            </PageShell>
+        );
+    }
+
+    if (!user) {
+        return (
             <>
                 <PageShell className="px-6 py-12 pt-20 dark:bg-[#1F2428] dark:text-[#ECFDF5]">
-                    <div className="mx-auto max-w-3xl">
-                        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
-                            <p className="text-sm font-medium uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
-                                DeepDaily lesson
-                            </p>
-                            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-                                Preparing your lesson...
-                            </h1>
-                            <p className="mt-4 text-slate-600 dark:text-slate-300">
-                                {currentGenerationMessage || "Loading your content..."}
-                            </p>
-                        </div>
+
+                    <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
+                            DeepDaily
+                        </p>
+
+                        <h1 className="mt-3 text-2xl font-semibold">Sign in required</h1>
+                        <p className="mt-3 text-slate-600 dark:text-slate-300">
+                            Please sign in to generate and view lessons.
+                        </p>
                     </div>
                 </PageShell>
 
@@ -432,25 +472,19 @@ export default function LearnPageClient(props: Props) {
 
     if (error || !data) {
         return (
-            <>
-                <PageShell className="px-6 py-12 pt-20 dark:bg-[#1F2428] dark:text-[#ECFDF5]">
-                    <div className="mx-auto max-w-3xl">
-                        <div className="rounded-3xl border border-red-200 bg-white p-8 shadow-sm dark:border-red-900/40 dark:bg-[#111827]">
-                            <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
-                                Couldn&apos;t load lesson
-                            </h1>
-                            <p className="mt-3 text-slate-600 dark:text-slate-300">
-                                {error || "Something went wrong."}
-                            </p>
-                        </div>
-                    </div>
-                </PageShell>
+            <PageShell className="px-6 py-12 pt-20 dark:bg-[#1F2428] dark:text-[#ECFDF5]">
 
-                <LoginRequiredModal
-                    open={showLoginModal}
-                    onClose={() => setShowLoginModal(false)}
-                />
-            </>
+                <div className="mx-auto max-w-3xl rounded-3xl border border-red-200 bg-white p-8 shadow-sm dark:border-red-900/40 dark:bg-[#111827]">
+                    <h1 className="text-2xl font-semibold">
+                        {isSavedLessonMode
+                            ? "Could not load saved lesson"
+                            : "Could not generate lesson"}
+                    </h1>
+                    <p className="mt-3 text-red-600 dark:text-red-400">
+                        {error || "Unknown error"}
+                    </p>
+                </div>
+            </PageShell>
         );
     }
 
