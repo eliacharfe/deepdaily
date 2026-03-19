@@ -19,6 +19,7 @@ import { createCurriculum, getCurriculaByLesson } from "@/lib/curricula-api";
 import ResumeCurriculumCard from "@/components/resume-curriculum-card";
 import type { Curriculum } from "@/types/curriculum";
 import PageShell from "@/components/page-shell";
+import MarkdownContent from "@/components/markdown-content";
 
 type Props =
     | {
@@ -400,9 +401,12 @@ export default function LearnPageClient(props: Props) {
                             <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                                 Summary
                             </h2>
-                            <p className="mt-3 leading-7 text-slate-700 dark:text-slate-300">
-                                {data.lesson.summary}
-                            </p>
+                            <div className="mt-3">
+                                <MarkdownContent
+                                    content={data.lesson.summary}
+                                    className="text-slate-700 dark:text-slate-300"
+                                />
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -427,9 +431,12 @@ export default function LearnPageClient(props: Props) {
                                         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                                             {section.title}
                                         </h3>
-                                        <p className="mt-2 leading-7 text-slate-700 dark:text-slate-300">
-                                            {section.content}
-                                        </p>
+                                        <div className="mt-2">
+                                            <MarkdownContent
+                                                content={section.content}
+                                                className="text-slate-700 dark:text-slate-300"
+                                            />
+                                        </div>
                                     </article>
                                 ))}
                             </div>
@@ -590,9 +597,12 @@ export default function LearnPageClient(props: Props) {
                             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
                                 Next step
                             </h2>
-                            <p className="mt-4 leading-7 text-slate-700 dark:text-slate-300">
-                                {data.lesson.next_step}
-                            </p>
+                            <div className="mt-4">
+                                <MarkdownContent
+                                    content={data.lesson.next_step}
+                                    className="text-slate-700 dark:text-slate-300"
+                                />
+                            </div>
                         </div>
                     </aside>
                 </section>

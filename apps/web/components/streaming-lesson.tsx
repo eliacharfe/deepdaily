@@ -208,6 +208,7 @@ export default function StreamingLesson({
                         ref={scrollContainerRef}
                         className="max-h-[70vh] overflow-y-auto pr-2"
                     >
+
                         <MarkdownContent content={renderedContent} />
 
                         {status === "loading" && (
