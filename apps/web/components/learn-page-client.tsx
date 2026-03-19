@@ -4,7 +4,6 @@
 
 import { useEffect, useState } from "react";
 import StreamingLesson from "@/components/streaming-lesson";
-// import AuthButton from "@/components/auth/auth-button";
 import SaveLessonButton from "@/components/save-lesson-button";
 import LoginRequiredModal from "@/components/auth/login-required-modal";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -12,7 +11,6 @@ import { config } from "@/lib/config";
 import { getSavedLessonById, saveLesson } from "@/lib/lessons-api";
 import type { TopicLevel } from "@/types/topic";
 import type { LessonData, SavedLesson } from "@/types/lesson";
-// import HomeButton from "@/components/home-button";
 import CurriculumCtaCard from "@/components/curriculum-cta-card";
 import { useRouter } from "next/navigation";
 import { createCurriculum, getCurriculaByLesson } from "@/lib/curricula-api";

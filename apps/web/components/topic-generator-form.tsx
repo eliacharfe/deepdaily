@@ -16,6 +16,7 @@ const SUGGESTIONS = [
     "Photography",
     "Learning Spanish",
     "Fitness",
+    "Learn Chess",
     "Personal Finance",
     "Starting a Business",
     "Python Coding",
@@ -156,7 +157,7 @@ export default function TopicGeneratorForm() {
 
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex flex-wrap gap-2">
-                                {SUGGESTIONS.slice(0, 6).map((suggestion) => (
+                                {SUGGESTIONS.slice(0, 7).map((suggestion) => (
                                     <button
                                         key={suggestion}
                                         type="button"
