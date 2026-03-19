@@ -4,7 +4,7 @@
 export default function AppFooter() {
     return (
         <div className="w-full text-center text-xs text-[var(--text-soft)]">
-            DeepDaily •{" "}
+            © {new Date().getFullYear()} DeepDaily •{" "}
             <a
                 href="https://www.eliacharfeig.com/"
                 target="_blank"
@@ -15,7 +15,7 @@ export default function AppFooter() {
             </a>{" "}
             •{" "}
             <a
-                href="https://github.com/eliacharfe/deepdaily" // update repo
+                href="https://github.com/eliacharfe/deepdaily"
                 target="_blank"
                 rel="noreferrer"
                 className="underline underline-offset-2 hover:text-[var(--text)]"

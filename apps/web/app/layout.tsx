@@ -5,6 +5,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import AppShell from "@/components/app-shell";
 import { Toaster } from "sonner";
+import SplashScreen from "@/components/splash-screen";
 
 export const metadata: Metadata = {
   title: "DeepDaily",
@@ -46,7 +47,10 @@ export default function RootLayout({
       </head>
 
       <body>
+
+        <SplashScreen />
         <Toaster richColors position="top-center" />
+
 
         <AuthProvider>
           <AppShell>{children}</AppShell>

@@ -93,3 +93,61 @@ body {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px var(--ring);
 }
+
+@keyframes splashZoom {
+  0% {
+    transform: scale(0.82);
+    opacity: 0;
+  }
+
+  45% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes logoEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.45) rotate(-18deg);
+  }
+
+  20% {
+    opacity: 1;
+    transform: scale(1.08) rotate(10deg);
+  }
+
+  38% {
+    transform: scale(0.94) rotate(-8deg);
+  }
+
+  55% {
+    transform: scale(1.03) rotate(6deg);
+  }
+
+  72% {
+    transform: scale(0.98) rotate(-3deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes logoExit {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.72) rotate(10deg);
+  }
+}
