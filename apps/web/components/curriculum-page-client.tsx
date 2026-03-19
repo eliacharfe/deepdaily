@@ -2,8 +2,6 @@
 // apps/web/components/curriculum-page-client.tsx
 
 
-// apps/web/components/curriculum-page-client.tsx
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
