@@ -8,6 +8,29 @@ DeepDaily is an AI-powered learning platform that generates structured, day-by-d
 
 ---
 
+## 📸 Product Preview
+
+### 🏠 Generate a Learning Path
+![Home](./docs/images/home.png)
+
+Turn any topic into a structured learning journey in seconds.
+
+---
+
+### 📅 Structured Daily Curriculum
+![Curriculum](./docs/images/curriculum.png)
+
+Follow a clear, day-by-day roadmap with progress tracking and guided lessons.
+
+---
+
+### 🔍 Curated Resources & Embedded Content
+![Resources](./docs/images/resources.png)
+
+Access high-quality resources, including articles, books, and embedded videos — all tailored to your learning path.
+
+---
+
 ## ✨ Features
 
 - 📚 **AI-Generated Lessons**
@@ -50,27 +73,6 @@ DeepDaily is an AI-powered learning platform that generates structured, day-by-d
   - Fully responsive (mobile-first)
 
 ---
-
-## 📸 Product Preview
-
-### 🏠 Generate a Learning Path
-![Home](./docs/images/home.png)
-
-Turn any topic into a structured learning journey in seconds.
-
----
-
-### 📅 Structured Daily Curriculum
-![Curriculum](./docs/images/curriculum.png)
-
-Follow a clear, day-by-day roadmap with progress tracking and guided lessons.
-
----
-
-### 🔍 Curated Resources & Embedded Content
-![Resources](./docs/images/resources.png)
-
-Access high-quality resources, including articles, books, and embedded videos — all tailored to your learning path.
 
 ## 🤖 Agent Architecture
 
