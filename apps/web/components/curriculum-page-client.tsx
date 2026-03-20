@@ -1,7 +1,6 @@
 
 // apps/web/components/curriculum-page-client.tsx
 
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -405,10 +404,11 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         <PageShell
             showBack
             backLessonId={curriculum.lessonId}
-            className="px-6 py-12 pt-20 dark:bg-[#1F2428] dark:text-[#ECFDF5]"
+            className="px-4 py-6 pt-16 sm:px-6 sm:py-12 sm:pt-20 dark:bg-[#1F2428]"
         >
-            <div className="mx-auto max-w-6xl space-y-8">
-                <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+            <div className="mx-auto max-w-6xl pt-4 sm:pt-6 lg:pt-10 space-y-6">
+                {/* Header Card */}
+                <section className="overflow-hidden rounded-3xl border  border-slate-200 bg-white shadow-sm dark:border-[#334155] dark:bg-[#111827]">
                     <div className="border-b border-teal-100 bg-linear-to-r from-teal-50 via-white to-cyan-50 p-8 dark:border-teal-900/30 dark:from-teal-950/30 dark:via-[#111827] dark:to-cyan-950/20">
                         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-teal-700 dark:text-teal-300">
                             Structured learning
@@ -470,23 +470,14 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                     </div>
                 </section>
 
-                {error ? (
-                    <div className="rounded-2xl border border-red-200 bg-white p-4 text-sm text-red-600 shadow-sm dark:border-red-900/40 dark:bg-[#111827] dark:text-red-400">
-                        {error}
-                    </div>
-                ) : null}
+                <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[280px_1fr] ">
+                    {/* Sidebar / Top Bar Navigation */}
+                    <aside className="lg:sticky lg:top-24 lg:h-fit">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                            <h2 className="mb-4 hidden text-xs font-bold uppercase text-slate-400 lg:block">Schedule</h2>
 
-                <section className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
-                    <aside className="pr-1 lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)] lg:overflow-y-auto">
-                        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
-                            <div className="flex items-center justify-between gap-3">
-                                <h2 className="text-2xl font-semibold">Days</h2>
-                                <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-teal-700 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300">
-                                    {curriculum.durationDays} total
-                                </span>
-                            </div>
-
-                            <div className="mt-5 space-y-3">
+                            {/* Scrollable Container */}
+                            <div className="flex flex-row gap-3 overflow-x-auto pb-2 scrollbar-hide lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pb-0 lg:max-h-[600px]">
                                 {curriculum.days.map((day) => {
                                     const isCompleted = curriculum.completedDays.includes(
                                         day.dayNumber
@@ -540,167 +531,65 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                         </div>
                     </aside>
 
-                    <div className="space-y-8">
+                    {/* Main Content Area */}
+                    <main className="min-w-0 space-y-6">
                         {!selectedDay.isGenerated || isGeneratingDay ? (
-                            <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
-                                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
-                                    Day {selectedDay.dayNumber}
-                                </p>
-
-                                <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
-                                    Preparing this lesson...
-                                </h2>
-
-                                <p className="mt-4 leading-7 text-slate-700 dark:text-slate-300">
-                                    DeepDaily is generating the content for this day.
-                                </p>
-
-                                <div className="mt-8 rounded-2xl border border-teal-100 bg-teal-50/70 p-4 dark:border-teal-900/30 dark:bg-teal-950/10">
-                                    <p className="text-sm font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">
-                                        Live progress
-                                    </p>
-
-                                    <div className="mt-3 flex items-center gap-3 rounded-xl border border-white/60 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-teal-600 dark:border-slate-700 dark:border-t-teal-300" />
-                                        <span>
-                                            {currentDayGenerationMessage ||
-                                                `Generating day ${selectedDay.dayNumber}...`}
-                                        </span>
-                                    </div>
-                                </div>
-                            </section>
+                            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center dark:border-[#334155] dark:bg-[#111827]">
+                                <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
+                                <p className="text-sm text-slate-500">{currentDayGenerationMessage || "Unlocking Day Content..."}</p>
+                            </div>
                         ) : (
                             <>
-                                <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
-                                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
-                                        Day {selectedDay.dayNumber}
-                                    </p>
-
-                                    <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
-                                        {selectedDay.title}
-                                    </h2>
-
-                                    <p className="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                        Objective
-                                    </p>
-
-                                    <p className="mt-2 leading-7 text-slate-700 dark:text-slate-300">
-                                        {selectedDay.objective}
-                                    </p>
-
-                                    <div className="mt-6 rounded-2xl border border-teal-100 bg-teal-50/60 p-5 dark:border-teal-900/30 dark:bg-teal-950/10">
-                                        <h3 className="text-sm font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">
-                                            Summary
-                                        </h3>
-
-                                        <div className="mt-2">
-                                            <MarkdownContent
-                                                content={selectedDay.summary}
-                                                className="text-slate-700 dark:text-slate-300"
-                                            />
-                                        </div>
+                                <section className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 dark:border-[#334155] dark:bg-[#111827]">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold dark:bg-slate-800">
+                                            DAY {selectedDay.dayNumber}
+                                        </span>
+                                        {curriculum.completedDays.includes(selectedDay.dayNumber) && (
+                                            <span className="text-[10px] font-bold text-teal-600">✓ COMPLETED</span>
+                                        )}
                                     </div>
+                                    <h2 className="text-xl font-bold text-slate-900 sm:text-3xl dark:text-white">{selectedDay.title}</h2>
+                                    <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{selectedDay.objective}</p>
                                 </section>
 
-                                <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
-                                    <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
-                                        Lesson sections
-                                    </h2>
-
-                                    <div className="mt-6 space-y-6">
-                                        {selectedDay.sections.map((section) => (
-                                            <article
-                                                key={section.title}
-                                                className="rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:border-teal-200 hover:bg-teal-50/40 dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-500/30 dark:hover:bg-teal-950/10"
-                                            >
-                                                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                                                    {section.title}
-                                                </h3>
-
-                                                <div className="mt-2">
-                                                    <MarkdownContent
-                                                        content={section.content}
-                                                        className="text-slate-700 dark:text-slate-300"
-                                                    />
-                                                </div>
-                                            </article>
-                                        ))}
-                                    </div>
+                                <section className="space-y-4">
+                                    {selectedDay.sections.map((section, i) => (
+                                        <article key={i} className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-[#334155] dark:bg-[#111827]">
+                                            <h3 className="text-lg font-bold mb-4">{section.title}</h3>
+                                            <div className="prose prose-sm max-w-none dark:prose-invert">
+                                                <MarkdownContent content={section.content} />
+                                            </div>
+                                        </article>
+                                    ))}
                                 </section>
 
                                 {selectedDay.resources?.length ? (
-                                    <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
-                                        <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
-                                            Resources
-                                        </h2>
-
-                                        <div className="mt-6 space-y-4">
-                                            {selectedDay.resources.map((resource) => (
-                                                <ResourceCard
-                                                    key={`${resource.title}-${resource.url}`}
-                                                    title={resource.title}
-                                                    type={resource.type}
-                                                    reason={resource.reason}
-                                                    snippet={resource.snippet}
-                                                    url={resource.url}
-                                                />
-                                            ))}
-                                        </div>
+                                    <section className="space-y-4">
+                                        <h2 className="px-1 text-sm font-bold uppercase text-slate-400">Daily Resources</h2>
+                                        {selectedDay.resources.map((res, i) => <ResourceCard key={i} {...res} />)}
                                     </section>
                                 ) : null}
 
-                                {selectedDay.exercise ? (
-                                    <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
-                                        <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
-                                            Practice
-                                        </h2>
-
-                                        <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-900/60">
-                                            <MarkdownContent
-                                                content={selectedDay.exercise}
-                                                className="text-slate-700 dark:text-slate-300"
-                                            />
-                                        </div>
-                                    </section>
-                                ) : null}
-
-                                <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
-                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                        <div>
-                                            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
-                                                Actions
-                                            </h2>
-
-                                            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                                                Mark this day complete when you finish studying it.
-                                            </p>
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            onClick={handleCompleteDay}
-                                            disabled={
-                                                isCompletingDay ||
-                                                curriculum.completedDays.includes(selectedDay.dayNumber)
-                                            }
-                                            className="inline-flex items-center justify-center rounded-full bg-teal-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-teal-400 dark:text-slate-900 dark:hover:bg-teal-300"
-                                        >
-                                            {curriculum.completedDays.includes(selectedDay.dayNumber)
-                                                ? "Completed"
-                                                : isCompletingDay
-                                                    ? "Saving..."
-                                                    : "Mark day complete"}
-                                        </button>
-                                    </div>
+                                <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-[#334155] dark:bg-[#111827]">
+                                    <button
+                                        onClick={handleCompleteDay}
+                                        disabled={isCompletingDay || curriculum.completedDays.includes(selectedDay.dayNumber)}
+                                        className="w-full rounded-xl bg-teal-600 py-4 text-sm font-bold text-white transition hover:bg-teal-700 disabled:opacity-50 dark:bg-teal-500"
+                                    >
+                                        {curriculum.completedDays.includes(selectedDay.dayNumber) ? "You finished this day!" : isCompletingDay ? "Saving..." : "Mark Day as Finished"}
+                                    </button>
                                 </section>
                             </>
                         )}
-                    </div>
-                </section>
+                    </main>
+                </div>
             </div>
+            <LoginRequiredModal open={showLoginModal} onClose={() => setShowLoginModal(false)} />
         </PageShell>
     );
 }
+
 // "use client";
 
 // import { useEffect, useMemo, useState } from "react";
@@ -1300,3 +1189,4 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 //         </PageShell>
 //     );
 // }
+
