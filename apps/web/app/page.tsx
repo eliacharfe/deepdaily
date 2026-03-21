@@ -4,6 +4,7 @@ import TopicGeneratorForm from "@/components/topic-generator-form";
 import { getHealth } from "@/lib/api";
 import PageShell from "@/components/page-shell";
 import AppFooter from "@/components/app-footer";
+import RotatingHeadline from "@/components/rotating-headline";
 
 export default async function HomePage() {
   let apiStatus = "unreachable";
@@ -23,11 +24,7 @@ export default async function HomePage() {
           DeepDaily
         </p>
 
-        <h1 className="max-w-4xl text-3xl font-semibold tracking-tight sm:text-6xl">
-          Stop jumping between resources. Learn any topic <span className="dd-accent-text">step by step</span>.
-          {/* <br /> */}
-
-        </h1>
+        <RotatingHeadline />
 
         <p className="mt-6 max-w-2xl text-base leading-7 text-(--text-soft) sm:text-lg">
           DeepDaily turns any topic into a structured, day-by-day learning path —
