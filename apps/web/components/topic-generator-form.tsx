@@ -7,7 +7,9 @@ import { useRouter } from "next/navigation";
 import type { TopicLevel } from "@/types/topic";
 import { useAuth } from "@/components/providers/auth-provider";
 import LoginRequiredModal from "@/components/auth/login-required-modal";
-import { Sparkles, ChevronDown } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import LevelDropdown from "@/components/ui/level-dropdown";
+
 
 const SUGGESTIONS = [
     "Investing",
@@ -99,9 +101,9 @@ export default function TopicGeneratorForm() {
         <>
             <div className="absolute inset-0 -z-10 rounded-[40px] bg-(--accent-soft) opacity-20 blur-3xl" />
 
-            <form onSubmit={handleSubmit} className="mt-10 w-full max-w-3xl">
+            <form onSubmit={handleSubmit} className="mt-5 w-full max-w-3xl">
                 <div
-                    className={`relative overflow-hidden rounded-[32px] border transition-all duration-300 ${isFocused
+                    className={`relative overflow-visible rounded-[32px] border transition-all duration-300 ${isFocused
                         ? "shadow-[0_0_0_1px_rgba(45,212,191,0.18),0_0_28px_rgba(45,212,191,0.10)]"
                         : "shadow-[0_16px_50px_rgba(0,0,0,0.28)]"
                         }`}
@@ -174,23 +176,20 @@ export default function TopicGeneratorForm() {
                             </div>
 
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                <div className="relative">
+                                {/* <div className="relative w-full sm:w-40">
                                     <select
                                         id="level"
                                         value={level}
-                                        onChange={(e) =>
-                                            setLevel(e.target.value as TopicLevel)
-                                        }
-                                        className="appearance-none rounded-2xl px-4 py-3 pr-10 text-sm text-white outline-none transition"
+                                        onChange={(e) => setLevel(e.target.value as TopicLevel)}
+                                        className="w-full cursor-pointer appearance-none rounded-2xl px-4 py-3 pr-10 text-sm text-white outline-none transition"
                                         style={{
                                             border: "1px solid rgba(120, 149, 164, 0.22)",
                                             background: "rgba(255,255,255,0.05)",
+                                            color: "#ffffff",
                                         }}
                                     >
                                         <option value="beginner">Beginner</option>
-                                        <option value="intermediate">
-                                            Intermediate
-                                        </option>
+                                        <option value="intermediate">Intermediate</option>
                                         <option value="advanced">Advanced</option>
                                     </select>
 
@@ -198,7 +197,13 @@ export default function TopicGeneratorForm() {
                                         size={16}
                                         className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
                                     />
-                                </div>
+                                </div> */}
+
+                                <LevelDropdown
+                                    value={level}
+                                    onChange={setLevel}
+                                    disabled={isSubmitting || loading}
+                                />
 
                                 <button
                                     type="submit"

@@ -18,17 +18,20 @@ export default async function HomePage() {
   return (
     <PageShell showHome={false}>
       <section className="mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center px-6 pt-4 pb-16 text-center sm:min-h-[calc(100vh-6rem)]">
+
         <p className="dd-accent-text mb-3 text-sm font-semibold uppercase tracking-[0.24em]">
           DeepDaily
         </p>
 
-        <h1 className="max-w-4xl text-4xl font-semibold tracking-tight sm:text-6xl">
-          Learn any topic <span className="dd-accent-text">deeply</span>, one day at a time.
+        <h1 className="max-w-4xl text-3xl font-semibold tracking-tight sm:text-6xl">
+          Stop jumping between resources. Learn any topic <span className="dd-accent-text">step by step</span>.
+          {/* <br /> */}
+
         </h1>
 
-        <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--text-soft)] sm:text-lg">
-          DeepDaily turns any topic into a structured learning path with clear
-          explanations, curated resources, and guided next steps.
+        <p className="mt-6 max-w-2xl text-base leading-7 text-(--text-soft) sm:text-lg">
+          DeepDaily turns any topic into a structured, day-by-day learning path —
+          so you always know what to learn next and actually stay consistent.
         </p>
 
         <TopicGeneratorForm />
@@ -37,7 +40,6 @@ export default async function HomePage() {
           <AppFooter />
         </div>
       </section>
-
     </PageShell>
   );
 }

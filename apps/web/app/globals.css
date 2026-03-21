@@ -2,12 +2,6 @@
 
 @import "tailwindcss";
 @import "prismjs/themes/prism-tomorrow.css";
-@custom-variant dark (&:where(.dark, .dark *));
-
-/* :root {
-  --background: #ffffff;
-  --foreground: #171717;
-} */
 
 :root {
   --bg: #f7f8fb;
@@ -41,12 +35,6 @@
   --ring: rgba(45, 212, 191, 0.24);
 }
 
-@theme inline {
-  --color-background: var(--bg);
-  --color-foreground: var(--text);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
 body {
   background: var(--bg);
@@ -152,7 +140,6 @@ body {
   }
 }
 
-/* ===== Scrollbar (Chrome, Edge, Safari) ===== */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -160,15 +147,12 @@ body {
 
 ::-webkit-scrollbar-track {
   background: transparent;
-  /* no bg */
 }
 
 ::-webkit-scrollbar-thumb {
   background-color: var(--accent);
-  /* your teal */
   border-radius: 999px;
   border: 2px solid transparent;
-  /* gives floating look */
   background-clip: content-box;
 }
 
@@ -176,8 +160,11 @@ body {
   background-color: var(--accent-hover);
 }
 
-/* ===== Firefox ===== */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--accent) transparent;
+}
+
+select {
+  color-scheme: dark;
 }
