@@ -107,7 +107,7 @@ export default function SavedLessonsSidebar({
         <>
             <aside
                 className={[
-                    "fixed bottom-0 left-0 top-0 z-50 w-[320px] max-w-[85vw] border-r border-slate-200 bg-[linear-gradient(180deg,rgba(15,23,42,0.85)_0%,rgba(15,23,42,0.75)_100%)] backdrop-blur-xl backdrop-blur transition-transform duration-300 dark:border-slate-800 dark:bg-[#0F1720]/95",
+                    "fixed bottom-0 left-0 top-0 z-50 w-[320px] max-w-[85vw] border-r border-slate-200 bg-[linear-gradient(180deg,rgba(15,23,42,0.85)_0%,rgba(15,23,42,0.75)_100%)] backdrop-blur transition-transform duration-300 dark:border-slate-800 dark:bg-[#0F1720]/95",
                     isOpen ? "translate-x-0" : "-translate-x-full",
                     desktopCollapsed ? "lg:w-[72px]" : "lg:w-[380px]",
                     "lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:translate-x-0 lg:shrink-0 lg:transition-[width] lg:duration-300",

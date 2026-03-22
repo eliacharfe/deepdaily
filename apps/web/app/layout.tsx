@@ -46,12 +46,9 @@ export default function RootLayout({
         />
       </head>
 
-      <body>
-
+      <body className="bg-white text-slate-900 dark:bg-[#1f1f23] dark:text-[#F1E7DF]">
         <SplashScreen />
         <Toaster richColors position="top-center" />
-
-
         <AuthProvider>
           <AppShell>{children}</AppShell>
         </AuthProvider>

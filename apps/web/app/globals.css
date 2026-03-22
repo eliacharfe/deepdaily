@@ -35,6 +35,7 @@
   --ring: rgba(45, 212, 191, 0.24);
 }
 
+@custom-variant dark (&:where(.dark, .dark *));
 
 body {
   background: var(--bg);
