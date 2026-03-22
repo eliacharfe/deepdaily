@@ -18,8 +18,9 @@ const headlines = [
         id: 1,
         content: (
             <>
-                Stop jumping between{" "}
-                <span className="dd-accent-text">resources</span>.
+                Stop{" "}
+                <span className="dd-accent-text">jumping</span>{" "}
+                between resources.
             </>
         ),
     },
