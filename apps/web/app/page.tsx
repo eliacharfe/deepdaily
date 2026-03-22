@@ -26,7 +26,7 @@ export default async function HomePage() {
 
         <RotatingHeadline />
 
-        <p className="mt-2 max-w-2xl text-base leading-7 text-(--text-soft) sm:text-lg">
+        <p className=" max-w-2xl text-base leading-7 text-(--text-soft) sm:text-lg">
           DeepDaily turns any topic into a structured, day-by-day learning path —
           so you always know what to learn next and actually stay consistent.
         </p>
