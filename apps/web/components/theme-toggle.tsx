@@ -47,7 +47,7 @@ export default function ThemeToggle() {
             {theme === "dark" ? (
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-white"
+                    className="h-5 w-5 text-(--accent)"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -59,7 +59,7 @@ export default function ThemeToggle() {
             ) : (
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-slate-700"
+                    className="h-5 w-5 text-teal-600 dark:text-(--accent)"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
