@@ -404,9 +404,9 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         <PageShell
             showBack
             backLessonId={curriculum.lessonId}
-            className="px-4 py-6 pt-16 sm:px-6 sm:py-12 sm:pt-20 dark:bg-[#1F2428]"
+            className="px-4 py-6 pt-10 sm:px-6 sm:py-12 sm:pt-20 dark:bg-[#1F2428]"
         >
-            <div className="mx-auto max-w-6xl pt-4 sm:pt-6 lg:pt-10 space-y-6">
+            <div className="mx-auto max-w-6xl pt-2 sm:pt-6 lg:pt-6 space-y-6">
                 {/* Header Card */}
                 <section className="overflow-hidden rounded-3xl border  border-slate-200 bg-white shadow-sm dark:border-[#334155] dark:bg-[#111827]">
                     <div className="border-b border-teal-100 bg-linear-to-r from-teal-50 via-white to-cyan-50 p-8 dark:border-teal-900/30 dark:from-teal-950/30 dark:via-[#111827] dark:to-cyan-950/20">
