@@ -45,7 +45,7 @@ export default function AppShell({
                             type="button"
                             onClick={() => setSidebarOpen(true)}
                             aria-label="Open saved lessons"
-                            className="fixed left-0 top-24 z-[100] inline-flex h-14 w-12 items-center justify-center rounded-r-2xl border border-l-0 border-teal-500/20 bg-[#08111D]/90 text-teal-300 shadow-lg backdrop-blur-md transition hover:w-14 hover:bg-[#0D1726] active:scale-[0.98] lg:hidden"
+                            className="fixed left-0 top-24 z-100 inline-flex h-14 w-12 items-center justify-center rounded-r-2xl border border-l-0 border-teal-500/20 bg-[#08111D]/90 text-teal-300 shadow-lg backdrop-blur-md transition hover:w-14 hover:bg-[#0D1726] active:scale-[0.98] lg:hidden"
                         >
                             <PanelLeft className="h-5 w-5" />
                         </button>

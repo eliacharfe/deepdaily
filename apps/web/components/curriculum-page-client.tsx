@@ -142,7 +142,7 @@ function ResourceCard({
             )}
 
             {url ? (
-                <p className="mt-3 break-words text-[10px] text-slate-500 opacity-60 sm:text-sm dark:text-slate-400">
+                <p className="mt-3 wrap-break-word text-[10px] text-slate-500 opacity-60 sm:text-sm dark:text-slate-400">
                     {url}
                 </p>
             ) : null}

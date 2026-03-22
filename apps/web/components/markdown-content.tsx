@@ -23,12 +23,12 @@ export default function MarkdownContent({ content, className = "" }: Props) {
     return (
         <div
             className={[
-                "min-w-0 text-sm leading-relaxed text-slate-900 dark:text-[#F1E7DF]",
+                "min-w-0 text-[15px] leading-7 text-slate-900 dark:text-[#F1E7DF]",
                 "[&_p]:my-4 [&_ul]:my-4 [&_ol]:my-4 [&_li]:my-1.5",
-                "[&_h1]:mt-8 [&_h1]:mb-4 [&_h1]:text-3xl [&_h1]:font-semibold",
-                "[&_h2]:mt-7 [&_h2]:mb-3 [&_h2]:text-2xl [&_h2]:font-semibold",
-                "[&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:text-xl [&_h3]:font-semibold",
-                "[&_h4]:mt-5 [&_h4]:mb-2 [&_h4]:text-lg [&_h4]:font-semibold",
+                "[&_h1]:mt-8 [&_h1]:mb-4 [&_h1]:text-[28px] [&_h1]:font-semibold",
+                "[&_h2]:mt-7 [&_h2]:mb-3 [&_h2]:text-[22px] [&_h2]:font-semibold",
+                "[&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:text-[18px] [&_h3]:font-semibold",
+                "[&_h4]:mt-5 [&_h4]:mb-2 [&_h4]:text-[16px] [&_h4]:font-semibold",
                 "[&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-4 [&_blockquote]:italic dark:[&_blockquote]:border-[#5A524D]",
                 "[&_hr]:my-6 [&_hr]:border-slate-200 dark:[&_hr]:border-[#4C4541]",
                 "[&_pre]:my-5 [&_pre]:max-w-full [&_pre]:overflow-x-auto",

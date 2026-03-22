@@ -21,11 +21,11 @@ export default function CurriculumCtaCard({
                 Structured learning
             </p>
 
-            <h2 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">
+            <h2 className="mt-3 text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">
                 {compact ? "Build a curriculum" : "Turn this into a daily curriculum"}
             </h2>
 
-            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+            <p className="mt-3 text-base sm:text-lg leading-relaxed text-slate-600 dark:text-slate-300">
                 {compact
                     ? "Turn this lesson into a guided daily plan and track your progress one day at a time."
                     : "Choose a guided plan and progress day by day with a structured path built from this lesson."}
@@ -50,7 +50,7 @@ export default function CurriculumCtaCard({
                                 </span>
                             </div>
 
-                            <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                            <p className="mt-2 text-base sm:text-lg leading-relaxed text-slate-600 dark:text-slate-300">
                                 A focused one-week plan to build solid understanding quickly.
                             </p>
 
@@ -86,7 +86,7 @@ export default function CurriculumCtaCard({
                                 </span>
                             </div>
 
-                            <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                            <p className="mt-2 text-base sm:text-lg leading-relaxed text-slate-600 dark:text-slate-300">
                                 A deeper curriculum with daily progression, reinforcement, and long-term retention.
                             </p>
 

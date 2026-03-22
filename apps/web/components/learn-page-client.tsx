@@ -2,13 +2,13 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import StreamingLesson from "@/components/streaming-lesson";
 import SaveLessonButton from "@/components/save-lesson-button";
 import LoginRequiredModal from "@/components/auth/login-required-modal";
 import { useAuth } from "@/components/providers/auth-provider";
 import { config } from "@/lib/config";
-import { getSavedLessonById, saveLesson } from "@/lib/lessons-api";
+import { getSavedLessonById, saveLesson, updateLesson } from "@/lib/lessons-api";
 import type { TopicLevel } from "@/types/topic";
 import type { LessonData, SavedLesson } from "@/types/lesson";
 import CurriculumCtaCard from "@/components/curriculum-cta-card";
@@ -106,15 +106,6 @@ function ResourceCard({
 
     return (
         <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:p-5 transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-500/30 dark:hover:bg-slate-900">
-            {/* {isYouTube && youtubeThumbnail ? (
-                <div className="mb-4 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
-                    <img
-                        src={youtubeThumbnail}
-                        alt={`${title} preview`}
-                        className="aspect-video w-full object-cover"
-                    />
-                </div>
-            ) : null} */}
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white leading-tight">
@@ -133,10 +124,10 @@ function ResourceCard({
                 </span>
             </div>
 
-            <p className="mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-300">{reason}</p>
+            <p className="mt-2 text-base sm:text-lg text-slate-600 dark:text-slate-300">{reason}</p>
 
             {snippet ? (
-                <p className="mt-3 line-clamp-3 text-xs sm:text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                <p className="mt-3 line-clamp-3 text-sm sm:text-base leading-relaxed text-slate-500 dark:text-slate-400">
                     {snippet}
                 </p>
             ) : null}
@@ -202,7 +193,16 @@ export default function LearnPageClient(props: Props) {
 
     const [currentGenerationMessage, setCurrentGenerationMessage] = useState("");
 
+    const isAutoSavingStreamRef = useRef(false);
+    const lastAutoSavedStreamRef = useRef("");
+
     const router = useRouter();
+
+    useEffect(() => {
+        if (data?.streamedLesson) {
+            lastAutoSavedStreamRef.current = data.streamedLesson;
+        }
+    }, [data?.id]);
 
     useEffect(() => {
         let cancelled = false;
@@ -403,6 +403,92 @@ export default function LearnPageClient(props: Props) {
         }
     }
 
+    async function autoSaveStreamedLesson(finalStreamedLesson: string) {
+        console.log("[autoSave] called", {
+            hasUser: Boolean(user),
+            hasData: Boolean(data),
+            savedLessonId,
+            currentDataId: data?.id,
+            length: finalStreamedLesson.length,
+            preview: finalStreamedLesson.slice(0, 120),
+        });
+
+        if (!user || !data) {
+            console.log("[autoSave] skipped: missing user or data");
+            return;
+        }
+
+        if (!finalStreamedLesson.trim()) {
+            console.log("[autoSave] skipped: empty content");
+            return;
+        }
+
+        if (isAutoSavingStreamRef.current) {
+            console.log("[autoSave] skipped: already saving");
+            return;
+        }
+
+        if (lastAutoSavedStreamRef.current === finalStreamedLesson) {
+            console.log("[autoSave] skipped: same content already saved");
+            return;
+        }
+
+        try {
+            isAutoSavingStreamRef.current = true;
+
+            const token = await user.getIdToken();
+
+            const lessonToSave = {
+                ...data,
+                id: savedLessonId ?? data.id,
+                streamedLesson: finalStreamedLesson,
+            };
+
+            const isUpdate = Boolean(lessonToSave.id);
+
+            console.log("[autoSave] request", {
+                mode: isUpdate ? "update" : "save",
+                id: lessonToSave.id,
+                topic: lessonToSave.topic,
+                level: lessonToSave.level,
+                streamedLessonLength: lessonToSave.streamedLesson?.length ?? 0,
+            });
+
+            const result = isUpdate
+                ? await updateLesson(lessonToSave.id as string, lessonToSave, token)
+                : await saveLesson(lessonToSave, token);
+
+            console.log("[autoSave] success", {
+                mode: isUpdate ? "update" : "save",
+                returnedId: result.id,
+            });
+
+            lastAutoSavedStreamRef.current = finalStreamedLesson;
+            setSavedLessonId(result.id);
+            setStreamedLesson(finalStreamedLesson);
+            setData((prev) =>
+                prev
+                    ? {
+                        ...prev,
+                        id: result.id,
+                        streamedLesson: finalStreamedLesson,
+                    }
+                    : prev
+            );
+
+            window.dispatchEvent(new Event("lessons:refresh"));
+
+            console.log("[autoSave] local state updated", {
+                savedLessonId: result.id,
+                streamedLessonLength: finalStreamedLesson.length,
+            });
+        } catch (error) {
+            console.error("[autoSave] failed", error);
+        } finally {
+            isAutoSavingStreamRef.current = false;
+        }
+    }
+
     if (loading) {
         return (
             <PageShell className="px-6 py-12 pt-20 dark:bg-[#1F2428] dark:text-[#ECFDF5]">
@@ -543,7 +629,7 @@ export default function LearnPageClient(props: Props) {
                                 <h2 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">
                                     Today&apos;s focus
                                 </h2>
-                                <p className="mt-2 text-sm sm:text-base text-slate-900 dark:text-slate-100">
+                                <p className="mt-2 text-base sm:text-lg text-slate-900 dark:text-slate-100">
                                     {data.lesson.today_focus}
                                 </p>
                             </div>
@@ -552,10 +638,10 @@ export default function LearnPageClient(props: Props) {
                                 <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">
                                     Summary
                                 </h2>
-                                <div className="mt-3 prose prose-sm sm:prose-base dark:prose-invert max-w-none">
+                                <div className="mt-3 prose prose-base sm:prose-lg dark:prose-invert max-w-none">
                                     <MarkdownContent
                                         content={data.lesson.summary}
-                                        className="text-slate-700 dark:text-slate-300"
+                                        className="text-base sm:text-lg text-slate-700 dark:text-slate-300"
                                     />
                                 </div>
                             </div>
@@ -586,7 +672,7 @@ export default function LearnPageClient(props: Props) {
                                             <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
                                                 {section.title}
                                             </h3>
-                                            <div className="mt-2 prose prose-sm dark:prose-invert max-w-none">
+                                            <div className="mt-2 prose prose-base sm:prose-lg dark:prose-invert max-w-none">
                                                 <MarkdownContent
                                                     content={section.content}
                                                     className="text-slate-700 dark:text-slate-300"
@@ -624,16 +710,17 @@ export default function LearnPageClient(props: Props) {
                                     Roadmap
                                 </h2>
 
-                                <ol className="mt-6 space-y-2 sm:space-y-3">
+                                <ol className="mt-6 space-y-3 sm:space-y-4">
                                     {data.roadmap.map((item, index) => (
                                         <li
                                             key={`${item}-${index}`}
-                                            className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 dark:border-slate-700 dark:bg-slate-900/60"
+                                            className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 sm:px-5 sm:py-4 dark:border-slate-700 dark:bg-slate-900/60"
                                         >
-                                            <span className="mt-0.5 flex h-5 w-5 sm:h-6 sm:w-6 shrink-0 items-center justify-center rounded-full bg-teal-100 text-[10px] sm:text-xs font-semibold text-teal-700 dark:bg-teal-900/30 dark:text-teal-300">
+                                            <span className="mt-0.5 flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs sm:text-sm font-semibold text-teal-700 dark:bg-teal-900/30 dark:text-teal-300">
                                                 {index + 1}
                                             </span>
-                                            <span className="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+
+                                            <span className="text-sm sm:text-base leading-relaxed text-slate-700 dark:text-slate-300">
                                                 {item}
                                             </span>
                                         </li>
@@ -641,7 +728,7 @@ export default function LearnPageClient(props: Props) {
                                 </ol>
                             </div>
 
-                            <div className="px-0 sm:px-0">
+                            <div className="hidden lg:block px-0">
                                 <CurriculumCtaCard
                                     compact
                                     isCreatingCurriculum={isCreatingCurriculum}
@@ -691,6 +778,17 @@ export default function LearnPageClient(props: Props) {
                             level={data.level}
                             initialContent={streamedLesson}
                             onContentChange={setStreamedLesson}
+                            onComplete={async (finalContent) => {
+                                console.log("[StreamingLesson -> parent] onComplete fired", {
+                                    length: finalContent.length,
+                                    preview: finalContent.slice(0, 120),
+                                });
+
+                                setStreamedLesson(finalContent);
+                                await autoSaveStreamedLesson(finalContent);
+
+                                console.log("[StreamingLesson -> parent] onComplete finished");
+                            }}
                         />
                     </div>
 

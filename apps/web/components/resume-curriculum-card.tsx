@@ -18,11 +18,11 @@ export default function ResumeCurriculumCard({ curricula }: Props) {
                 Continue learning
             </p>
 
-            <h2 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">
+            <h2 className="mt-3 text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">
                 Resume your curriculum
             </h2>
 
-            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+            <p className="mt-3 text-base sm:text-lg leading-relaxed text-slate-600 dark:text-slate-300">
                 You already started a structured plan for this lesson. Continue where you left off.
             </p>
 
@@ -59,7 +59,7 @@ export default function ResumeCurriculumCard({ curricula }: Props) {
                                         </span>
                                     </div>
 
-                                    <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                    <p className="mt-2 text-base sm:text-lg leading-relaxed text-slate-600 dark:text-slate-300">
                                         {completed}/{total} completed · {progressPercent}% done
                                     </p>
                                 </div>

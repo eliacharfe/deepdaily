@@ -11,6 +11,7 @@ type Props = {
     level: string;
     initialContent?: string;
     onContentChange?: (content: string) => void;
+    onComplete?: (content: string) => void | Promise<void>;
 };
 
 type Status = "idle" | "loading" | "done" | "error";
@@ -39,6 +40,7 @@ export default function StreamingLesson({
     level,
     initialContent = "",
     onContentChange,
+    onComplete,
 }: Props) {
     const [content, setContent] = useState(initialContent);
     const [status, setStatus] = useState<Status>(
@@ -50,6 +52,7 @@ export default function StreamingLesson({
     const sectionRef = useRef<HTMLElement | null>(null);
     const streamAreaRef = useRef<HTMLDivElement | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+    const contentRef = useRef(initialContent);
 
     useEffect(() => {
         onContentChange?.(content);
@@ -90,37 +93,60 @@ export default function StreamingLesson({
     }, [content, shouldAutoScroll]);
 
     async function handleGenerate() {
-        setContent("");
+        console.log("[StreamingLesson] handleGenerate start", { topic, level });
+
         setError("");
         setStatus("loading");
         setShouldAutoScroll(true);
+
+        contentRef.current = "";
+        setContent("");
 
         try {
             await streamLesson(
                 { topic, level },
                 {
                     onChunk: (chunk) => {
-                        setContent((prev) => prev + chunk);
+                        contentRef.current += chunk;
+                        setContent(contentRef.current);
                     },
-                    onDone: () => setStatus("done"),
+                    onDone: async () => {
+                        console.log("[StreamingLesson] generate onDone", {
+                            finalLength: contentRef.current.length,
+                            preview: contentRef.current.slice(0, 120),
+                        });
+
+                        setStatus("done");
+                        await onComplete?.(contentRef.current);
+
+                        console.log("[StreamingLesson] generate onComplete resolved");
+                    },
                     onError: (message) => {
+                        console.error("[StreamingLesson] generate onError", message);
                         setError(message);
                         setStatus("error");
                     },
                 }
             );
         } catch (err) {
+            console.error("[StreamingLesson] handleGenerate catch", err);
             setError(err instanceof Error ? err.message : "Unknown error");
             setStatus("error");
         }
     }
 
     async function handleGoDeeper() {
+        console.log("[StreamingLesson] handleGoDeeper start", {
+            currentLength: contentRef.current.length,
+        });
+
         setError("");
         setStatus("loading");
         setShouldAutoScroll(true);
 
-        setContent((prev) => prev + "\n\n---\n\n## Going deeper\n\n");
+        const prefix = "\n\n---\n\n## Going deeper\n\n";
+        contentRef.current += prefix;
+        setContent(contentRef.current);
 
         try {
             await streamLesson(
@@ -132,16 +158,29 @@ export default function StreamingLesson({
                 },
                 {
                     onChunk: (chunk) => {
-                        setContent((prev) => prev + chunk);
+                        contentRef.current += chunk;
+                        setContent(contentRef.current);
                     },
-                    onDone: () => setStatus("done"),
+                    onDone: async () => {
+                        console.log("[StreamingLesson] goDeeper onDone", {
+                            finalLength: contentRef.current.length,
+                            preview: contentRef.current.slice(0, 120),
+                        });
+
+                        setStatus("done");
+                        await onComplete?.(contentRef.current);
+
+                        console.log("[StreamingLesson] goDeeper onComplete resolved");
+                    },
                     onError: (message) => {
+                        console.error("[StreamingLesson] goDeeper onError", message);
                         setError(message);
                         setStatus("error");
                     },
                 }
             );
         } catch (err) {
+            console.error("[StreamingLesson] handleGoDeeper catch", err);
             setError(err instanceof Error ? err.message : "Unknown error");
             setStatus("error");
         }
