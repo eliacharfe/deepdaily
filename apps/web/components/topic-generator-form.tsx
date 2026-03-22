@@ -117,7 +117,7 @@ export default function TopicGeneratorForm() {
                         WebkitBackdropFilter: "blur(18px) saturate(140%)",
                     }}
                 >
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-teal-200/15 to-transparent" />
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-teal-200/15 to-transparent" />
 
                     <div className="flex flex-col gap-4 p-3 sm:p-4">
                         <div

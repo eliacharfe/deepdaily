@@ -9,8 +9,8 @@ const headlines = [
         id: 0,
         content: (
             <>
-                Stop jumping between resources. Learn any topic{" "}
-                <span className="dd-accent-text">step by step</span>.
+                Learn any topic <span className="dd-accent-text">deeply</span>, one day
+                at a time.
             </>
         ),
     },
@@ -18,8 +18,17 @@ const headlines = [
         id: 1,
         content: (
             <>
-                Learn any topic <span className="dd-accent-text">deeply</span>, one day
-                at a time.
+                Stop jumping between{" "}
+                <span className="dd-accent-text">resources</span>.
+            </>
+        ),
+    },
+    {
+        id: 2,
+        content: (
+            <>
+                Start your next topic{" "}
+                <span className="dd-accent-text">step by step</span>.
             </>
         ),
     },
@@ -30,23 +39,33 @@ export default function RotatingHeadline() {
     const [isVisible, setIsVisible] = useState(true);
 
     useEffect(() => {
-        const interval = window.setInterval(() => {
+        console.log("headline index:", index);
+    }, [index]);
+
+    useEffect(() => {
+        let timeout: number;
+
+        function cycle() {
             setIsVisible(false);
 
-            window.setTimeout(() => {
+            timeout = window.setTimeout(() => {
                 setIndex((prev) => (prev + 1) % headlines.length);
                 setIsVisible(true);
-            }, 350);
-        }, 5000);
 
-        return () => window.clearInterval(interval);
+                timeout = window.setTimeout(cycle, 5000); // next cycle
+            }, 450); // animation duration
+        }
+
+        timeout = window.setTimeout(cycle, 5000);
+
+        return () => window.clearTimeout(timeout);
     }, []);
 
     return (
         <div className="max-w-4xl overflow-hidden">
             <h1
                 className={[
-                    "text-3xl font-semibold tracking-tight sm:text-6xl",
+                    "min-h-[96px] text-3xl font-semibold tracking-tight sm:min-h-[144px] sm:text-6xl",
                     "transform transition-all duration-500 will-change-transform",
                     isVisible
                         ? "translate-x-0 opacity-100"
