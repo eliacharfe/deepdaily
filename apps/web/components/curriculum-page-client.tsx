@@ -15,6 +15,8 @@ import type { Curriculum } from "@/types/curriculum";
 import { generateCurriculumDayWithProgress } from "@/lib/curricula-api";
 import MarkdownContent from "@/components/markdown-content";
 import PageShell from "@/components/page-shell";
+import LessonDayQaCard from "@/components/lesson-day-qa-card";
+import { streamLessonQuestion } from "@/lib/lesson-qa-api";
 
 type Props = {
     curriculumId: string;
@@ -165,6 +167,8 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
     const [isUpdatingOpenedDay, setIsUpdatingOpenedDay] = useState(false);
 
     const [currentDayGenerationMessage, setCurrentDayGenerationMessage] = useState("");
+
+    const [lessonQaAnswer, setLessonQaAnswer] = useState("");
 
     useEffect(() => {
         if (!curriculum) return;
@@ -570,6 +574,40 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                         {selectedDay.resources.map((res, i) => <ResourceCard key={i} {...res} />)}
                                     </section>
                                 ) : null}
+
+                                <LessonDayQaCard
+                                    dayTitle={selectedDay.title}
+                                    dayObjective={selectedDay.objective}
+                                    disabled={!selectedDay.isGenerated || isGeneratingDay}
+                                    answer={lessonQaAnswer}
+                                    onAsk={async (question) => {
+                                        if (!user || !curriculum) {
+                                            throw new Error("You must be signed in");
+                                        }
+
+                                        const token = await user.getIdToken();
+                                        setLessonQaAnswer("");
+
+                                        await streamLessonQuestion({
+                                            token,
+                                            payload: {
+                                                curriculumId: curriculum.id,
+                                                dayNumber: selectedDay.dayNumber,
+                                                question,
+                                                level: curriculum.level,
+                                                dayTitle: selectedDay.title,
+                                                dayObjective: selectedDay.objective,
+                                                sections: selectedDay.sections.map((section) => ({
+                                                    title: section.title,
+                                                    content: section.content,
+                                                })),
+                                            },
+                                            onChunk: (chunk) => {
+                                                setLessonQaAnswer((prev) => prev + chunk);
+                                            },
+                                        });
+                                    }}
+                                />
 
                                 <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-[#334155] dark:bg-[#111827]">
                                     <button

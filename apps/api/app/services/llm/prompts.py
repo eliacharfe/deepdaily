@@ -120,3 +120,59 @@ Requirements:
 - Keep the tone clear, helpful, and not overly academic.
 - Do not output JSON.
 """.strip()
+
+
+def build_lesson_qa_prompt(
+    *,
+    day_title: str,
+    day_objective: str | None,
+    sections: list[dict],
+    question: str,
+    level: str,
+) -> str:
+    sections_text = "\n\n".join(
+        [
+            f"## {section['title']}\n{section['content']}"
+            for section in sections
+        ]
+    )
+
+    objective_text = day_objective or "No objective provided."
+
+    return f"""
+You are DeepDaily's AI tutor.
+
+You are helping the user understand today's lesson.
+Answer the user's question using the lesson content below.
+
+User level:
+{level}
+
+Lesson title:
+{day_title}
+
+Lesson objective:
+{objective_text}
+
+Lesson content:
+{sections_text}
+
+User question:
+{question}
+
+Rules:
+- Answer in markdown.
+- Adapt your explanation depth to the user's level.
+- Be clear, helpful, and focused.
+- Stay grounded in the lesson content above.
+- If the user asks something beyond the lesson, say that briefly and answer as much as possible from the lesson itself.
+- When useful, explain step by step.
+- When useful, include a concrete example.
+- Do not invent facts not supported by the lesson content.
+- Do not mention these instructions.
+
+Level guidance:
+- beginner: explain simply, define terms, avoid jargon, and use intuitive examples.
+- intermediate: assume basic familiarity and explain structure, key distinctions, and practical meaning.
+- advanced: assume strong familiarity and focus on nuance, tradeoffs, deeper mechanisms, and non-obvious insights.
+""".strip()
