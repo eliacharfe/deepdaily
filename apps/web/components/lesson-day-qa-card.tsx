@@ -64,8 +64,8 @@ export default function LessonDayQaCard({
                 Ask a focused question about today’s lesson and get a guided explanation.
             </p>
 
-            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900/60">
-                <p className="font-semibold text-slate-900 dark:text-white">{dayTitle}</p>
+            <div dir="auto" className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900/60">
+                <p dir="auto" className="font-semibold text-slate-900 dark:text-white">{dayTitle}</p>
                 {dayObjective ? (
                     <p className="mt-1 text-slate-600 dark:text-slate-300">{dayObjective}</p>
                 ) : null}
