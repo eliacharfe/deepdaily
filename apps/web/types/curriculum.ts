@@ -6,8 +6,8 @@ export type CurriculumDayResource = {
     title: string;
     url: string;
     type: string;
-    reason?: string;
-    snippet?: string;
+    reason?: string | null;
+    snippet?: string | null;
 };
 
 export type CurriculumSection = {

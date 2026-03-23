@@ -323,57 +323,116 @@ class ResourceDiscoveryAgent:
         day_objective: str,
         day_summary: str,
         sections: list[dict[str, Any]],
+        used_urls: set[str] | None = None,
+        used_titles: set[str] | None = None,
     ) -> list[dict[str, Any]]:
-        query = f"{topic} {day_title} {day_objective} {level} tutorial OR lecture OR guide"
+        def normalize_url(url: str) -> str:
+            try:
+                parsed = urlparse(url.strip())
+                hostname = (parsed.hostname or "").lower().replace("www.", "")
+                path = (parsed.path or "").rstrip("/")
+                return f"{hostname}{path}"
+            except Exception:
+                return url.strip().lower()
 
-        results = await self.search(query=query, max_results=8)
+        def normalize_title(title: str) -> str:
+            return " ".join((title or "").strip().lower().split())
 
-        resources: list[dict[str, Any]] = []
+        used_urls_normalized = {normalize_url(url) for url in (used_urls or set()) if url}
+        used_titles_normalized = {
+            normalize_title(title) for title in (used_titles or set()) if title
+        }
+
+        section_titles: list[str] = []
+        for section in sections[:3]:
+            if isinstance(section, dict):
+                title = (section.get("title") or "").strip()
+                if title:
+                    section_titles.append(title)
+
+        section_hint = " ".join(section_titles[:2])
+        summary_hint = " ".join((day_summary or "").split()[:20])
+
+        queries = [
+            f"{topic} {day_title} {day_objective} {level} tutorial",
+            f"{topic} {day_title} {section_hint} guide".strip(),
+            f"{topic} {day_title} explained video",
+            f"{topic} {day_objective} {summary_hint} practical example".strip(),
+        ]
+
+        collected: list[tuple[int, dict[str, Any]]] = []
         seen_urls: set[str] = set()
-        added_video = False
+        seen_titles: set[str] = set()
 
-        for item in results:
-            url = (item.get("url") or "").strip()
-            title = (item.get("title") or "").strip()
-            snippet = (item.get("snippet") or "").strip()
+        for query in queries:
+            results = await self.search(query=query, max_results=8)
 
-            if not url or not title or url in seen_urls:
-                continue
+            for item in results:
+                url = (item.get("url") or "").strip()
+                title = (item.get("title") or "").strip()
+                snippet = (item.get("snippet") or "").strip()
+                source = (item.get("source") or "").strip()
 
-            if not self.is_good_result(title, url):
-                continue
-
-            lower_url = url.lower()
-
-            if any(domain in lower_url for domain in TRUSTED_VIDEO_DOMAINS):
-                if added_video:
+                if not url or not title:
                     continue
 
-                resources.append(
-                    {
-                        "title": title,
-                        "url": url,
-                        "type": "video",
-                        "reason": f"Relevant video for {day_title}",
-                        "snippet": snippet,
-                    }
+                normalized_url = normalize_url(url)
+                normalized_title = normalize_title(title)
+
+                if normalized_url in seen_urls or normalized_title in seen_titles:
+                    continue
+
+                if normalized_url in used_urls_normalized or normalized_title in used_titles_normalized:
+                    continue
+
+                if not self.is_good_result(title, url):
+                    continue
+
+                resource_type = self.infer_resource_type(url, title)
+                score = self.score_result(
+                    title=title,
+                    url=url,
+                    resource_type=resource_type,
+                    level=level,
                 )
-                seen_urls.add(url)
-                added_video = True
-                continue
 
-            resources.append(
-                {
-                    "title": title,
-                    "url": url,
-                    "type": self.infer_resource_type(url, title),
-                    "reason": f"Helpful supporting resource for {day_title}",
-                    "snippet": snippet,
-                }
-            )
-            seen_urls.add(url)
+                collected.append(
+                    (
+                        score,
+                        {
+                            "title": title,
+                            "url": url,
+                            "type": resource_type,
+                            "reason": self.build_reason(resource_type, source or None),
+                            "snippet": snippet,
+                        },
+                    )
+                )
 
-            if len(resources) >= 3:
+                seen_urls.add(normalized_url)
+                seen_titles.add(normalized_title)
+
+        collected.sort(key=lambda item: item[0], reverse=True)
+
+        ranked = [resource for _, resource in collected]
+
+        videos = [r for r in ranked if r["type"] == "video"]
+        docs = [r for r in ranked if r["type"] == "documentation"]
+        articles = [r for r in ranked if r["type"] == "article"]
+
+        balanced: list[dict[str, Any]] = []
+
+        if articles:
+            balanced.append(articles[0])
+        if videos:
+            balanced.append(videos[0])
+        if docs:
+            balanced.append(docs[0])
+
+        for resource in ranked:
+            if resource not in balanced:
+                balanced.append(resource)
+            if len(balanced) >= 3:
                 break
 
-        return resources
+        return balanced[:3]

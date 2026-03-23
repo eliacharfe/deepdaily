@@ -230,21 +230,75 @@ def build_mock_generated_day(
         "dayNumber": day_number,
         "title": title,
         "objective": objective,
-        "summary": f"This is the study summary for day {day_number} on {topic}.",
+        "summary": (
+            f"On day {day_number}, you focus on a key part of {topic}. "
+            f"This session builds a deeper understanding of the topic by breaking it into clear ideas, "
+            f"explaining how they connect, and showing why they matter in practice. "
+            f"By the end of this lesson, you should feel more confident applying what you've learned "
+            f"and recognizing it in real-world situations."
+        ),
         "sections": [
             {
-                "title": "Main concept",
-                "content": f"Core explanation for day {day_number}.",
+                "title": "Core concept",
+                "content": (
+                    f"This section introduces the main idea for day {day_number} of {topic}. "
+                    f"You should focus on understanding what the concept is, how it works, "
+                    f"and where it fits within the broader topic.\n\n"
+                    f"Try to connect this idea to what you already know, and think about simple examples "
+                    f"that make it easier to grasp."
+                ),
             },
             {
-                "title": "Why it matters",
-                "content": f"Why this part of {topic} matters on day {day_number}.",
+                "title": "How it works in practice",
+                "content": (
+                    f"Now that you understand the core idea, this section explains how it is used in real scenarios. "
+                    f"In {topic}, concepts are rarely isolated — they are applied in context.\n\n"
+                    f"Think about practical situations where this concept would appear, and how you would recognize it."
+                ),
+            },
+            {
+                "title": "Common pitfalls and insights",
+                "content": (
+                    f"Many learners misunderstand this part of {topic} at first. "
+                    f"This section highlights typical mistakes and important nuances.\n\n"
+                    f"Pay attention to what can go wrong and how to avoid it — this is what builds real understanding."
+                ),
             },
         ],
-        "exercise": f"Write 3 takeaways from day {day_number}.",
+        "exercise": (
+            f"Practice applying today's concept:\n\n"
+            f"1. Write a short explanation of the main idea from memory.\n"
+            f"2. Come up with one real-world example where it applies.\n"
+            f"3. Identify one potential mistake or misunderstanding.\n\n"
+            f"If possible, try to explain this concept to someone else or simulate teaching it."
+        ),
         "resources": [],
         "isGenerated": True,
     }
+
+
+def extract_used_resources(days: list[dict[str, Any]]) -> tuple[set[str], set[str]]:
+    used_urls: set[str] = set()
+    used_titles: set[str] = set()
+
+    for day in days:
+        resources = day.get("resources", []) or []
+        if not isinstance(resources, list):
+            continue
+
+        for resource in resources:
+            if not isinstance(resource, dict):
+                continue
+
+            url = (resource.get("url") or "").strip()
+            title = (resource.get("title") or "").strip()
+
+            if url:
+                used_urls.add(url)
+            if title:
+                used_titles.add(title)
+
+    return used_urls, used_titles
 
 
 async def generate_curriculum_outline(
@@ -418,38 +472,38 @@ async def generate_curriculum_day(
             topic,
         )
         await progress("Using a fallback lesson structure...")
-        return build_mock_generated_day(
+        generated_day = build_mock_generated_day(
             topic=topic,
             day_number=day_outline["dayNumber"],
             title=day_outline["title"],
             objective=day_outline["objective"],
         )
-
-    sections = result.get("sections", [])
-    if not isinstance(sections, list) or len(sections) == 0:
-        logger.warning(
-            "Generated day invalid sections for day=%s topic=%s, using mock fallback",
-            day_outline.get("dayNumber"),
-            topic,
-        )
-        await progress("Rebuilding this day with a fallback structure...")
-        return build_mock_generated_day(
-            topic=topic,
-            day_number=day_outline["dayNumber"],
-            title=day_outline["title"],
-            objective=day_outline["objective"],
-        )
-
-    generated_day = {
-        "dayNumber": result.get("dayNumber", day_outline["dayNumber"]),
-        "title": result.get("title", day_outline["title"]),
-        "objective": result.get("objective", day_outline["objective"]),
-        "summary": result.get("summary", ""),
-        "sections": result.get("sections", []),
-        "exercise": result.get("exercise", ""),
-        "resources": result.get("resources", []),
-        "isGenerated": True,
-    }
+    else:
+        sections = result.get("sections", [])
+        if not isinstance(sections, list) or len(sections) == 0:
+            logger.warning(
+                "Generated day invalid sections for day=%s topic=%s, using mock fallback",
+                day_outline.get("dayNumber"),
+                topic,
+            )
+            await progress("Rebuilding this day with a fallback structure...")
+            generated_day = build_mock_generated_day(
+                topic=topic,
+                day_number=day_outline["dayNumber"],
+                title=day_outline["title"],
+                objective=day_outline["objective"],
+            )
+        else:
+            generated_day = {
+                "dayNumber": result.get("dayNumber", day_outline["dayNumber"]),
+                "title": result.get("title", day_outline["title"]),
+                "objective": result.get("objective", day_outline["objective"]),
+                "summary": result.get("summary", ""),
+                "sections": result.get("sections", []),
+                "exercise": result.get("exercise", ""),
+                "resources": result.get("resources", []),
+                "isGenerated": True,
+            }
 
     await progress("Evaluating lesson quality...")
 
@@ -475,9 +529,8 @@ async def generate_curriculum_day(
     approved = evaluation.get("approved", False)
     score = evaluation.get("score", 0)
 
-    # -------------------------
-    # REVISION STEP (NEW)
-    # -------------------------
+    final_day = generated_day
+
     if not approved or score < 6 or not passed_manual_checks:
         await progress("Improving the lesson based on feedback...")
 
@@ -496,12 +549,13 @@ async def generate_curriculum_day(
                 level=level,
             )
 
+            revised_sections = revised_result.get("sections", [])
             revised_day = {
                 "dayNumber": revised_result.get("dayNumber", day_outline["dayNumber"]),
                 "title": revised_result.get("title", day_outline["title"]),
                 "objective": revised_result.get("objective", day_outline["objective"]),
                 "summary": revised_result.get("summary", ""),
-                "sections": revised_result.get("sections", []),
+                "sections": revised_sections if isinstance(revised_sections, list) else [],
                 "exercise": revised_result.get("exercise", ""),
                 "resources": revised_result.get("resources", []),
                 "isGenerated": True,
@@ -518,39 +572,66 @@ async def generate_curriculum_day(
                 generated_day=revised_day,
             )
 
-            if second_eval.get("approved") and second_eval.get("score", 0) >= 6:
-                await progress("Finalizing improved lesson...")
-                return revised_day
+            revised_section_count = len(revised_day.get("sections", []))
+            revised_summary_length = len((revised_day.get("summary") or "").strip())
+            revised_exercise_length = len((revised_day.get("exercise") or "").strip())
+
+            revised_passed_manual_checks = (
+                revised_section_count >= 3
+                and revised_summary_length >= 120
+                and revised_exercise_length >= 20
+            )
+
+            if (
+                second_eval.get("approved", False)
+                and second_eval.get("score", 0) >= 6
+                and revised_passed_manual_checks
+            ):
+                final_day = revised_day
+                await progress("Improved lesson approved...")
+            else:
+                logger.warning(
+                    "Revised lesson still not good enough for day=%s topic=%s, using fallback",
+                    day_outline.get("dayNumber"),
+                    topic,
+                )
+                await progress("Using fallback lesson...")
+                final_day = build_mock_generated_day(
+                    topic=topic,
+                    day_number=day_outline["dayNumber"],
+                    title=day_outline["title"],
+                    objective=day_outline["objective"],
+                )
 
         except Exception:
-            logger.exception("Revision step failed")
-
-        logger.warning(
-            "Lesson rejected after revision, using fallback day=%s topic=%s",
-            day_outline.get("dayNumber"),
-            topic,
-        )
-
-        await progress("Using fallback lesson...")
-        return build_mock_generated_day(
-            topic=topic,
-            day_number=day_outline["dayNumber"],
-            title=day_outline["title"],
-            objective=day_outline["objective"],
-        )
+            logger.exception(
+                "Revision step failed for day=%s topic=%s, using fallback",
+                day_outline.get("dayNumber"),
+                topic,
+            )
+            await progress("Using fallback lesson...")
+            final_day = build_mock_generated_day(
+                topic=topic,
+                day_number=day_outline["dayNumber"],
+                title=day_outline["title"],
+                objective=day_outline["objective"],
+            )
 
     await progress("Finding helpful resources for this day...")
 
     resource_agent = ResourceDiscoveryAgent()
+    used_urls, used_titles = extract_used_resources(previous_days)
 
     try:
         daily_resources = await resource_agent.discover_day_resources(
             topic=topic,
             level=level,
-            day_title=generated_day["title"],
-            day_objective=generated_day["objective"],
-            day_summary=generated_day["summary"],
-            sections=generated_day["sections"],
+            day_title=final_day["title"],
+            day_objective=final_day["objective"],
+            day_summary=final_day["summary"],
+            sections=final_day["sections"],
+            used_urls=used_urls,
+            used_titles=used_titles,
         )
     except Exception:
         logger.exception(
@@ -560,8 +641,12 @@ async def generate_curriculum_day(
         )
         daily_resources = []
 
-    generated_day["resources"] = daily_resources or []
+    final_day["resources"] = daily_resources or []
 
     await progress("Finalizing this study day...")
 
-    return generated_day
+    return final_day
+
+
+
+

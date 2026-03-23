@@ -8,7 +8,8 @@ class CurriculumDayResourceResponse(BaseModel):
     title: str
     url: str
     type: str
-
+    reason: str | None = None
+    snippet: str | None = None
 
 class CurriculumSectionResponse(BaseModel):
     title: str

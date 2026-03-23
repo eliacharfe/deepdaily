@@ -83,7 +83,7 @@ function ResourceCard({
     const isYouTube = Boolean(youtubeEmbedUrl);
 
     return (
-        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:p-5 transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-500/30 dark:hover:bg-slate-900">
+        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:shadow-sm sm:p-5 dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-500/30 dark:hover:bg-slate-900">
             {/* {isYouTube && youtubeThumbnail ? (
                 <div className="mb-4 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
                     <img
@@ -95,9 +95,12 @@ function ResourceCard({
             ) : null} */}
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                <h3 className="text-base font-semibold leading-tight text-slate-900 sm:text-lg dark:text-white">
-                    {title}
-                </h3>
+                <div className="min-w-0 flex-1">
+                    <MarkdownContent
+                        content={title}
+                        className="[&_p]:my-0 [&_h1]:my-0 [&_h2]:my-0 [&_h3]:my-0 [&_h4]:my-0 text-base font-semibold leading-tight text-slate-900 sm:text-lg dark:text-white"
+                    />
+                </div>
 
                 <span className="w-fit rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-teal-700 sm:text-xs dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300">
                     {type}
@@ -105,15 +108,17 @@ function ResourceCard({
             </div>
 
             {reason ? (
-                <p className="mt-2 text-sm text-slate-600 sm:text-base dark:text-slate-300">
-                    {reason}
-                </p>
+                <MarkdownContent
+                    content={reason}
+                    className="mt-2 text-sm text-slate-600 sm:text-base dark:text-slate-300 [&_p]:my-0"
+                />
             ) : null}
 
             {snippet ? (
-                <p className="mt-3 text-xs leading-relaxed text-slate-500 sm:text-sm dark:text-slate-400">
-                    {snippet}
-                </p>
+                <MarkdownContent
+                    content={snippet}
+                    className="mt-3 text-xs leading-relaxed text-slate-500 sm:text-sm dark:text-slate-400 [&_p]:my-0"
+                />
             ) : null}
 
             {isYouTube && youtubeEmbedUrl ? (
@@ -144,7 +149,7 @@ function ResourceCard({
             )}
 
             {url ? (
-                <p className="mt-3 wrap-break-word text-[10px] text-slate-500 opacity-60 sm:text-sm dark:text-slate-400">
+                <p className="mt-3 break-words text-[10px] text-slate-500 opacity-60 sm:text-sm dark:text-slate-400">
                     {url}
                 </p>
             ) : null}
