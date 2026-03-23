@@ -108,11 +108,12 @@ function ResourceCard({
         <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:p-5 transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-500/30 dark:hover:bg-slate-900">
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white leading-tight">
+                <h3 dir="auto" className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white leading-tight">
                     {title}
                 </h3>
 
                 <span
+                    dir="auto"
                     className="w-fit rounded-full border px-2.5 py-0.5 text-[10px] sm:text-xs font-medium uppercase tracking-wide"
                     style={{
                         borderColor: "var(--accent-border)",
@@ -127,7 +128,7 @@ function ResourceCard({
             <p className="mt-2 text-base sm:text-lg text-slate-600 dark:text-slate-300">{reason}</p>
 
             {snippet ? (
-                <p className="mt-3 line-clamp-3 text-sm sm:text-base leading-relaxed text-slate-500 dark:text-slate-400">
+                <p dir="auto" className="mt-3 line-clamp-3 text-sm sm:text-base leading-relaxed text-slate-500 dark:text-slate-400">
                     {snippet}
                 </p>
             ) : null}
@@ -160,7 +161,7 @@ function ResourceCard({
             )}
 
             {url ? (
-                <p className="mt-3 break-all text-[10px] sm:text-sm text-slate-500 dark:text-slate-400 opacity-60">
+                <p dir="auto" className="mt-3 break-all text-[10px] sm:text-sm text-slate-500 dark:text-slate-400 opacity-60">
                     {url}
                 </p>
             ) : null}
@@ -579,27 +580,41 @@ export default function LearnPageClient(props: Props) {
             <PageShell className="px-4 py-8 pt-16 sm:px-6 sm:py-12 sm:pt-20 dark:bg-[#1F2428] dark:text-[#ECFDF5]">
                 <div className="mx-auto max-w-6xl space-y-6 sm:space-y-8 pt-4 sm:pt-6 lg:pt-10">
                     {/* Main Lesson Header Card */}
-                    <section className="overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                    <section
+                        dir="auto"
+                        className="overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-[#334155] dark:bg-[#111827]"
+                    >
                         <div className="border-b border-slate-200 p-5 sm:p-8 dark:border-[#334155]">
                             <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-                                <div className="space-y-2">
-                                    <p className="text-[10px] sm:text-sm font-medium uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
+                                <div className="space-y-2 min-w-0">
+                                    <p
+                                        dir="auto"
+                                        className="text-[10px] sm:text-sm font-medium uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300 text-start"
+                                    >
                                         DeepDaily lesson
                                     </p>
 
-                                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white leading-tight">
+                                    <h1
+                                        dir="auto"
+                                        className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white leading-tight text-start"
+                                    >
                                         {data.lesson.title}
                                     </h1>
 
-                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-                                        <p>
+                                    <div
+                                        dir="auto"
+                                        className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300"
+                                    >
+                                        <p dir="auto" className="text-start">
                                             Topic:{" "}
                                             <span className="font-medium text-slate-800 dark:text-slate-100">
                                                 {data.topic}
                                             </span>
                                         </p>
+
                                         <span className="hidden sm:inline text-slate-300">|</span>
-                                        <p>
+
+                                        <p dir="auto" className="text-start">
                                             Level:{" "}
                                             <span className="font-medium capitalize text-slate-800 dark:text-slate-100">
                                                 {data.level}
@@ -608,7 +623,7 @@ export default function LearnPageClient(props: Props) {
                                     </div>
                                 </div>
 
-                                <div className="flex sm:block">
+                                <div className="flex sm:block shrink-0 self-start">
                                     <SaveLessonButton
                                         lesson={{
                                             ...data,
@@ -625,19 +640,33 @@ export default function LearnPageClient(props: Props) {
                         </div>
 
                         <div className="p-5 sm:p-8">
-                            <div className="rounded-xl border border-teal-100 bg-teal-50/60 p-4 sm:p-5 dark:border-teal-900/30 dark:bg-teal-950/10">
-                                <h2 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">
+                            <div
+                                dir="auto"
+                                className="rounded-xl border border-teal-100 bg-teal-50/60 p-4 sm:p-5 dark:border-teal-900/30 dark:bg-teal-950/10"
+                            >
+                                <h2
+                                    dir="auto"
+                                    className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300 text-start"
+                                >
                                     Today&apos;s focus
                                 </h2>
-                                <p className="mt-2 text-base sm:text-lg text-slate-900 dark:text-slate-100">
+
+                                <p
+                                    dir="auto"
+                                    className="mt-2 text-base sm:text-lg text-slate-900 dark:text-slate-100 text-start"
+                                >
                                     {data.lesson.today_focus}
                                 </p>
                             </div>
 
                             <div className="mt-8">
-                                <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">
+                                <h2
+                                    dir="auto"
+                                    className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white text-start"
+                                >
                                     Summary
                                 </h2>
+
                                 <div className="mt-3 prose prose-base sm:prose-lg dark:prose-invert max-w-none">
                                     <MarkdownContent
                                         content={data.lesson.summary}
@@ -669,7 +698,7 @@ export default function LearnPageClient(props: Props) {
                                             key={section.title}
                                             className="rounded-xl border border-slate-100 bg-slate-50 p-4 sm:p-5 transition hover:border-teal-200 hover:bg-teal-50/40 dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-500/30 dark:hover:bg-teal-950/10"
                                         >
-                                            <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                                            <h3 dir="auto" className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
                                                 {section.title}
                                             </h3>
                                             <div className="mt-2 prose prose-base sm:prose-lg dark:prose-invert max-w-none">

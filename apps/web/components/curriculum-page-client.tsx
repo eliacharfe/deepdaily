@@ -425,28 +425,28 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 
                         <div className="mt-3 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                             <div>
-                                <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
+                                <h1 dir="auto" className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
                                     {curriculum.title}
                                 </h1>
 
-                                <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+                                <p dir="auto" className="mt-4 text-sm text-slate-600 dark:text-slate-300">
                                     Topic:{" "}
-                                    <span className="font-medium text-slate-800 dark:text-slate-100">
+                                    <span dir="auto" className="font-medium text-slate-800 dark:text-slate-100">
                                         {curriculum.topic}
                                     </span>
                                     {" · "}
                                     Level:{" "}
-                                    <span className="font-medium capitalize text-slate-800 dark:text-slate-100">
+                                    <span dir="auto" className="font-medium capitalize text-slate-800 dark:text-slate-100">
                                         {curriculum.level}
                                     </span>
                                     {" · "}
                                     Plan:{" "}
-                                    <span className="font-medium text-slate-800 dark:text-slate-100">
+                                    <span dir="auto" className="font-medium text-slate-800 dark:text-slate-100">
                                         {curriculum.durationDays} days
                                     </span>
                                 </p>
 
-                                <p className="mt-4 max-w-2xl leading-7 text-slate-700 dark:text-slate-300">
+                                <p dir="auto" className="mt-4 max-w-2xl leading-7 text-slate-700 dark:text-slate-300">
                                     {curriculum.overview}
                                 </p>
                             </div>
@@ -558,14 +558,14 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                             <span className="text-[10px] font-bold text-teal-600">✓ COMPLETED</span>
                                         )}
                                     </div>
-                                    <h2 className="text-xl font-bold text-slate-900 sm:text-3xl dark:text-white">{selectedDay.title}</h2>
-                                    <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{selectedDay.objective}</p>
+                                    <h2 dir="auto" className="text-xl font-bold text-slate-900 sm:text-3xl dark:text-white">{selectedDay.title}</h2>
+                                    <p dir="auto" className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{selectedDay.objective}</p>
                                 </section>
 
                                 <section className="space-y-4">
                                     {selectedDay.sections.map((section, i) => (
                                         <article key={i} className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-[#334155] dark:bg-[#111827]">
-                                            <h3 className="text-lg font-bold mb-4">{section.title}</h3>
+                                            <h3 dir="auto" className="text-lg font-bold mb-4">{section.title}</h3>
                                             <div className="prose prose-sm max-w-none dark:prose-invert">
                                                 <MarkdownContent content={section.content} />
                                             </div>
