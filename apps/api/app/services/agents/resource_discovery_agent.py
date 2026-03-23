@@ -19,24 +19,55 @@ class ResourceDiscoveryAgent:
         self.search_client = search_client or WebSearchClient()
 
         self.preferred_domains = {
-            "developer.apple.com": 4,
-            "docs.python.org": 4,
-            "react.dev": 4,
-            "nextjs.org": 4,
-            "fastapi.tiangolo.com": 4,
-            "platform.openai.com": 4,
-            "investopedia.com": 4,
-            "bogleheads.org": 3,
-            "morningstar.com": 3,
-            "coursera.org": 2,
-            "youtube.com": 2,
-            "udemy.com": 1,
-            "goodreads.com": 1,
-            "amazon.com": 1,
-            "medium.com": -1,
-            "reddit.com": -3,
-            "quora.com": -3,
-        }
+        # 🔥 Official docs / elite sources
+        "developer.mozilla.org": 5,
+        "github.com": 5,
+        "mit.edu": 5,
+        "stanford.edu": 5,
+        "harvard.edu": 5,
+
+        # 📘 Strong documentation
+        "developer.apple.com": 4,
+        "docs.python.org": 4,
+        "react.dev": 4,
+        "nextjs.org": 4,
+        "fastapi.tiangolo.com": 4,
+        "platform.openai.com": 4,
+        "learn.microsoft.com": 4,
+        "cloud.google.com": 4,
+        "aws.amazon.com": 4,
+
+        # 📚 Learning platforms
+        "khanacademy.org": 5,
+        "coursera.org": 3,
+        "edx.org": 4,
+        "freecodecamp.org": 4,
+
+        # 💻 Dev education
+        "realpython.com": 4,
+        "javascript.info": 5,
+        "css-tricks.com": 4,
+        "smashingmagazine.com": 4,
+        "geeksforgeeks.org": 3,
+
+        # 💰 Finance
+        "investopedia.com": 4,
+        "bogleheads.org": 3,
+        "morningstar.com": 3,
+
+        # 🎥 Video
+        "youtube.com": 4,
+
+        # 📦 Commerce / books
+        "goodreads.com": 1,
+        "amazon.com": 1,
+
+        # ⚠️ Lower quality
+        "medium.com": -1,
+        "reddit.com": -3,
+        "quora.com": -3,
+        "pinterest.com": -3,
+    }
 
     async def search(self, query: str, max_results: int = 5) -> list[dict[str, Any]]:
         results = await self.search_client.search(query=query, max_results=max_results)
@@ -64,10 +95,21 @@ class ResourceDiscoveryAgent:
     def infer_resource_type(self, url: str, title: str) -> str:
         value = f"{url} {title}".lower()
 
-        if "youtube.com" in value or "youtu.be" in value:
+        video_indicators = [
+            "youtube.com",
+            "youtu.be",
+            "vimeo.com",
+            "video",
+            "lecture",
+            "watch?v=",
+        ]
+
+        if any(indicator in value for indicator in video_indicators):
             return "video"
+
         if any(x in value for x in ["docs.", "/docs", "documentation", "developer.apple.com"]):
             return "documentation"
+
         return "article"
 
     def is_good_result(self, title: str, url: str) -> bool:
@@ -179,29 +221,36 @@ class ResourceDiscoveryAgent:
                 )
 
         collected.sort(key=lambda item: item[0], reverse=True)
-
         ranked = [resource for _, resource in collected]
 
-        videos = [r for r in ranked if r.type == "video"]
-        docs = [r for r in ranked if r.type == "documentation"]
-        articles = [r for r in ranked if r.type == "article"]
+        videos = [r for r in ranked if r["type"] == "video"]
+        docs = [r for r in ranked if r["type"] == "documentation"]
+        articles = [r for r in ranked if r["type"] == "article"]
 
-        balanced: list[LessonResource] = []
+        balanced: list[dict[str, Any]] = []
 
-        if articles:
-            balanced.append(articles[0])
+        # Always keep one video if one exists
         if videos:
             balanced.append(videos[0])
-        if docs:
-            balanced.append(docs[0])
 
+        # Then prefer one article
+        if articles:
+            if articles[0] not in balanced:
+                balanced.append(articles[0])
+
+        # Then prefer one documentation item
+        if docs:
+            if docs[0] not in balanced:
+                balanced.append(docs[0])
+
+        # Fill remaining slots by score
         for resource in ranked:
             if resource not in balanced:
                 balanced.append(resource)
-            if len(balanced) >= 4:
+            if len(balanced) >= 3:
                 break
 
-        return balanced[:4]
+        return balanced[:3]
 
     def build_deep_dive_queries(self, topic: str, level: str) -> list[str]:
         return [
@@ -356,7 +405,7 @@ class ResourceDiscoveryAgent:
         queries = [
             f"{topic} {day_title} {day_objective} {level} tutorial",
             f"{topic} {day_title} {section_hint} guide".strip(),
-            f"{topic} {day_title} explained video",
+            f"{topic} {day_title} explained video youtube",
             f"{topic} {day_objective} {summary_hint} practical example".strip(),
         ]
 
