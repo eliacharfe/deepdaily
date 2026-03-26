@@ -15,6 +15,7 @@ from app.db.base import Base
 from app.db.session import engine
 from app.api.routes.curriculum import router as curriculum_router
 from app.api.routes.lesson_qa import router as lesson_qa_router
+from app.api.routes.surprise_topic import router as surprise_topic_router
 
 # IMPORTANT: import models so SQLAlchemy knows about them
 from app.models.lesson import Lesson
@@ -48,6 +49,7 @@ app.include_router(streaming_router)
 app.include_router(lessons_router)
 app.include_router(curriculum_router)
 app.include_router(lesson_qa_router)
+app.include_router(surprise_topic_router)
 
 print("DB URL:", settings.database_url)
 
