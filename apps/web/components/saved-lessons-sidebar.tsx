@@ -17,6 +17,10 @@ import {
 import { useAuth } from "@/components/providers/auth-provider";
 import { getSavedLessons, deleteLesson } from "@/lib/lessons-api";
 import type { LessonPreview } from "@/types/lesson";
+import { getCurricula } from "@/lib/curricula-api";
+import { pickPrimaryCurriculum } from "@/lib/primary-curriculum";
+import type { Curriculum } from "@/types/curriculum";
+import SidebarInProgressCard from "@/components/sidebar-in-progress-card";
 
 type Props = {
     isOpen: boolean;
@@ -39,6 +43,9 @@ export default function SavedLessonsSidebar({
     const [error, setError] = useState("");
     const [deletingLessonId, setDeletingLessonId] = useState<string | null>(null);
 
+    const [primaryCurriculum, setPrimaryCurriculum] = useState<Curriculum | null>(null);
+    const [isLoadingCurricula, setIsLoadingCurricula] = useState(false);
+
     const loadLessons = useCallback(async () => {
         if (!user) {
             setLessons([]);
@@ -58,6 +65,45 @@ export default function SavedLessonsSidebar({
         } finally {
             setIsLoading(false);
         }
+    }, [user]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadPrimaryCurriculum() {
+            if (!user) {
+                setPrimaryCurriculum(null);
+                return;
+            }
+
+            try {
+                setIsLoadingCurricula(true);
+
+                const token = await user.getIdToken();
+                const curricula = await getCurricula(token);
+                const primary = pickPrimaryCurriculum(curricula);
+
+                if (!cancelled) {
+                    setPrimaryCurriculum(primary);
+                }
+            } catch (error) {
+                console.error("Failed to load primary curriculum:", error);
+
+                if (!cancelled) {
+                    setPrimaryCurriculum(null);
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsLoadingCurricula(false);
+                }
+            }
+        }
+
+        loadPrimaryCurriculum();
+
+        return () => {
+            cancelled = true;
+        };
     }, [user]);
 
     useEffect(() => {
@@ -174,6 +220,12 @@ export default function SavedLessonsSidebar({
                             </div>
 
                             <div className="mt-4 border-b border-slate-200 dark:border-slate-700" />
+
+                            {primaryCurriculum && (
+                                <div className="mt-4 px-1">
+                                    <SidebarInProgressCard curriculum={primaryCurriculum} />
+                                </div>
+                            )}
                         </div>
 
                         {!user ? (
