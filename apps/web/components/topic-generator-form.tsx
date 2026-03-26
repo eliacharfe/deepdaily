@@ -37,6 +37,7 @@ export default function TopicGeneratorForm() {
     const [pendingSubmit, setPendingSubmit] = useState(false);
     const [placeholderIndex, setPlaceholderIndex] = useState(0);
     const [isFocused, setIsFocused] = useState(false);
+    const [hasSurprise, setHasSurprise] = useState(false);
 
     const animatedPlaceholder = useMemo(
         () => `Try ${SUGGESTIONS[placeholderIndex]}`,
@@ -110,6 +111,7 @@ export default function TopicGeneratorForm() {
             if (randomTopic.trim()) {
                 setTopic(randomTopic.trim());
                 storeSurpriseTopic(randomTopic.trim());
+                setHasSurprise(true);
             }
         } catch (error) {
             console.error("Surprise topic error:", error);
@@ -197,7 +199,10 @@ export default function TopicGeneratorForm() {
                                     id="topic"
                                     type="text"
                                     value={topic}
-                                    onChange={(e) => setTopic(e.target.value)}
+                                    onChange={(e) => {
+                                        setTopic(e.target.value);
+                                        setHasSurprise(false);
+                                    }}
                                     onFocus={() => setIsFocused(true)}
                                     onBlur={() => setIsFocused(false)}
                                     placeholder={animatedPlaceholder}
@@ -265,7 +270,7 @@ export default function TopicGeneratorForm() {
                                 }}
                             >
                                 <p className="text-xs font-medium text-slate-400 sm:text-sm">
-                                    You don’t know what to learn next?
+                                    Not sure what to learn next?
                                 </p>
 
                                 <button
@@ -278,7 +283,11 @@ export default function TopicGeneratorForm() {
                                         background: "rgba(255,255,255,0.05)",
                                     }}
                                 >
-                                    {isSurprising ? "Surprising..." : "Surprise me"}
+                                    {isSurprising
+                                        ? "Thinking..."
+                                        : hasSurprise
+                                            ? "Try another"
+                                            : "Surprise me"}
                                 </button>
                             </div>
                         </div>
