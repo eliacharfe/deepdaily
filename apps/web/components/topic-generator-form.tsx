@@ -10,6 +10,7 @@ import LoginRequiredModal from "@/components/auth/login-required-modal";
 import { Sparkles } from "lucide-react";
 import LevelDropdown from "@/components/ui/level-dropdown";
 import { getSurpriseTopic } from "@/lib/surprise-topic";
+import { getSavedLessons } from "@/lib/lessons-api";
 
 const SUGGESTIONS = [
     "Investing",
@@ -101,16 +102,21 @@ export default function TopicGeneratorForm() {
         try {
             setIsSurprising(true);
 
+            const userLearnedTopics = await getUserLearnedTopics();
+
             const excludeTopics = [
                 topic.trim(),
                 ...getStoredSurpriseTopics(),
+                ...userLearnedTopics,
             ].filter(Boolean);
 
             const randomTopic = await getSurpriseTopic(level, excludeTopics);
 
             if (randomTopic.trim()) {
-                setTopic(randomTopic.trim());
-                storeSurpriseTopic(randomTopic.trim());
+                const trimmedTopic = randomTopic.trim();
+
+                setTopic(trimmedTopic);
+                storeSurpriseTopic(trimmedTopic);
                 setHasSurprise(true);
             }
         } catch (error) {
@@ -145,6 +151,22 @@ export default function TopicGeneratorForm() {
             localStorage.setItem(SURPRISE_TOPICS_STORAGE_KEY, JSON.stringify(next));
         } catch {
             // ignore storage errors
+        }
+    }
+
+    async function getUserLearnedTopics(): Promise<string[]> {
+        try {
+            if (!user) return [];
+
+            const token = await user.getIdToken();
+            const lessons = await getSavedLessons(token);
+
+            return lessons
+                .map((lesson) => lesson.topic?.trim())
+                .filter((topic): topic is string => Boolean(topic));
+        } catch (error) {
+            console.error("Failed to load user topics:", error);
+            return [];
         }
     }
 
