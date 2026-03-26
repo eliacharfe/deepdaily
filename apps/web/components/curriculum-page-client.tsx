@@ -272,6 +272,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 
             setCurriculum((prev) => mergeCurriculumState(prev, updated));
             setSelectedDayNumber(updated.currentDay);
+            window.dispatchEvent(new Event("curricula:refresh"));
         } catch (err) {
             setError(
                 err instanceof Error ? err.message : "Failed to complete day"
