@@ -18,7 +18,7 @@ export default async function HomePage() {
 
   return (
     <PageShell showHome={false}>
-      <section className="mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center px-6 pt-4 pb-16 text-center sm:min-h-[calc(100vh-6rem)]">
+      <section className="mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center px-6 pt-4 pb-4 text-center sm:min-h-[calc(100vh-6rem)]">
         <p className="dd-accent-text mb-3 text-sm font-semibold uppercase tracking-[0.24em]">
           DeepDaily
         </p>
@@ -32,7 +32,7 @@ export default async function HomePage() {
 
         <HomePageClient />
 
-        <div className="pt-4">
+        <div className="pt-6">
           <AppFooter />
         </div>
       </section>
