@@ -549,3 +549,20 @@ async def generate_day_for_curriculum(
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@router.get("", response_model=list[CurriculumResponse])
+async def get_curricula(
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    logger.info("Fetching all curricula for user=%s", current_user["uid"])
+
+    result = await db.execute(
+        select(Curriculum).where(
+            Curriculum.user_id == current_user["uid"],
+        )
+    )
+    curricula = result.scalars().all()
+
+    return [build_curriculum_response(curriculum) for curriculum in curricula]

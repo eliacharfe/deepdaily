@@ -215,3 +215,24 @@ export async function generateCurriculumDayWithProgress(
 
     return finalResult;
 }
+
+export async function getCurricula(token: string): Promise<Curriculum[]> {
+    const res = await fetch(`${config.apiBaseUrl}/curricula`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+    });
+
+    const contentType = res.headers.get("content-type") || "";
+
+    if (!res.ok) {
+        if (contentType.includes("application/json")) {
+            const err = await res.json();
+            throw new Error(err.detail || "Failed to load curricula");
+        }
+        throw new Error("Failed to load curricula");
+    }
+
+    return res.json();
+}
