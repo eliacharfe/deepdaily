@@ -11,8 +11,10 @@ import { getCurricula } from "@/lib/curricula-api";
 import {
     pickPrimaryCurriculum,
     isCurriculumCompleted,
+    getNextDayNumber,
 } from "@/lib/primary-curriculum";
 import type { Curriculum } from "@/types/curriculum";
+import Link from "next/link";
 
 export default function HomePageClient() {
     const { user, loading } = useAuth();
@@ -60,6 +62,24 @@ export default function HomePageClient() {
         };
     }, [user, loading]);
 
+    function groupCurriculaByLesson(curricula: Curriculum[]): Curriculum[][] {
+        const groups = new Map<string, Curriculum[]>();
+
+        for (const curriculum of curricula) {
+            const key = curriculum.lessonId;
+
+            if (!groups.has(key)) {
+                groups.set(key, []);
+            }
+
+            groups.get(key)!.push(curriculum);
+        }
+
+        return Array.from(groups.values()).map((group) =>
+            [...group].sort((a, b) => a.durationDays - b.durationDays)
+        );
+    }
+
     const primaryCurriculum = pickPrimaryCurriculum(curricula);
     const otherActiveCurricula = [...curricula]
         .filter(
@@ -74,6 +94,8 @@ export default function HomePageClient() {
 
             return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
         });
+
+    const groupedOtherCurricula = groupCurriculaByLesson(otherActiveCurricula);
 
     return (
         <>
@@ -91,48 +113,75 @@ export default function HomePageClient() {
                         Other learning paths
                     </p>
 
-                    <div className="mt-4 space-y-3">
-                        {otherActiveCurricula.map((curriculum) => {
-                            const progress = Math.round(
-                                (curriculum.completedDays.length / curriculum.durationDays) * 100
-                            );
+                    {groupedOtherCurricula.map((group) => {
+                        function capitalizeFirst(str: string) {
+                            return str.charAt(0).toUpperCase() + str.slice(1);
+                        }
 
-                            return (
-                                <div
-                                    key={curriculum.id}
-                                    className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 px-4 py-4 dark:border-[#334155]"
-                                >
-                                    <div className="min-w-0 flex-1 text-left">
-                                        <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
-                                            {curriculum.title}
-                                        </p>
+                        const groupTitle = capitalizeFirst(group[0]?.topic ?? "Learning topic");
 
-                                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                            Day {curriculum.lastOpenedDay} of {curriculum.durationDays}
-                                        </p>
-
-                                        <div className="mt-3 h-2 w-full max-w-md overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-                                            <div
-                                                className="h-full rounded-full bg-teal-500 transition-all"
-                                                style={{ width: `${progress}%` }}
-                                            />
-                                        </div>
-
-                                        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                            {progress}% completed
-                                        </p>
-                                    </div>
-
-                                    <a
-                                        href={`/curriculum/${curriculum.id}`}
-                                        className="shrink-0 rounded-xl border border-teal-500/30 px-3 py-2 text-xs font-semibold text-teal-700 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-500/10"
-                                    >
-                                        Open
-                                    </a>
+                        return (
+                            <div
+                                key={group[0].lessonId}
+                                className="rounded-2xl border border-slate-200 px-4 py-4 dark:border-[#334155]"
+                            >
+                                <div className="text-left">
+                                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                        {groupTitle}
+                                    </p>
+                                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                        {group.length} active plan{group.length > 1 ? "s" : ""}
+                                    </p>
                                 </div>
-                            );
-                        })}
-                    </div>
+
+                                <div className="mt-4 space-y-3">
+                                    {group.map((curriculum) => {
+                                        const nextDay = getNextDayNumber(curriculum);
+                                        const progress = Math.round(
+                                            (curriculum.completedDays.length / curriculum.durationDays) * 100
+                                        );
+
+                                        return (
+                                            <div
+                                                key={curriculum.id}
+                                                className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 dark:border-slate-700 dark:bg-slate-900/60"
+                                            >
+                                                <div className="min-w-0 flex-1 text-left">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                                                            {curriculum.durationDays}-day plan
+                                                        </span>
+                                                    </div>
+
+                                                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                                        Continue with Day {nextDay} of {curriculum.durationDays}
+                                                    </p>
+
+                                                    <div className="mt-3 h-2 w-full max-w-md overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                                                        <div
+                                                            className="h-full rounded-full bg-teal-500 transition-all"
+                                                            style={{ width: `${progress}%` }}
+                                                        />
+                                                    </div>
+
+                                                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                                        {progress}% completed
+                                                    </p>
+                                                </div>
+
+                                                <Link
+                                                    href={`/curriculum/${curriculum.id}`}
+                                                    className="shrink-0 rounded-xl border border-teal-500/30 px-3 py-2 text-xs font-semibold text-teal-700 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-500/10"
+                                                >
+                                                    Continue
+                                                </Link>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             ) : null}
         </>
