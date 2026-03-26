@@ -3,6 +3,11 @@
 
 import { config } from "@/lib/config";
 
+export type LessonQaTurn = {
+    role: "user" | "assistant";
+    content: string;
+};
+
 type AskLessonQuestionPayload = {
     curriculumId: string;
     dayNumber: number;
@@ -14,6 +19,7 @@ type AskLessonQuestionPayload = {
         title: string;
         content: string;
     }>;
+    conversationHistory?: LessonQaTurn[];
 };
 
 type StreamLessonQuestionOptions = {
@@ -56,6 +62,7 @@ export async function streamLessonQuestion({
     const reader = res.body.getReader();
     const decoder = new TextDecoder("utf-8");
     let buffer = "";
+    let didCallDone = false;
 
     while (true) {
         const { value, done } = await reader.read();
@@ -68,7 +75,10 @@ export async function streamLessonQuestion({
         buffer = events.pop() || "";
 
         for (const event of events) {
-            const line = event.split("\n").find((row) => row.startsWith("data: "));
+            const line = event
+                .split("\n")
+                .find((row) => row.startsWith("data: "));
+
             if (!line) continue;
 
             const raw = line.replace(/^data:\s*/, "");
@@ -81,7 +91,10 @@ export async function streamLessonQuestion({
                 } else if (parsed.type === "error") {
                     throw new Error(parsed.message || "Streaming failed");
                 } else if (parsed.type === "done") {
-                    onDone?.();
+                    if (!didCallDone) {
+                        didCallDone = true;
+                        onDone?.();
+                    }
                 }
             } catch (error) {
                 if (error instanceof Error) {
@@ -91,5 +104,7 @@ export async function streamLessonQuestion({
         }
     }
 
-    onDone?.();
+    if (!didCallDone) {
+        onDone?.();
+    }
 }

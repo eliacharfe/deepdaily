@@ -43,6 +43,7 @@ export default function TopicGeneratorForm() {
     const [surpriseQueue, setSurpriseQueue] = useState<string[]>([]);
     const [userLearnedTopics, setUserLearnedTopics] = useState<string[]>([]);
     const [hasLoadedUserTopics, setHasLoadedUserTopics] = useState(false);
+    const [isPreloadingSurprises, setIsPreloadingSurprises] = useState(false);
 
     const animatedPlaceholder = useMemo(
         () => `Try ${SUGGESTIONS[placeholderIndex]}`,
@@ -68,11 +69,6 @@ export default function TopicGeneratorForm() {
             goToLesson(trimmedTopic, level);
         }
     }, [user, loading, pendingSubmit, topic, level, router]);
-
-    useEffect(() => {
-        setSurpriseQueue([]);
-        setHasSurprise(false);
-    }, [level]);
 
     useEffect(() => {
         if (topic.trim()) return;
@@ -103,6 +99,70 @@ export default function TopicGeneratorForm() {
         } finally {
             setIsSubmitting(false);
         }
+    }
+
+    useEffect(() => {
+        setUserLearnedTopics([]);
+        setHasLoadedUserTopics(false);
+    }, [user?.uid]);
+
+    useEffect(() => {
+        if (!hasSurprise) return;
+        if (isSurprising || isPreloadingSurprises) return;
+        if (surpriseQueue.length !== 1) return;
+
+        let cancelled = false;
+
+        async function preloadNextBatch() {
+            try {
+                setIsPreloadingSurprises(true);
+
+                const nextBatch = await fetchSurpriseBatch(surpriseQueue);
+
+                if (cancelled || nextBatch.length === 0) return;
+
+                setSurpriseQueue((prev) => {
+                    const merged = [...prev, ...nextBatch];
+                    return [...new Set(merged)];
+                });
+            } catch (error) {
+                console.error("Failed to preload surprise topics:", error);
+            } finally {
+                if (!cancelled) {
+                    setIsPreloadingSurprises(false);
+                }
+            }
+        }
+
+        void preloadNextBatch();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [hasSurprise, isSurprising, isPreloadingSurprises, surpriseQueue.length, level]);
+
+    useEffect(() => {
+        setSurpriseQueue([]);
+        setHasSurprise(false);
+        setIsPreloadingSurprises(false);
+    }, [level]);
+
+    function formatLevelLabel(value: TopicLevel): string {
+        if (value === "beginner") return "Beginner";
+        if (value === "intermediate") return "Intermediate";
+        return "Advanced";
+    }
+
+    function buildExcludeTopics(
+        learnedTopics: string[],
+        queuedTopics: string[] = []
+    ): string[] {
+        return [
+            topic.trim(),
+            ...getStoredSurpriseTopics(),
+            ...learnedTopics,
+            ...queuedTopics,
+        ].filter(Boolean);
     }
 
     async function handleSurpriseMe() {
@@ -163,22 +223,6 @@ export default function TopicGeneratorForm() {
         }
     }
 
-    async function getUserLearnedTopics(): Promise<string[]> {
-        try {
-            if (!user) return [];
-
-            const token = await user.getIdToken();
-            const lessons = await getSavedLessons(token);
-
-            return lessons
-                .map((lesson) => lesson.topic?.trim())
-                .filter((topic): topic is string => Boolean(topic));
-        } catch (error) {
-            console.error("Failed to load user topics:", error);
-            return [];
-        }
-    }
-
     async function getCachedUserLearnedTopics(): Promise<string[]> {
         if (hasLoadedUserTopics) {
             return userLearnedTopics;
@@ -205,15 +249,10 @@ export default function TopicGeneratorForm() {
         }
     }
 
-    async function fetchSurpriseBatch(): Promise<string[]> {
+    async function fetchSurpriseBatch(existingQueue: string[] = []): Promise<string[]> {
         const learnedTopics = await getCachedUserLearnedTopics();
 
-        const excludeTopics = [
-            topic.trim(),
-            ...getStoredSurpriseTopics(),
-            ...learnedTopics,
-            ...surpriseQueue,
-        ].filter(Boolean);
+        const excludeTopics = buildExcludeTopics(learnedTopics, existingQueue);
 
         const topics = await getSurpriseTopics(level, excludeTopics, 4);
 
@@ -275,6 +314,7 @@ export default function TopicGeneratorForm() {
                                         setTopic(e.target.value);
                                         setHasSurprise(false);
                                         setSurpriseQueue([]);
+                                        setIsPreloadingSurprises(false);
                                     }}
                                     onFocus={() => setIsFocused(true)}
                                     onBlur={() => setIsFocused(false)}
@@ -362,6 +402,10 @@ export default function TopicGeneratorForm() {
                                             ? "Try another"
                                             : "Surprise me"}
                                 </button>
+
+                                <p className="text-[11px] text-slate-500 sm:text-xs">
+                                    Picked for {formatLevelLabel(level).toLowerCase()} level
+                                </p>
                             </div>
                         </div>
                     </div>

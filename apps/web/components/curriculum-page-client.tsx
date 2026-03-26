@@ -22,6 +22,11 @@ type Props = {
     curriculumId: string;
 };
 
+type LessonQaTurn = {
+    role: "user" | "assistant";
+    content: string;
+};
+
 function getYouTubeVideoId(url?: string | null): string | null {
     if (!url) return null;
 
@@ -174,11 +179,17 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
     const [currentDayGenerationMessage, setCurrentDayGenerationMessage] = useState("");
 
     const [lessonQaAnswer, setLessonQaAnswer] = useState("");
+    const [lessonQaHistory, setLessonQaHistory] = useState<LessonQaTurn[]>([]);
 
     useEffect(() => {
         if (!curriculum) return;
         void ensureDayGenerated(selectedDayNumber);
     }, [curriculum?.id, selectedDayNumber]);
+
+    useEffect(() => {
+        setLessonQaAnswer("");
+        setLessonQaHistory([]);
+    }, [selectedDayNumber]);
 
     useEffect(() => {
         let cancelled = false;
@@ -255,6 +266,24 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             setIsUpdatingOpenedDay(false);
         }
     }
+
+    const lessonQaQuickActions = useMemo(() => {
+        if (!selectedDay) return [];
+
+        const firstSectionTitle = selectedDay.sections[0]?.title;
+        const secondSectionTitle = selectedDay.sections[1]?.title;
+
+        return [
+            `Explain "${selectedDay.title}" like I'm a beginner`,
+            firstSectionTitle
+                ? `Help me understand "${firstSectionTitle}"`
+                : "What are the key takeaways?",
+            secondSectionTitle
+                ? `Give me a practical example for "${secondSectionTitle}"`
+                : "Give me a practical example",
+            "Test me with 3 questions",
+        ];
+    }, [selectedDay]);
 
     async function handleCompleteDay() {
         if (!user || !curriculum || !selectedDay || isCompletingDay) return;
@@ -586,12 +615,17 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                     dayObjective={selectedDay.objective}
                                     disabled={!selectedDay.isGenerated || isGeneratingDay}
                                     answer={lessonQaAnswer}
+                                    quickActions={lessonQaQuickActions}
                                     onAsk={async (question) => {
                                         if (!user || !curriculum) {
                                             throw new Error("You must be signed in");
                                         }
 
                                         const token = await user.getIdToken();
+
+                                        const previousHistory = lessonQaHistory.slice(-4);
+                                        let streamedAnswer = "";
+
                                         setLessonQaAnswer("");
 
                                         await streamLessonQuestion({
@@ -607,11 +641,19 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                                     title: section.title,
                                                     content: section.content,
                                                 })),
+                                                conversationHistory: previousHistory,
                                             },
                                             onChunk: (chunk) => {
+                                                streamedAnswer += chunk;
                                                 setLessonQaAnswer((prev) => prev + chunk);
                                             },
                                         });
+
+                                        setLessonQaHistory((prev) => [
+                                            ...prev,
+                                            { role: "user", content: question },
+                                            { role: "assistant", content: streamedAnswer },
+                                        ]);
                                     }}
                                 />
 

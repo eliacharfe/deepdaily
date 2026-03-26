@@ -3,7 +3,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MarkdownContent from "@/components/markdown-content";
 
 type LessonDayQaCardProps = {
@@ -11,12 +11,14 @@ type LessonDayQaCardProps = {
     dayObjective?: string;
     disabled?: boolean;
     answer: string;
+    quickActions?: string[];
     onAsk: (question: string) => Promise<void>;
 };
 
-const QUICK_ACTIONS = [
-    "Explain this simply",
-    "Give me a real-world example",
+const DEFAULT_QUICK_ACTIONS = [
+    "Explain this like I'm a beginner",
+    "Give me a practical example",
+    "What are the key takeaways?",
     "Test me with 3 questions",
 ];
 
@@ -25,11 +27,23 @@ export default function LessonDayQaCard({
     dayObjective,
     disabled = false,
     answer,
+    quickActions = DEFAULT_QUICK_ACTIONS,
     onAsk,
 }: LessonDayQaCardProps) {
     const [question, setQuestion] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [copied, setCopied] = useState(false);
+
+    useEffect(() => {
+        if (!copied) return;
+
+        const timeout = window.setTimeout(() => {
+            setCopied(false);
+        }, 1500);
+
+        return () => window.clearTimeout(timeout);
+    }, [copied]);
 
     async function handleSubmit(customQuestion?: string) {
         const finalQuestion = (customQuestion ?? question).trim();
@@ -38,6 +52,8 @@ export default function LessonDayQaCard({
         try {
             setLoading(true);
             setError("");
+            setCopied(false);
+
             await onAsk(finalQuestion);
 
             if (!customQuestion) {
@@ -50,29 +66,63 @@ export default function LessonDayQaCard({
         }
     }
 
+    async function handleCopyAnswer() {
+        if (!answer.trim()) return;
+
+        try {
+            await navigator.clipboard.writeText(answer);
+            setCopied(true);
+        } catch {
+            setError("Could not copy the answer");
+        }
+    }
+
+    async function handleFollowUp() {
+        if (loading || disabled) return;
+        await handleSubmit("Go a bit deeper on the most important part of this lesson.");
+    }
+
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-[#334155] dark:bg-[#111827]">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
-                AI Tutor
+                AI Coach
             </p>
 
             <h2 className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
-                Ask about this lesson
+                Stuck or curious?
             </h2>
 
             <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                Ask a focused question about today’s lesson and get a guided explanation.
+                Get a clear explanation, examples, or test your understanding.
             </p>
 
-            <div dir="auto" className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900/60">
-                <p dir="auto" className="font-semibold text-slate-900 dark:text-white">{dayTitle}</p>
+            <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
+                Based on today’s lesson content
+            </p>
+
+            <div
+                dir="auto"
+                className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900/60"
+            >
+                <p
+                    dir="auto"
+                    className="font-semibold text-slate-900 dark:text-white"
+                >
+                    {dayTitle}
+                </p>
+
                 {dayObjective ? (
-                    <p className="mt-1 text-slate-600 dark:text-slate-300">{dayObjective}</p>
+                    <p
+                        dir="auto"
+                        className="mt-1 text-slate-600 dark:text-slate-300"
+                    >
+                        {dayObjective}
+                    </p>
                 ) : null}
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
-                {QUICK_ACTIONS.map((action) => (
+                {quickActions.map((action) => (
                     <button
                         key={action}
                         type="button"
@@ -96,12 +146,16 @@ export default function LessonDayQaCard({
                 />
             </div>
 
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex items-center justify-between gap-3">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
+                    Ask a focused question for the best answer
+                </p>
+
                 <button
                     type="button"
                     onClick={() => handleSubmit()}
                     disabled={!question.trim() || loading || disabled}
-                    className="rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-teal-700 disabled:opacity-50 dark:bg-teal-500"
+                    className="rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-teal-500 dark:hover:bg-teal-400 dark:text-slate-900"
                 >
                     {loading ? "Thinking..." : "Ask AI"}
                 </button>
@@ -115,13 +169,54 @@ export default function LessonDayQaCard({
 
             {(loading || answer) ? (
                 <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
-                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                        Answer
-                    </p>
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                            Answer
+                        </p>
 
-                    <div className="prose prose-sm max-w-none dark:prose-invert">
-                        <MarkdownContent content={answer || "Thinking..."} />
+                        {answer ? (
+                            <button
+                                type="button"
+                                onClick={handleCopyAnswer}
+                                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                            >
+                                {copied ? "Copied" : "Copy"}
+                            </button>
+                        ) : null}
                     </div>
+
+                    {loading && !answer ? (
+                        <p className="animate-pulse text-sm text-slate-500 dark:text-slate-400">
+                            Thinking through your question...
+                        </p>
+                    ) : (
+                        <div className="prose prose-sm max-w-none dark:prose-invert">
+                            <MarkdownContent content={answer} />
+                        </div>
+                    )}
+
+                    {answer && !loading ? (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                onClick={handleFollowUp}
+                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                            >
+                                Ask a follow-up
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    handleSubmit("Summarize this answer in 3 short bullet points.")
+                                }
+                                disabled={loading || disabled}
+                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                            >
+                                Summarize this
+                            </button>
+                        </div>
+                    ) : null}
                 </div>
             ) : null}
         </section>

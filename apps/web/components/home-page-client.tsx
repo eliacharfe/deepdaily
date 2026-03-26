@@ -81,6 +81,10 @@ export default function HomePageClient() {
     }
 
     const primaryCurriculum = pickPrimaryCurriculum(curricula);
+    const hasAnyCurricula = curricula.length > 0;
+    const hasActiveCurricula = curricula.some(
+        (curriculum) => !isCurriculumCompleted(curriculum)
+    );
     const otherActiveCurricula = [...curricula]
         .filter(
             (curriculum) =>
@@ -99,6 +103,39 @@ export default function HomePageClient() {
 
     return (
         <>
+
+            {!loading && user && !isLoadingCurricula && !hasAnyCurricula ? (
+                <div className="mb-6 w-full max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
+                        Start learning
+                    </p>
+
+                    <h2 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">
+                        Start your first learning path
+                    </h2>
+
+                    <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                        Pick any topic and DeepDaily will turn it into a structured day-by-day plan you can actually follow.
+                    </p>
+                </div>
+            ) : null}
+
+            {!loading && user && !isLoadingCurricula && hasAnyCurricula && !hasActiveCurricula ? (
+                <div className="mb-6 w-full max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
+                        Great progress
+                    </p>
+
+                    <h2 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">
+                        Ready for a new topic?
+                    </h2>
+
+                    <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                        You finished your active learning plans. Generate a new topic and keep the momentum going.
+                    </p>
+                </div>
+            ) : null}
+
             <TopicGeneratorForm />
 
             {primaryCurriculum ? (
