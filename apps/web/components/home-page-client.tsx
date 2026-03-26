@@ -61,11 +61,19 @@ export default function HomePageClient() {
     }, [user, loading]);
 
     const primaryCurriculum = pickPrimaryCurriculum(curricula);
-    const otherActiveCurricula = curricula.filter(
-        (curriculum) =>
-            !isCurriculumCompleted(curriculum) &&
-            curriculum.id !== primaryCurriculum?.id
-    );
+    const otherActiveCurricula = [...curricula]
+        .filter(
+            (curriculum) =>
+                !isCurriculumCompleted(curriculum) &&
+                curriculum.id !== primaryCurriculum?.id
+        )
+        .sort((a, b) => {
+            if (b.lastOpenedDay !== a.lastOpenedDay) {
+                return b.lastOpenedDay - a.lastOpenedDay;
+            }
+
+            return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        });
 
     return (
         <>
@@ -84,7 +92,7 @@ export default function HomePageClient() {
                     </p>
 
                     <div className="mt-4 space-y-3">
-                        {otherActiveCurricula.slice(0, 3).map((curriculum) => {
+                        {otherActiveCurricula.map((curriculum) => {
                             const progress = Math.round(
                                 (curriculum.completedDays.length / curriculum.durationDays) * 100
                             );
