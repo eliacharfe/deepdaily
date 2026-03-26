@@ -26,6 +26,9 @@ FALLBACK_TOPICS: dict[str, list[str]] = {
         "Improve public speaking",
         "Learn photography basics",
         "Build better focus habits",
+        "Learn negotiation basics",
+        "Understand emotional intelligence",
+        "Learn time management basics",
     ],
     "intermediate": [
         "Build a REST API with Node.js",
@@ -33,6 +36,9 @@ FALLBACK_TOPICS: dict[str, list[str]] = {
         "Understand UI UX fundamentals",
         "Create a personal investment plan",
         "Learn Git team workflows",
+        "Improve product thinking",
+        "Learn intermediate SQL",
+        "Develop leadership skills",
     ],
     "advanced": [
         "Design scalable backend architecture",
@@ -40,6 +46,9 @@ FALLBACK_TOPICS: dict[str, list[str]] = {
         "Build a production ready SaaS MVP",
         "Improve software performance optimization",
         "Design a personal knowledge system",
+        "Master advanced negotiation",
+        "Develop growth strategy systems",
+        "Design high leverage workflows",
     ],
 }
 
@@ -75,60 +84,75 @@ def is_too_similar(topic: str, excluded: list[str]) -> bool:
     return False
 
 
-def build_prompt(level: str, category: str, exclude_topics: list[str]) -> str:
-    excluded_text = "\n".join(f"- {topic}" for topic in exclude_topics[:30]) or "- None"
+def build_prompt(level: str, count: int, exclude_topics: list[str]) -> str:
+    categories_text = ", ".join(CATEGORIES)
+    excluded_text = "\n".join(f"- {topic}" for topic in exclude_topics[:40]) or "- None"
 
     return f"""
-You are generating one surprise learning topic for DeepDaily, a product that turns topics into structured day-by-day learning plans.
+You are generating surprise learning topics for DeepDaily, a product that turns topics into structured day-by-day learning plans.
 
-Generate exactly ONE topic.
+Generate exactly {count} topic suggestions.
 
 Requirements:
 - learner level: {level}
-- category: {category}
+- choose from a diverse mix of categories such as: {categories_text}
 - practical and interesting
 - specific enough for a structured 7-day or 30-day curriculum
 - not too broad
 - not too academic
 - not overly niche
 - useful, motivating, and realistic
-- keep it short, ideally 2 to 6 words
+- each topic should be short, ideally 2 to 6 words
 - do not use quotes
-- do not number it
-- do not add explanation
-- return only the topic text
+- do not add explanations
 
 Avoid repeating or closely matching any of these topics:
 {excluded_text}
 
-Good examples:
-- Learn Python basics
-- Improve public speaking
-- Understand personal budgeting
-- Learn photography fundamentals
-- Build better focus habits
+Return valid JSON only in this exact format:
+{{
+  "topics": [
+    "Topic 1",
+    "Topic 2",
+    "Topic 3",
+    "Topic 4"
+  ]
+}}
 """.strip()
 
 
-async def get_surprise_topic(level: str | None, exclude_topics: list[str] | None = None) -> str:
+def pick_fallback_topics(level: str, exclude_topics: list[str], count: int) -> list[str]:
+    available = [
+        topic
+        for topic in FALLBACK_TOPICS[level]
+        if not is_too_similar(topic, exclude_topics)
+    ]
+
+    if len(available) >= count:
+        return random.sample(available, count)
+
+    if available:
+        return available
+
+    return FALLBACK_TOPICS[level][:count]
+
+
+async def get_surprise_topics(
+    level: str | None,
+    exclude_topics: list[str] | None = None,
+    count: int = 4,
+) -> list[str]:
     normalized_level = normalize_level(level)
     excluded = [topic for topic in (exclude_topics or []) if topic.strip()]
+    count = max(1, min(count, 8))
 
     if not settings.openai_api_key:
-        fallback_candidates = [
-            topic
-            for topic in FALLBACK_TOPICS[normalized_level]
-            if not is_too_similar(topic, excluded)
-        ]
-        if fallback_candidates:
-            return random.choice(fallback_candidates)
-        return random.choice(FALLBACK_TOPICS[normalized_level])
+        return pick_fallback_topics(normalized_level, excluded, count)
 
-    for _ in range(3):
-        category = random.choice(CATEGORIES)
+    try:
         prompt = build_prompt(
             level=normalized_level,
-            category=category,
+            count=count,
             exclude_topics=excluded,
         )
 
@@ -137,20 +161,48 @@ async def get_surprise_topic(level: str | None, exclude_topics: list[str] | None
             input=prompt,
         )
 
-        topic = response.output_text.strip()
-        topic = topic.strip().strip('"').strip("'")
-        topic = " ".join(topic.split())
+        text = response.output_text.strip()
 
-        if topic and not is_too_similar(topic, excluded):
-            return topic
+        import json
+        parsed = json.loads(text)
+        raw_topics = parsed.get("topics", [])
 
-    fallback_candidates = [
-        topic
-        for topic in FALLBACK_TOPICS[normalized_level]
-        if not is_too_similar(topic, excluded)
-    ]
+        if not isinstance(raw_topics, list):
+            raise ValueError("Invalid topics payload")
 
-    if fallback_candidates:
-        return random.choice(fallback_candidates)
+        cleaned_topics: list[str] = []
+        seen_normalized: set[str] = set()
 
-    return random.choice(FALLBACK_TOPICS[normalized_level])
+        for raw_topic in raw_topics:
+            if not isinstance(raw_topic, str):
+                continue
+
+            topic = raw_topic.strip().strip('"').strip("'")
+            topic = " ".join(topic.split())
+
+            if not topic:
+                continue
+
+            normalized = normalize_topic(topic)
+            if not normalized:
+                continue
+
+            if normalized in seen_normalized:
+                continue
+
+            if is_too_similar(topic, excluded):
+                continue
+
+            seen_normalized.add(normalized)
+            cleaned_topics.append(topic)
+
+            if len(cleaned_topics) == count:
+                break
+
+        if cleaned_topics:
+            return cleaned_topics
+
+    except Exception:
+        pass
+
+    return pick_fallback_topics(normalized_level, excluded, count)

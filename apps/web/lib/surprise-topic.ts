@@ -3,10 +3,11 @@
 import { config } from "@/lib/config";
 import type { TopicLevel } from "@/types/topic";
 
-export async function getSurpriseTopic(
+export async function getSurpriseTopics(
     level: TopicLevel,
-    excludeTopics: string[] = []
-): Promise<string> {
+    excludeTopics: string[] = [],
+    count = 4
+): Promise<string[]> {
     const res = await fetch(`${config.apiBaseUrl}/surprise-topic`, {
         method: "POST",
         headers: {
@@ -15,6 +16,7 @@ export async function getSurpriseTopic(
         body: JSON.stringify({
             level,
             exclude_topics: excludeTopics,
+            count,
         }),
         cache: "no-store",
     });
@@ -24,17 +26,17 @@ export async function getSurpriseTopic(
     if (!res.ok) {
         if (contentType.includes("application/json")) {
             const err = await res.json();
-            throw new Error(err.detail || "Failed to get surprise topic");
+            throw new Error(err.detail || "Failed to get surprise topics");
         }
 
-        throw new Error("Failed to get surprise topic");
+        throw new Error("Failed to get surprise topics");
     }
 
     const data = await res.json();
 
-    if (!data?.topic || typeof data.topic !== "string") {
-        throw new Error("Invalid surprise topic response");
+    if (!Array.isArray(data?.topics)) {
+        throw new Error("Invalid surprise topics response");
     }
 
-    return data.topic;
+    return data.topics.filter((topic: unknown): topic is string => typeof topic === "string");
 }

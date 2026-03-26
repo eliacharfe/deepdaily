@@ -9,7 +9,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import LoginRequiredModal from "@/components/auth/login-required-modal";
 import { Sparkles } from "lucide-react";
 import LevelDropdown from "@/components/ui/level-dropdown";
-import { getSurpriseTopic } from "@/lib/surprise-topic";
+import { getSurpriseTopics } from "@/lib/surprise-topic";
 import { getSavedLessons } from "@/lib/lessons-api";
 
 const SUGGESTIONS = [
@@ -40,6 +40,10 @@ export default function TopicGeneratorForm() {
     const [isFocused, setIsFocused] = useState(false);
     const [hasSurprise, setHasSurprise] = useState(false);
 
+    const [surpriseQueue, setSurpriseQueue] = useState<string[]>([]);
+    const [userLearnedTopics, setUserLearnedTopics] = useState<string[]>([]);
+    const [hasLoadedUserTopics, setHasLoadedUserTopics] = useState(false);
+
     const animatedPlaceholder = useMemo(
         () => `Try ${SUGGESTIONS[placeholderIndex]}`,
         [placeholderIndex]
@@ -64,6 +68,11 @@ export default function TopicGeneratorForm() {
             goToLesson(trimmedTopic, level);
         }
     }, [user, loading, pendingSubmit, topic, level, router]);
+
+    useEffect(() => {
+        setSurpriseQueue([]);
+        setHasSurprise(false);
+    }, [level]);
 
     useEffect(() => {
         if (topic.trim()) return;
@@ -102,23 +111,23 @@ export default function TopicGeneratorForm() {
         try {
             setIsSurprising(true);
 
-            const userLearnedTopics = await getUserLearnedTopics();
+            let queue = surpriseQueue;
 
-            const excludeTopics = [
-                topic.trim(),
-                ...getStoredSurpriseTopics(),
-                ...userLearnedTopics,
-            ].filter(Boolean);
-
-            const randomTopic = await getSurpriseTopic(level, excludeTopics);
-
-            if (randomTopic.trim()) {
-                const trimmedTopic = randomTopic.trim();
-
-                setTopic(trimmedTopic);
-                storeSurpriseTopic(trimmedTopic);
-                setHasSurprise(true);
+            if (queue.length === 0) {
+                queue = await fetchSurpriseBatch();
             }
+
+            if (queue.length === 0) {
+                throw new Error("No surprise topics available");
+            }
+
+            const [nextTopic, ...restQueue] = queue;
+            const trimmedTopic = nextTopic.trim();
+
+            setTopic(trimmedTopic);
+            storeSurpriseTopic(trimmedTopic);
+            setHasSurprise(true);
+            setSurpriseQueue(restQueue);
         } catch (error) {
             console.error("Surprise topic error:", error);
         } finally {
@@ -168,6 +177,47 @@ export default function TopicGeneratorForm() {
             console.error("Failed to load user topics:", error);
             return [];
         }
+    }
+
+    async function getCachedUserLearnedTopics(): Promise<string[]> {
+        if (hasLoadedUserTopics) {
+            return userLearnedTopics;
+        }
+
+        try {
+            if (!user) return [];
+
+            const token = await user.getIdToken();
+            const lessons = await getSavedLessons(token);
+
+            const topics = lessons
+                .map((lesson) => lesson.topic?.trim())
+                .filter((topic): topic is string => Boolean(topic));
+
+            setUserLearnedTopics(topics);
+            setHasLoadedUserTopics(true);
+
+            return topics;
+        } catch (error) {
+            console.error("Failed to load user topics:", error);
+            setHasLoadedUserTopics(true);
+            return [];
+        }
+    }
+
+    async function fetchSurpriseBatch(): Promise<string[]> {
+        const learnedTopics = await getCachedUserLearnedTopics();
+
+        const excludeTopics = [
+            topic.trim(),
+            ...getStoredSurpriseTopics(),
+            ...learnedTopics,
+            ...surpriseQueue,
+        ].filter(Boolean);
+
+        const topics = await getSurpriseTopics(level, excludeTopics, 4);
+
+        return [...new Set(topics.map((item) => item.trim()).filter(Boolean))];
     }
 
     function applySuggestion(value: string) {
@@ -224,6 +274,7 @@ export default function TopicGeneratorForm() {
                                     onChange={(e) => {
                                         setTopic(e.target.value);
                                         setHasSurprise(false);
+                                        setSurpriseQueue([]);
                                     }}
                                     onFocus={() => setIsFocused(true)}
                                     onBlur={() => setIsFocused(false)}
