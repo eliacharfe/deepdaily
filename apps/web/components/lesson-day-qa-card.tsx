@@ -12,6 +12,7 @@ type LessonDayQaCardProps = {
     disabled?: boolean;
     answer: string;
     quickActions?: string[];
+    recentQuestions?: string[];
     onAsk: (question: string) => Promise<void>;
 };
 
@@ -28,6 +29,7 @@ export default function LessonDayQaCard({
     disabled = false,
     answer,
     quickActions = DEFAULT_QUICK_ACTIONS,
+    recentQuestions = [],
     onAsk,
 }: LessonDayQaCardProps) {
     const [question, setQuestion] = useState("");
@@ -75,11 +77,6 @@ export default function LessonDayQaCard({
         } catch {
             setError("Could not copy the answer");
         }
-    }
-
-    async function handleFollowUp() {
-        if (loading || disabled) return;
-        await handleSubmit("Go a bit deeper on the most important part of this lesson.");
     }
 
     return (
@@ -195,14 +192,61 @@ export default function LessonDayQaCard({
                         </div>
                     )}
 
+                    {recentQuestions.length > 0 ? (
+                        <div className="mt-4">
+                            <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                                You asked earlier
+                            </p>
+
+                            <div className="flex flex-wrap gap-2">
+                                {recentQuestions.map((item) => (
+                                    <button
+                                        key={item}
+                                        type="button"
+                                        onClick={() => handleSubmit(item)}
+                                        disabled={loading || disabled}
+                                        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                                    >
+                                        {item}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ) : null}
+
                     {answer && !loading ? (
                         <div className="mt-4 flex flex-wrap gap-2">
                             <button
                                 type="button"
-                                onClick={handleFollowUp}
-                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                                onClick={() =>
+                                    handleSubmit("Go deeper on the most important idea here.")
+                                }
+                                disabled={loading || disabled}
+                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
                             >
-                                Ask a follow-up
+                                Go deeper
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    handleSubmit("Give me a concrete real-world example.")
+                                }
+                                disabled={loading || disabled}
+                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                            >
+                                Give an example
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    handleSubmit("Test me with 3 short questions.")
+                                }
+                                disabled={loading || disabled}
+                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                            >
+                                Quiz me
                             </button>
 
                             <button

@@ -267,6 +267,15 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         }
     }
 
+    const lessonQaRecentQuestions = useMemo(() => {
+        const userQuestions = lessonQaHistory
+            .filter((turn) => turn.role === "user")
+            .map((turn) => turn.content.trim())
+            .filter(Boolean);
+
+        return Array.from(new Set(userQuestions)).slice(-3).reverse();
+    }, [lessonQaHistory]);
+
     const lessonQaQuickActions = useMemo(() => {
         if (!selectedDay) return [];
 
@@ -616,6 +625,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                     disabled={!selectedDay.isGenerated || isGeneratingDay}
                                     answer={lessonQaAnswer}
                                     quickActions={lessonQaQuickActions}
+                                    recentQuestions={lessonQaRecentQuestions}
                                     onAsk={async (question) => {
                                         if (!user || !curriculum) {
                                             throw new Error("You must be signed in");
