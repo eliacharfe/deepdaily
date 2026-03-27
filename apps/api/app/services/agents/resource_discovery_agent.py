@@ -223,11 +223,11 @@ class ResourceDiscoveryAgent:
         collected.sort(key=lambda item: item[0], reverse=True)
         ranked = [resource for _, resource in collected]
 
-        videos = [r for r in ranked if r["type"] == "video"]
-        docs = [r for r in ranked if r["type"] == "documentation"]
-        articles = [r for r in ranked if r["type"] == "article"]
+        videos = [r for r in ranked if r.type == "video"]
+        docs = [r for r in ranked if r.type == "documentation"]
+        articles = [r for r in ranked if r.type == "article"]
 
-        balanced: list[dict[str, Any]] = []
+        balanced: list[LessonResource] = []
 
         # Always keep one video if one exists
         if videos:
