@@ -8,11 +8,13 @@ import LoginRequiredModal from "@/components/auth/login-required-modal";
 import { useAuth } from "@/components/providers/auth-provider";
 import {
     completeCurriculumDay,
+    generateCurriculumDayWithProgress,
     getCurriculum,
+    regenerateCurriculumDay,
+    retryCurriculumDayResources,
     updateCurriculumLastOpenedDay,
 } from "@/lib/curricula-api";
 import type { Curriculum } from "@/types/curriculum";
-import { generateCurriculumDayWithProgress } from "@/lib/curricula-api";
 import MarkdownContent from "@/components/markdown-content";
 import PageShell from "@/components/page-shell";
 import LessonDayQaCard from "@/components/lesson-day-qa-card";
@@ -89,15 +91,6 @@ function ResourceCard({
 
     return (
         <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:shadow-sm sm:p-5 dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-500/30 dark:hover:bg-slate-900">
-            {/* {isYouTube && youtubeThumbnail ? (
-                <div className="mb-4 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
-                    <img
-                        src={youtubeThumbnail}
-                        alt={`${title} preview`}
-                        className="aspect-video w-full object-cover"
-                    />
-                </div>
-            ) : null} */}
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div className="min-w-0 flex-1">
@@ -154,7 +147,7 @@ function ResourceCard({
             )}
 
             {url ? (
-                <p className="mt-3 break-words text-[10px] text-slate-500 opacity-60 sm:text-sm dark:text-slate-400">
+                <p className="mt-3 wrap-break-word text-[10px] text-slate-500 opacity-60 sm:text-sm dark:text-slate-400">
                     {url}
                 </p>
             ) : null}
@@ -180,6 +173,9 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 
     const [lessonQaAnswer, setLessonQaAnswer] = useState("");
     const [lessonQaHistory, setLessonQaHistory] = useState<LessonQaTurn[]>([]);
+
+    const [isRetryingResources, setIsRetryingResources] = useState(false);
+    const [isRegeneratingDay, setIsRegeneratingDay] = useState(false);
 
     useEffect(() => {
         if (!curriculum) return;
@@ -320,11 +316,13 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         }
     }
 
-    async function ensureDayGenerated(dayNumber: number) {
+    async function ensureDayGenerated(dayNumber: number, force = false) {
         if (!user || !curriculum || isGeneratingDay) return;
 
         const day = curriculum.days.find((item) => item.dayNumber === dayNumber);
-        if (!day || day.isGenerated) return;
+        if (!day) return;
+
+        if (day.isGenerated && !force) return;
 
         try {
             setIsGeneratingDay(true);
@@ -371,6 +369,56 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             lastOpenedDay: next.lastOpenedDay ?? prev.lastOpenedDay,
             days: next.days,
         };
+    }
+
+    async function handleRetryResources() {
+        if (!user || !curriculum || !selectedDay || isRetryingResources) return;
+
+        try {
+            setIsRetryingResources(true);
+            setError("");
+
+            const token = await user.getIdToken();
+            const updated = await retryCurriculumDayResources(
+                curriculum.id,
+                selectedDay.dayNumber,
+                token
+            );
+
+            setCurriculum((prev) => mergeCurriculumState(prev, updated));
+        } catch (err) {
+            setError(
+                err instanceof Error ? err.message : "Failed to retry resources"
+            );
+        } finally {
+            setIsRetryingResources(false);
+        }
+    }
+
+    async function handleRegenerateDay() {
+        if (!user || !curriculum || !selectedDay || isRegeneratingDay) return;
+
+        try {
+            setIsRegeneratingDay(true);
+            setError("");
+            setLessonQaAnswer("");
+            setLessonQaHistory([]);
+
+            const token = await user.getIdToken();
+            const updated = await regenerateCurriculumDay(
+                curriculum.id,
+                selectedDay.dayNumber,
+                token
+            );
+
+            setCurriculum((prev) => mergeCurriculumState(prev, updated));
+        } catch (err) {
+            setError(
+                err instanceof Error ? err.message : "Failed to regenerate day"
+            );
+        } finally {
+            setIsRegeneratingDay(false);
+        }
     }
 
     if (loading) {
@@ -581,24 +629,66 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 
                     {/* Main Content Area */}
                     <main className="min-w-0 space-y-6">
-                        {!selectedDay.isGenerated || isGeneratingDay ? (
+                        {!selectedDay.isGenerated || isGeneratingDay || isRegeneratingDay ? (
                             <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center dark:border-[#334155] dark:bg-[#111827]">
                                 <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
-                                <p className="text-sm text-slate-500">{currentDayGenerationMessage || "Unlocking Day Content..."}</p>
+                                <p className="text-sm text-slate-500">
+                                    {isRegeneratingDay
+                                        ? "Regenerating this day..."
+                                        : currentDayGenerationMessage || "Unlocking Day Content..."}
+                                </p>
                             </div>
                         ) : (
                             <>
                                 <section className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 dark:border-[#334155] dark:bg-[#111827]">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold dark:bg-slate-800">
-                                            DAY {selectedDay.dayNumber}
-                                        </span>
-                                        {curriculum.completedDays.includes(selectedDay.dayNumber) && (
-                                            <span className="text-[10px] font-bold text-teal-600">✓ COMPLETED</span>
-                                        )}
+                                    <div className="mb-4 flex items-start justify-between gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold dark:bg-slate-800">
+                                                DAY {selectedDay.dayNumber}
+                                            </span>
+                                            {curriculum.completedDays.includes(selectedDay.dayNumber) && (
+                                                <span className="text-[10px] font-bold text-teal-600">
+                                                    ✓ COMPLETED
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="flex shrink-0 flex-wrap justify-end gap-2">
+                                            {selectedDay.resources?.length === 0 ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleRetryResources}
+                                                    disabled={isRetryingResources || isRegeneratingDay || isGeneratingDay}
+                                                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                                                >
+                                                    {isRetryingResources ? "Retrying..." : "Retry resources"}
+                                                </button>
+                                            ) : null}
+
+                                            <button
+                                                type="button"
+                                                onClick={handleRegenerateDay}
+                                                disabled={isRegeneratingDay || isRetryingResources || isGeneratingDay}
+                                                className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300 dark:hover:bg-teal-950/30"
+                                            >
+                                                {isRegeneratingDay ? "Regenerating..." : "Regenerate day"}
+                                            </button>
+                                        </div>
                                     </div>
-                                    <h2 dir="auto" className="text-xl font-bold text-slate-900 sm:text-3xl dark:text-white">{selectedDay.title}</h2>
-                                    <p dir="auto" className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{selectedDay.objective}</p>
+
+                                    <h2
+                                        dir="auto"
+                                        className="text-xl font-bold text-slate-900 sm:text-3xl dark:text-white"
+                                    >
+                                        {selectedDay.title}
+                                    </h2>
+
+                                    <p
+                                        dir="auto"
+                                        className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                                    >
+                                        {selectedDay.objective}
+                                    </p>
                                 </section>
 
                                 <section className="space-y-4">

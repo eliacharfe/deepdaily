@@ -236,3 +236,60 @@ export async function getCurricula(token: string): Promise<Curriculum[]> {
 
     return res.json();
 }
+
+
+export async function retryCurriculumDayResources(
+    curriculumId: string,
+    dayNumber: number,
+    token: string
+): Promise<Curriculum> {
+    const res = await fetch(
+        `${config.apiBaseUrl}/curricula/${curriculumId}/days/${dayNumber}/retry-resources`,
+        {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+
+    const contentType = res.headers.get("content-type") || "";
+
+    if (!res.ok) {
+        if (contentType.includes("application/json")) {
+            const err = await res.json();
+            throw new Error(err.detail || "Failed to retry resources");
+        }
+        throw new Error("Failed to retry resources");
+    }
+
+    return res.json();
+}
+
+export async function regenerateCurriculumDay(
+    curriculumId: string,
+    dayNumber: number,
+    token: string
+): Promise<Curriculum> {
+    const res = await fetch(
+        `${config.apiBaseUrl}/curricula/${curriculumId}/days/${dayNumber}/regenerate`,
+        {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+
+    const contentType = res.headers.get("content-type") || "";
+
+    if (!res.ok) {
+        if (contentType.includes("application/json")) {
+            const err = await res.json();
+            throw new Error(err.detail || "Failed to regenerate day");
+        }
+        throw new Error("Failed to regenerate day");
+    }
+
+    return res.json();
+}

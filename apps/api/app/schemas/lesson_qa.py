@@ -3,7 +3,7 @@
 
 from typing import List, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field  # pyright: ignore[reportMissingImports]
 
 
 class LessonSectionInput(BaseModel):

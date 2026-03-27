@@ -24,7 +24,11 @@ from app.schemas.curriculum import (
 from app.services.curriculum_service import (
     generate_curriculum_outline,
     generate_curriculum_day,
+    retry_curriculum_day_resources,
+    regenerate_curriculum_day,
 )
+from sqlalchemy import select
+from app.models.curriculum import Curriculum
 
 logger = logging.getLogger(__name__)
 
@@ -566,3 +570,43 @@ async def get_curricula(
     curricula = result.scalars().all()
 
     return [build_curriculum_response(curriculum) for curriculum in curricula]
+
+
+
+
+@router.post(
+    "/{curriculum_id}/days/{day_number}/retry-resources",
+    response_model=CurriculumResponse,
+)
+async def retry_day_resources_route(
+    curriculum_id: str,
+    day_number: int,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    updated = await retry_curriculum_day_resources(
+        db=db,
+        user_id=current_user["uid"],
+        curriculum_id=curriculum_id,
+        day_number=day_number,
+    )
+    return build_curriculum_response(updated)
+
+
+@router.post(
+    "/{curriculum_id}/days/{day_number}/regenerate",
+    response_model=CurriculumResponse,
+)
+async def regenerate_day_route(
+    curriculum_id: str,
+    day_number: int,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    updated = await regenerate_curriculum_day(
+        db=db,
+        user_id=current_user["uid"],
+        curriculum_id=curriculum_id,
+        day_number=day_number,
+    )
+    return build_curriculum_response(updated)

@@ -9,6 +9,11 @@ from collections.abc import Awaitable, Callable
 from app.services.llm.client import generate_json_response
 from app.services.agents.resource_discovery_agent import ResourceDiscoveryAgent
 
+from copy import deepcopy
+from fastapi import HTTPException, status
+from sqlalchemy import select
+from app.models.curriculum import Curriculum
+
 logger = logging.getLogger(__name__)
 
 ProgressCallback = Callable[[str], Awaitable[None]]
@@ -649,4 +654,128 @@ async def generate_curriculum_day(
 
 
 
+async def retry_curriculum_day_resources(
+    db,
+    user_id: str,
+    curriculum_id: str,
+    day_number: int,
+):
+    result = await db.execute(
+        select(Curriculum).where(
+            Curriculum.id == curriculum_id,
+            Curriculum.user_id == user_id,
+        )
+    )
+    curriculum = result.scalar_one_or_none()
 
+    if not curriculum:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Curriculum not found",
+        )
+
+    content = deepcopy(curriculum.content_json or {})
+    days = content.get("days", [])
+
+    day_index = next(
+        (index for index, day in enumerate(days) if day.get("dayNumber") == day_number),
+        None,
+    )
+    if day_index is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Day not found",
+        )
+
+    day = days[day_index]
+
+    resource_agent = ResourceDiscoveryAgent()
+    used_urls, used_titles = extract_used_resources(
+        [d for d in days if d.get("dayNumber", 0) < day_number]
+    )
+
+    resources = await resource_agent.discover_day_resources(
+        topic=curriculum.topic,
+        level=curriculum.level,
+        day_title=day.get("title", ""),
+        day_objective=day.get("objective", ""),
+        day_summary=day.get("summary", ""),
+        sections=day.get("sections", []),
+        used_urls=used_urls,
+        used_titles=used_titles,
+    )
+
+    day["resources"] = resources or []
+    days[day_index] = day
+    content["days"] = days
+    curriculum.content_json = content
+
+    await db.commit()
+    await db.refresh(curriculum)
+
+    return curriculum
+
+
+async def regenerate_curriculum_day(
+    db,
+    user_id: str,
+    curriculum_id: str,
+    day_number: int,
+):
+    result = await db.execute(
+        select(Curriculum).where(
+            Curriculum.id == curriculum_id,
+            Curriculum.user_id == user_id,
+        )
+    )
+    curriculum = result.scalar_one_or_none()
+
+    if not curriculum:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Curriculum not found",
+        )
+
+    content = deepcopy(curriculum.content_json or {})
+    days = content.get("days", [])
+
+    day_index = next(
+        (index for index, day in enumerate(days) if day.get("dayNumber") == day_number),
+        None,
+    )
+    if day_index is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Day not found",
+        )
+
+    target_day = days[day_index]
+
+    previous_days = [
+        d
+        for d in days
+        if d.get("isGenerated") is True and d.get("dayNumber", 0) < day_number
+    ]
+
+    generated_day = await generate_curriculum_day(
+        topic=curriculum.topic,
+        level=curriculum.level,
+        duration_days=curriculum.duration_days,
+        day_outline=target_day,
+        previous_days=previous_days,
+    )
+
+    updated_days = [
+        generated_day if day.get("dayNumber") == day_number else day
+        for day in days
+    ]
+
+    curriculum.content_json = {
+        **content,
+        "days": updated_days,
+    }
+
+    await db.commit()
+    await db.refresh(curriculum)
+
+    return curriculum
