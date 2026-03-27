@@ -810,15 +810,7 @@ export default function LearnPageClient(props: Props) {
                                 </ol>
                             </div>
 
-                            <div className="hidden lg:block px-0">
-                                <CurriculumCtaCard
-                                    compact
-                                    isCreatingCurriculum={isCreatingCurriculum}
-                                    selectedDuration={selectedDuration}
-                                    curriculumMessage={curriculumMessage}
-                                    onCreateCurriculum={handleCreateCurriculum}
-                                />
-                            </div>
+
 
                             <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-5 sm:p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
                                 <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
@@ -837,6 +829,19 @@ export default function LearnPageClient(props: Props) {
                                         />
                                     ))}
                                 </div>
+                            </div>
+
+                            <div className="hidden lg:block px-0">
+                                <CurriculumCtaCard
+                                    compact
+                                    curricula={existingCurricula}
+                                    has7DayCurriculum={has7DayCurriculum}
+                                    has30DayCurriculum={has30DayCurriculum}
+                                    isCreatingCurriculum={isCreatingCurriculum}
+                                    selectedDuration={selectedDuration}
+                                    curriculumMessage={curriculumMessage}
+                                    onCreateCurriculum={handleCreateCurriculum}
+                                />
                             </div>
 
                             <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-5 sm:p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
