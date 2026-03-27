@@ -89,17 +89,17 @@ function ResourceCard({
     const isYouTube = Boolean(youtubeEmbedUrl);
 
     return (
-        <div className="dd-surface-soft rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20 sm:p-5">
+        <div className="dd-surface-soft overflow-hidden rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20 sm:p-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div className="min-w-0 flex-1">
                     <MarkdownContent
                         content={title}
-                        className="[&_p]:my-0 [&_h1]:my-0 [&_h2]:my-0 [&_h3]:my-0 [&_h4]:my-0 text-base font-semibold leading-tight text-slate-900 sm:text-lg dark:text-white"
+                        className="[&_p]:my-0 [&_h1]:my-0 [&_h2]:my-0 [&_h3]:my-0 [&_h4]:my-0 break-words text-base font-semibold leading-tight text-slate-900 sm:text-lg dark:text-white"
                     />
                 </div>
 
                 <span
-                    className="w-fit rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide sm:text-xs"
+                    className="w-fit shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide sm:text-xs"
                     style={{
                         borderColor: "var(--accent-border)",
                         background: "var(--accent-soft)",
@@ -113,15 +113,27 @@ function ResourceCard({
             {reason ? (
                 <MarkdownContent
                     content={reason}
-                    className="mt-2 text-sm text-slate-600 sm:text-base dark:text-slate-300 [&_p]:my-0"
+                    className="mt-2 break-words text-sm text-slate-600 sm:text-base dark:text-slate-300 [&_p]:my-0 [&_a]:break-all"
                 />
             ) : null}
 
             {snippet ? (
-                <MarkdownContent
-                    content={snippet}
-                    className="mt-3 text-xs leading-relaxed text-slate-500 sm:text-sm dark:text-slate-400 [&_p]:my-0"
-                />
+                <div className="mt-3 overflow-hidden rounded-xl border border-slate-200/70 px-4 py-3 dark:border-white/10">
+                    <MarkdownContent
+                        content={snippet}
+                        className="
+                            line-clamp-6
+                            text-xs leading-relaxed text-slate-500 sm:text-sm dark:text-slate-400
+                            [&_p]:my-0
+                            [&_*]:max-w-full
+                            [&_*]:break-words
+                            [&_a]:break-all
+                            [&_pre]:overflow-x-auto
+                            [&_code]:break-words
+                            [&_hr]:my-3
+                        "
+                    />
+                </div>
             ) : null}
 
             {isYouTube && youtubeEmbedUrl ? (
@@ -507,7 +519,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             backLessonId={curriculum.lessonId}
             className="px-4 py-6 pt-10 sm:px-6 sm:py-12 sm:pt-20"
         >
-            <div className="mx-auto max-w-6xl space-y-6 pt-2 sm:space-y-8 sm:pt-6 lg:pt-6">
+            <div className="mx-auto max-w-6xl space-y-6 pt-2 sm:space-y-8 sm:pt-6 lg:pt-6 px-4 sm:px-6 lg:px-8">
                 <section className="dd-surface dd-surface-top-line overflow-hidden rounded-3xl border shadow-sm">
                     <div className="border-b border-teal-100 bg-linear-to-r from-teal-50 via-white to-cyan-50 p-8 dark:border-teal-900/30 dark:from-teal-950/30 dark:via-transparent dark:to-cyan-950/20">
                         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-teal-700 dark:text-teal-300">
@@ -1319,11 +1331,11 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 //             : 0;
 
 //     return (
-//         <PageShell
-//             showBack
-//             backLessonId={curriculum.lessonId}
-//             className="px-4 py-6 pt-10 sm:px-6 sm:py-12 sm:pt-20 dark:bg-[#1F2428]"
-//         >
+// <PageShell
+//     showBack
+//     backLessonId={curriculum.lessonId}
+//     className="px-4 py-6 pt-10 sm:px-6 sm:py-12 sm:pt-20 dark:bg-[#1F2428]"
+// >
 //             <div className="mx-auto max-w-6xl pt-2 sm:pt-6 lg:pt-6 space-y-6">
 //                 {/* Header Card */}
 //                 <section className="overflow-hidden rounded-3xl border  border-slate-200 bg-white shadow-sm dark:border-[#334155] dark:bg-[#111827]">
