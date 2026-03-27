@@ -599,7 +599,7 @@ export default function LearnPageClient(props: Props) {
 
     return (
         <>
-            <PageShell className="px-4 py-8 pt-16 sm:px-6 sm:py-12 sm:pt-20 dark:bg-[#1F2428] dark:text-[#ECFDF5]">
+            <PageShell className="px-4 py-8 pt-8  sm:px-6 sm:py-12 sm:pt-16 dark:bg-[#1F2428] dark:text-[#ECFDF5]">
                 <div className="mx-auto max-w-6xl space-y-6 sm:space-y-8 pt-4 sm:pt-6 lg:pt-10">
                     {/* Main Lesson Header Card */}
                     <section
