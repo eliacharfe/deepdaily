@@ -17,7 +17,7 @@ export default function ContinueLearningCard({ curriculum }: Props) {
     );
 
     return (
-        <div className="rounded-3xl mt-5 border border-slate-200 bg-white p-6 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+        <div className="dd-surface dd-surface-top-line mt-5 rounded-3xl border p-6 shadow-sm">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
                 Continue learning
             </p>
@@ -53,6 +53,6 @@ export default function ContinueLearningCard({ curriculum }: Props) {
                     Continue Day {nextDay}
                 </Link>
             </div>
-        </div>
+        </div >
     );
 }

@@ -153,7 +153,7 @@ export default function SavedLessonsSidebar({
         <>
             <aside
                 className={[
-                    "fixed bottom-0 left-0 top-0 z-50 w-[320px] max-w-[85vw] border-r border-slate-200 bg-[linear-gradient(180deg,rgba(15,23,42,0.85)_0%,rgba(15,23,42,0.75)_100%)] backdrop-blur transition-transform duration-300 dark:border-slate-800 dark:bg-[#0F1720]/95",
+                    "fixed bottom-0 left-0 top-0 z-50 w-[320px] max-w-[85vw] border-r border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(244,248,251,0.96)_100%)] backdrop-blur transition-transform duration-300 dark:border-white/10 dark:bg-[radial-gradient(circle_at_20%_0%,rgba(45,212,191,0.08),transparent_35%),linear-gradient(180deg,rgba(8,18,27,0.94)_0%,rgba(9,20,30,0.90)_100%)]",
                     isOpen ? "translate-x-0" : "-translate-x-full",
                     desktopCollapsed ? "lg:w-[72px]" : "lg:w-[380px]",
                     "lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:translate-x-0 lg:shrink-0 lg:transition-[width] lg:duration-300",
@@ -165,7 +165,7 @@ export default function SavedLessonsSidebar({
                             type="button"
                             onClick={onToggleDesktop}
                             aria-label="Expand sidebar"
-                            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                            className="dd-surface inline-flex h-11 w-11 items-center justify-center rounded-2xl border text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md dark:text-slate-200 dark:hover:border-teal-500/20"
                         >
                             <PanelLeftOpen className="h-5 w-5" />
                         </button>
@@ -179,20 +179,21 @@ export default function SavedLessonsSidebar({
                         <div className="mb-5 px-1">
                             <div className="mb-4 flex items-center justify-between">
                                 <div className="flex items-start gap-3">
-                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 dark:bg-teal-950/30 dark:text-teal-300">
+                                    <div className="dd-surface-soft flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-teal-700 dark:text-teal-300">
+
                                         <BookOpen className="h-5 w-5" />
                                     </div>
 
                                     <div className="min-w-0">
-                                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-300">
+                                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-700 dark:text-teal-300">
                                             Library
                                         </p>
 
-                                        <h2 className="mt-1 text-xl font-semibold text-white">
+                                        <h2 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">
                                             Saved lessons
                                         </h2>
 
-                                        <p className="mt-1 text-sm leading-6 text-slate-300">
+                                        <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
                                             Revisit and continue learning.
                                         </p>
                                     </div>
@@ -203,7 +204,7 @@ export default function SavedLessonsSidebar({
                                         type="button"
                                         onClick={onToggleDesktop}
                                         aria-label="Collapse sidebar"
-                                        className="hidden h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 lg:inline-flex"
+                                        className="dd-surface hidden h-10 w-10 items-center justify-center rounded-full border text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md dark:text-slate-200 dark:hover:border-teal-500/20 lg:inline-flex"
                                     >
                                         <PanelLeftClose className="h-5 w-5" />
                                     </button>
@@ -212,7 +213,7 @@ export default function SavedLessonsSidebar({
                                         type="button"
                                         onClick={onClose}
                                         aria-label="Close sidebar"
-                                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 lg:hidden"
+                                        className="dd-surface inline-flex h-10 w-10 items-center justify-center rounded-full border text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md dark:text-slate-200 dark:hover:border-teal-500/20 lg:hidden"
                                     >
                                         <X className="h-5 w-5" />
                                     </button>
@@ -237,7 +238,7 @@ export default function SavedLessonsSidebar({
                                 {Array.from({ length: 6 }).map((_, i) => (
                                     <div
                                         key={i}
-                                        className="h-24 animate-pulse rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+                                        className="dd-surface h-24 animate-pulse rounded-2xl border"
                                     />
                                 ))}
                             </div>
@@ -246,7 +247,7 @@ export default function SavedLessonsSidebar({
                                 {error}
                             </div>
                         ) : lessons.length === 0 ? (
-                            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                            <div className="dd-surface rounded-2xl border p-4 text-sm text-slate-600 shadow-sm dark:text-slate-300">
                                 No saved lessons yet.
                             </div>
                         ) : (
@@ -262,8 +263,8 @@ export default function SavedLessonsSidebar({
                                             className={[
                                                 "group rounded-2xl border p-4 shadow-sm transition",
                                                 isActive
-                                                    ? "border-teal-200 bg-teal-50/70 dark:border-teal-500/30 dark:bg-teal-950/20"
-                                                    : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-teal-500/20 dark:hover:bg-slate-900",
+                                                    ? "dd-surface border-teal-200 ring-1 ring-teal-200/50 dark:border-teal-500/30 dark:ring-teal-500/20"
+                                                    : "dd-surface hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md dark:hover:border-teal-500/20",
                                             ].join(" ")}
                                         >
                                             <div className="flex items-start gap-3">
@@ -279,8 +280,8 @@ export default function SavedLessonsSidebar({
                                                                     className={[
                                                                         "rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]",
                                                                         isActive
-                                                                            ? "border-teal-200 bg-white text-teal-700 dark:border-teal-400/30 dark:bg-teal-950/20 dark:text-teal-300"
-                                                                            : "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
+                                                                            ? "dd-surface-soft border-teal-200 text-teal-700 dark:border-teal-400/30 dark:text-teal-300"
+                                                                            : "dd-surface-soft text-slate-600 dark:text-slate-300"
                                                                     ].join(" ")}
                                                                 >
                                                                     {lesson.level}
@@ -309,7 +310,7 @@ export default function SavedLessonsSidebar({
                                                     }
                                                     disabled={isDeleting}
                                                     aria-label={`Delete ${lesson.title}`}
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:border-red-900/40 dark:hover:bg-red-950/20 dark:hover:text-red-300"
+                                                    className="dd-surface-soft inline-flex h-9 w-9 items-center justify-center rounded-full border text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-300 dark:hover:border-red-900/40 dark:hover:bg-red-950/20 dark:hover:text-red-300"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </button>

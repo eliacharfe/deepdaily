@@ -30,11 +30,30 @@ export default function LevelDropdown({
     disabled = false,
 }: Props) {
     const [open, setOpen] = useState(false);
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
     const containerRef = useRef<HTMLDivElement | null>(null);
     const buttonRef = useRef<HTMLButtonElement | null>(null);
 
     const selectedOption =
         OPTIONS.find((option) => option.value === value) ?? OPTIONS[0];
+
+    // Detect theme
+    useEffect(() => {
+        const updateTheme = () => {
+            setIsDarkMode(document.documentElement.classList.contains("dark"));
+        };
+
+        updateTheme();
+
+        const observer = new MutationObserver(updateTheme);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+
+        return () => observer.disconnect();
+    }, []);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -92,6 +111,7 @@ export default function LevelDropdown({
 
     return (
         <div ref={containerRef} className="relative w-full sm:w-[150px]">
+            {/* BUTTON */}
             <button
                 ref={buttonRef}
                 type="button"
@@ -101,32 +121,50 @@ export default function LevelDropdown({
                 aria-label="Select learning level"
                 onClick={handleToggle}
                 onKeyDown={handleButtonKeyDown}
-                className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm text-white outline-none transition disabled:cursor-not-allowed disabled:opacity-50"
-                style={{
-                    border: "1px solid rgba(120, 149, 164, 0.22)",
-                    background: "rgba(255,255,255,0.05)",
-                    boxShadow: open
-                        ? "0 0 0 1px rgba(45,212,191,0.18), 0 0 20px rgba(45,212,191,0.08)"
-                        : "none",
-                }}
+                className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm outline-none transition disabled:cursor-not-allowed disabled:opacity-50 ${isDarkMode ? "text-slate-200" : "text-slate-800"
+                    }`}
+                style={
+                    isDarkMode
+                        ? {
+                            border: "1px solid rgba(120, 149, 164, 0.22)",
+                            background: "rgba(255,255,255,0.05)",
+                            boxShadow: open
+                                ? "0 0 0 1px rgba(45,212,191,0.18), 0 0 20px rgba(45,212,191,0.08)"
+                                : "none",
+                        }
+                        : {
+                            border: "1px solid rgba(203, 213, 225, 0.95)",
+                            background:
+                                "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(244,248,251,0.96) 100%)",
+                            boxShadow: open
+                                ? "0 0 0 1px rgba(20,184,166,0.15)"
+                                : "none",
+                        }
+                }
             >
                 <span>{selectedOption.label}</span>
 
                 <ChevronDown
                     size={16}
-                    className={`shrink-0 text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""
-                        }`}
+                    className={`shrink-0 ${isDarkMode ? "text-slate-400" : "text-slate-500"
+                        } transition-transform duration-200 ${open ? "rotate-180" : ""}`}
                 />
             </button>
+
+            {/* DROPDOWN */}
             {open && (
                 <div
                     className="absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-2xl border backdrop-blur-xl"
                     style={{
-                        borderColor: "rgba(45,212,191,0.18)",
-                        background:
-                            "linear-gradient(180deg, rgba(8,18,27,0.96) 0%, rgba(9,20,30,0.94) 100%)",
-                        boxShadow:
-                            "0 18px 50px rgba(0,0,0,0.32), 0 0 0 1px rgba(45,212,191,0.08)",
+                        borderColor: isDarkMode
+                            ? "rgba(45,212,191,0.18)"
+                            : "rgba(203,213,225,0.95)",
+                        background: isDarkMode
+                            ? "linear-gradient(180deg, rgba(8,18,27,0.96) 0%, rgba(9,20,30,0.94) 100%)"
+                            : "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(244,248,251,0.98) 100%)",
+                        boxShadow: isDarkMode
+                            ? "0 18px 50px rgba(0,0,0,0.32)"
+                            : "0 12px 30px rgba(15,23,42,0.08)",
                     }}
                 >
                     <div className="py-1" role="listbox" aria-label="Learning level options">
@@ -140,17 +178,27 @@ export default function LevelDropdown({
                                     role="option"
                                     aria-selected={isSelected}
                                     onClick={() => handleSelect(option.value)}
-                                    onKeyDown={(event) => handleOptionKeyDown(event, option.value)}
+                                    onKeyDown={(event) =>
+                                        handleOptionKeyDown(event, option.value)
+                                    }
                                     className="flex w-full items-center justify-between px-4 py-3 text-left text-sm transition"
                                     style={{
-                                        color: isSelected ? "#ffffff" : "rgb(203 213 225)",
+                                        color: isSelected
+                                            ? isDarkMode
+                                                ? "#ffffff"
+                                                : "#0f172a"
+                                            : isDarkMode
+                                                ? "rgb(203 213 225)"
+                                                : "rgb(71 85 105)",
                                         background: isSelected
                                             ? "rgba(45,212,191,0.12)"
                                             : "transparent",
                                     }}
                                     onMouseEnter={(e) => {
                                         if (!isSelected) {
-                                            e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                                            e.currentTarget.style.background = isDarkMode
+                                                ? "rgba(255,255,255,0.04)"
+                                                : "rgba(15,23,42,0.04)";
                                         }
                                     }}
                                     onMouseLeave={(e) => {
@@ -161,7 +209,9 @@ export default function LevelDropdown({
                                 >
                                     <span>{option.label}</span>
 
-                                    {isSelected && <Check size={16} className="text-teal-300" />}
+                                    {isSelected && (
+                                        <Check size={16} className="text-teal-500 dark:text-teal-300" />
+                                    )}
                                 </button>
                             );
                         })}

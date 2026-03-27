@@ -192,7 +192,7 @@ export default function StreamingLesson({
     return (
         <section
             ref={sectionRef}
-            className="scroll-mt-32 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+            className="dd-surface dd-surface-top-line scroll-mt-32 rounded-3xl border p-8 shadow-sm"
         >
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -208,18 +208,11 @@ export default function StreamingLesson({
                     type="button"
                     onClick={handleGenerate}
                     disabled={status === "loading"}
-                    className="
-        inline-flex items-center justify-center
-        rounded-full
-        bg-teal-600
-        px-5 py-3
-        text-sm font-semibold text-white
-        transition
-        hover:bg-teal-700
-        active:scale-[0.98]
-        disabled:cursor-not-allowed disabled:opacity-60
-        dark:bg-teal-400 dark:text-slate-900 dark:hover:bg-teal-300
-    "
+                    className="inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-white transition hover:scale-[1.01] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                    style={{
+                        background: "linear-gradient(135deg, #19c2b3 0%, #0f8f86 100%)",
+                        boxShadow: "0 10px 24px rgba(20, 184, 166, 0.22)",
+                    }}
                 >
                     {status === "loading"
                         ? "Generating..."
@@ -230,13 +223,13 @@ export default function StreamingLesson({
             </div>
 
             {error && (
-                <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+                <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
                     {error}
                 </div>
             )}
 
             {!content && status === "idle" && (
-                <div className="mt-8 rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                <div className="dd-surface-soft mt-8 rounded-2xl border border-dashed px-4 py-8 text-center text-slate-500 dark:text-slate-400">
                     No streamed lesson yet.
                 </div>
             )}
@@ -245,9 +238,8 @@ export default function StreamingLesson({
                 <div ref={streamAreaRef} className="mt-8">
                     <div
                         ref={scrollContainerRef}
-                        className="max-h-[70vh] overflow-y-auto pr-2"
+                        className="dd-surface-soft max-h-[70vh] overflow-y-auto rounded-2xl border p-5 pr-3"
                     >
-
                         <MarkdownContent content={renderedContent} />
 
                         {status === "loading" && (
@@ -261,7 +253,7 @@ export default function StreamingLesson({
                                 <button
                                     type="button"
                                     onClick={handleGoDeeper}
-                                    className="rounded-2xl border border-slate-300 px-5 py-3 text-sm font-medium text-slate-800 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                                    className="dd-surface-soft rounded-2xl border px-5 py-3 text-sm font-medium text-slate-800 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:text-slate-100 dark:hover:border-teal-500/20"
                                 >
                                     Go deeper with examples
                                 </button>

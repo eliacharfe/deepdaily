@@ -145,81 +145,84 @@ export default function HomePageClient() {
             ) : null}
 
             {!loading && user && !isLoadingCurricula && otherActiveCurricula.length > 0 ? (
-                <div className="mt-5 w-full max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
+                <div className="dd-surface dd-surface-top-line mt-5 w-full max-w-3xl rounded-3xl border p-6 shadow-sm">
+                    <p className="mb-5 text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
                         Other learning paths
                     </p>
 
-                    {groupedOtherCurricula.map((group) => {
-                        function capitalizeFirst(str: string) {
-                            return str.charAt(0).toUpperCase() + str.slice(1);
-                        }
+                    <div className="space-y-4">
+                        {groupedOtherCurricula.map((group) => {
+                            function capitalizeFirst(str: string) {
+                                return str.charAt(0).toUpperCase() + str.slice(1);
+                            }
 
-                        const groupTitle = capitalizeFirst(group[0]?.topic ?? "Learning topic");
+                            const groupTitle = capitalizeFirst(group[0]?.topic ?? "Learning topic");
 
-                        return (
-                            <div
-                                key={group[0].lessonId}
-                                className="rounded-2xl border border-slate-200 px-4 py-4 dark:border-[#334155]"
-                            >
-                                <div className="text-left">
-                                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                                        {groupTitle}
-                                    </p>
-                                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                        {group.length} active plan{group.length > 1 ? "s" : ""}
-                                    </p>
-                                </div>
+                            return (
+                                <div
+                                    key={group[0].lessonId}
+                                    className="dd-surface-soft rounded-2xl border px-4 py-4"
+                                >
+                                    <div className="text-left">
+                                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                            {groupTitle}
+                                        </p>
+                                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                            {group.length} active plan{group.length > 1 ? "s" : ""}
+                                        </p>
+                                    </div>
 
-                                <div className="mt-4 space-y-3">
-                                    {group.map((curriculum) => {
-                                        const nextDay = getNextDayNumber(curriculum);
-                                        const progress = Math.round(
-                                            (curriculum.completedDays.length / curriculum.durationDays) * 100
-                                        );
+                                    <div className="mt-4 space-y-3">
+                                        {group.map((curriculum) => {
+                                            const nextDay = getNextDayNumber(curriculum);
+                                            const progress = Math.round(
+                                                (curriculum.completedDays.length / curriculum.durationDays) * 100
+                                            );
 
-                                        return (
-                                            <div
-                                                key={curriculum.id}
-                                                className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 dark:border-slate-700 dark:bg-slate-900/60"
-                                            >
-                                                <div className="min-w-0 flex-1 text-left">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                                                            {curriculum.durationDays}-day plan
-                                                        </span>
-                                                    </div>
-
-                                                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                                        Continue with Day {nextDay} of {curriculum.durationDays}
-                                                    </p>
-
-                                                    <div className="mt-3 h-2 w-full max-w-md overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-                                                        <div
-                                                            className="h-full rounded-full bg-teal-500 transition-all"
-                                                            style={{ width: `${progress}%` }}
-                                                        />
-                                                    </div>
-
-                                                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                                        {progress}% completed
-                                                    </p>
-                                                </div>
-
-                                                <Link
-                                                    href={`/curriculum/${curriculum.id}`}
-                                                    className="shrink-0 rounded-xl border border-teal-500/30 px-3 py-2 text-xs font-semibold text-teal-700 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-500/10"
+                                            return (
+                                                <div
+                                                    key={curriculum.id}
+                                                    className="dd-surface-soft flex items-center justify-between gap-4 rounded-2xl border px-4 py-4 transition hover:border-teal-500/20"
                                                 >
-                                                    Continue
-                                                </Link>
-                                            </div>
-                                        );
-                                    })}
+                                                    <div className="min-w-0 flex-1 text-left">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <span className="dd-surface rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                                                                {curriculum.durationDays}-day plan
+                                                            </span>
+                                                        </div>
+
+                                                        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                                            Continue with Day {nextDay} of {curriculum.durationDays}
+                                                        </p>
+
+                                                        <div className="mt-3 h-2 w-full max-w-md overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                                                            <div
+                                                                className="h-full rounded-full bg-teal-500 transition-all"
+                                                                style={{ width: `${progress}%` }}
+                                                            />
+                                                        </div>
+
+                                                        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                                            {progress}% completed
+                                                        </p>
+                                                    </div>
+
+                                                    <Link
+                                                        href={`/curriculum/${curriculum.id}`}
+                                                        className="shrink-0 rounded-xl border border-teal-500/30 px-3 py-2 text-xs font-semibold text-teal-700 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-500/10"
+                                                    >
+                                                        Continue
+                                                    </Link>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
+                    </div>
                 </div>
+
             ) : null}
         </>
     );

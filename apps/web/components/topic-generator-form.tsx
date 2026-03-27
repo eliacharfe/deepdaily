@@ -45,6 +45,24 @@ export default function TopicGeneratorForm() {
     const [hasLoadedUserTopics, setHasLoadedUserTopics] = useState(false);
     const [isPreloadingSurprises, setIsPreloadingSurprises] = useState(false);
 
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
+    useEffect(() => {
+        const updateTheme = () => {
+            setIsDarkMode(document.documentElement.classList.contains("dark"));
+        };
+
+        updateTheme();
+
+        const observer = new MutationObserver(updateTheme);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
     const animatedPlaceholder = useMemo(
         () => `Try ${SUGGESTIONS[placeholderIndex]}`,
         [placeholderIndex]
@@ -263,6 +281,69 @@ export default function TopicGeneratorForm() {
         setTopic(value);
     }
 
+    const formShellStyle = isDarkMode
+        ? {
+            borderColor: isFocused
+                ? "rgba(45,212,191,0.22)"
+                : "rgba(90, 118, 132, 0.28)",
+            background:
+                "linear-gradient(180deg, rgba(8,18,27,0.88) 0%, rgba(9,20,30,0.78) 100%)",
+            backdropFilter: "blur(18px) saturate(140%)",
+            WebkitBackdropFilter: "blur(18px) saturate(140%)",
+        }
+        : {
+            borderColor: isFocused
+                ? "rgba(20,184,166,0.24)"
+                : "rgba(203, 213, 225, 0.95)",
+            background:
+                "radial-gradient(circle at 20% 0%, rgba(45, 212, 191, 0.08), transparent 38%), linear-gradient(180deg, #ffffff 0%, #f4f8fb 100%)",
+            boxShadow:
+                "0 18px 40px rgba(15, 23, 42, 0.08), 0 4px 14px rgba(15, 23, 42, 0.05)",
+        };
+
+    const innerPanelStyle = isDarkMode
+        ? {
+            border: "1px solid rgba(115, 148, 165, 0.16)",
+            background:
+                "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
+        }
+        : {
+            border: "1px solid rgba(203, 213, 225, 0.95)",
+            background:
+                "linear-gradient(180deg, rgba(248,251,252,0.98) 0%, rgba(238,244,247,0.98) 100%)",
+        };
+
+    const surprisePanelStyle = isDarkMode
+        ? {
+            border: "1px solid rgba(115, 148, 165, 0.14)",
+            background: "rgba(255,255,255,0.03)",
+        }
+        : {
+            border: "1px solid rgba(203, 213, 225, 0.92)",
+            background:
+                "linear-gradient(180deg, rgba(248,251,252,0.98) 0%, rgba(238,244,247,0.98) 100%)",
+        };
+
+    const chipStyle = isDarkMode
+        ? {
+            borderColor: "rgba(45, 212, 191, 0.35)",
+            background: "rgba(255,255,255,0.04)",
+        }
+        : {
+            borderColor: "rgba(20, 184, 166, 0.24)",
+            background: "rgba(255,255,255,0.92)",
+        };
+
+    const surpriseButtonStyle = isDarkMode
+        ? {
+            border: "1px solid rgba(45, 212, 191, 0.35)",
+            background: "rgba(255,255,255,0.05)",
+        }
+        : {
+            border: "1px solid rgba(20, 184, 166, 0.24)",
+            background: "rgba(255,255,255,0.92)",
+        };
+
     return (
         <>
             <div className="absolute inset-0 -z-10 rounded-[40px] bg-(--accent-soft) opacity-20 blur-3xl" />
@@ -273,26 +354,14 @@ export default function TopicGeneratorForm() {
                         ? "shadow-[0_0_0_1px_rgba(45,212,191,0.18),0_0_28px_rgba(45,212,191,0.10)]"
                         : "shadow-[0_16px_50px_rgba(0,0,0,0.28)]"
                         }`}
-                    style={{
-                        borderColor: isFocused
-                            ? "rgba(45,212,191,0.22)"
-                            : "rgba(90, 118, 132, 0.28)",
-                        background:
-                            "linear-gradient(180deg, rgba(8,18,27,0.88) 0%, rgba(9,20,30,0.78) 100%)",
-                        backdropFilter: "blur(18px) saturate(140%)",
-                        WebkitBackdropFilter: "blur(18px) saturate(140%)",
-                    }}
+                    style={formShellStyle}
                 >
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-teal-200/15 to-transparent" />
 
                     <div className="flex flex-col gap-4 p-3 sm:p-4">
                         <div
                             className="flex items-start gap-3 rounded-[24px] px-4 py-4 transition"
-                            style={{
-                                border: "1px solid rgba(115, 148, 165, 0.16)",
-                                background:
-                                    "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.03) 100%)",
-                            }}
+                            style={innerPanelStyle}
                         >
                             <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-400/12 text-teal-300">
                                 <Sparkles size={18} />
@@ -301,7 +370,8 @@ export default function TopicGeneratorForm() {
                             <div className="min-w-0 flex-1">
                                 <label
                                     htmlFor="topic"
-                                    className="mb-2 block text-xs font-medium uppercase tracking-wide text-slate-400"
+                                    className={`mb-2 block text-xs font-medium uppercase tracking-wide ${isDarkMode ? "text-slate-400" : "text-slate-500"
+                                        }`}
                                 >
                                     What do you want to learn?
                                 </label>
@@ -319,10 +389,16 @@ export default function TopicGeneratorForm() {
                                     onFocus={() => setIsFocused(true)}
                                     onBlur={() => setIsFocused(false)}
                                     placeholder={animatedPlaceholder}
-                                    className="w-full bg-transparent text-base text-white outline-none placeholder:text-slate-500 sm:text-lg"
+                                    className={`w-full bg-transparent text-base outline-none sm:text-lg ${isDarkMode
+                                        ? "text-white placeholder:text-slate-500"
+                                        : "text-slate-900 placeholder:text-slate-400"
+                                        }`}
                                 />
 
-                                <p className="mt-2 text-xs text-slate-400 sm:text-sm">
+                                <p
+                                    className={`mt-2 text-xs sm:text-sm ${isDarkMode ? "text-slate-400" : "text-slate-600"
+                                        }`}
+                                >
                                     Build a structured lesson in minutes, tailored to your level — or let DeepDaily pick a topic for you.
                                 </p>
                             </div>
@@ -337,11 +413,11 @@ export default function TopicGeneratorForm() {
                                             key={suggestion}
                                             type="button"
                                             onClick={() => applySuggestion(suggestion)}
-                                            className="rounded-full border px-3 py-1.5 text-xs font-medium text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:text-white"
-                                            style={{
-                                                borderColor: "rgba(45, 212, 191, 0.35)",
-                                                background: "rgba(255,255,255,0.04)",
-                                            }}
+                                            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 ${isDarkMode
+                                                ? "text-slate-300 hover:text-white"
+                                                : "text-slate-700 hover:text-slate-900"
+                                                }`}
+                                            style={chipStyle}
                                         >
                                             {suggestion}
                                         </button>
@@ -377,12 +453,12 @@ export default function TopicGeneratorForm() {
 
                             <div
                                 className="flex flex-col items-center justify-center gap-3 rounded-[22px] px-4 py-4 text-center"
-                                style={{
-                                    border: "1px solid rgba(115, 148, 165, 0.14)",
-                                    background: "rgba(255,255,255,0.03)",
-                                }}
+                                style={surprisePanelStyle}
                             >
-                                <p className="text-xs font-medium text-slate-400 sm:text-sm">
+                                <p
+                                    className={`text-xs font-medium sm:text-sm ${isDarkMode ? "text-slate-400" : "text-slate-600"
+                                        }`}
+                                >
                                     Not sure what to learn next?
                                 </p>
 
@@ -390,11 +466,9 @@ export default function TopicGeneratorForm() {
                                     type="button"
                                     onClick={handleSurpriseMe}
                                     disabled={isSubmitting || isSurprising || loading}
-                                    className="rounded-2xl px-6 py-3 text-sm font-semibold text-slate-200 transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
-                                    style={{
-                                        border: "1px solid rgba(45, 212, 191, 0.35)",
-                                        background: "rgba(255,255,255,0.05)",
-                                    }}
+                                    className={`rounded-2xl px-6 py-3 text-sm font-semibold transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50 ${isDarkMode ? "text-slate-200" : "text-slate-800"
+                                        }`}
+                                    style={surpriseButtonStyle}
                                 >
                                     {isSurprising
                                         ? "Thinking..."
@@ -403,7 +477,10 @@ export default function TopicGeneratorForm() {
                                             : "Surprise me"}
                                 </button>
 
-                                <p className="text-[11px] text-slate-500 sm:text-xs">
+                                <p
+                                    className={`text-[11px] sm:text-xs ${isDarkMode ? "text-slate-500" : "text-slate-600"
+                                        }`}
+                                >
                                     Picked for {formatLevelLabel(level).toLowerCase()} level
                                 </p>
                             </div>

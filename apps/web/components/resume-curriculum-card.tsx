@@ -17,16 +17,19 @@ export default function ResumeCurriculumCard({
     if (curricula.length === 0) return null;
 
     return (
-        <div ref={containerRef} className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+        <div
+            ref={containerRef}
+            className="dd-surface dd-surface-top-line scroll-mt-24 rounded-3xl border p-8 shadow-sm"
+        >
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
                 Continue learning
             </p>
 
-            <h2 className="mt-3 text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">
+            <h2 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white sm:text-3xl">
                 Resume your curriculum
             </h2>
 
-            <p className="mt-3 text-base sm:text-lg leading-relaxed text-slate-600 dark:text-slate-300">
+            <p className="mt-3 text-base leading-relaxed text-slate-600 dark:text-slate-300 sm:text-lg">
                 You already started a structured plan for this lesson. Continue where you left off.
             </p>
 
@@ -41,7 +44,7 @@ export default function ResumeCurriculumCard({
                         <Link
                             key={curriculum.id}
                             href={`/curriculum/${curriculum.id}`}
-                            className="group block rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-500/30 dark:hover:bg-slate-900"
+                            className="dd-surface-soft group block rounded-2xl border p-5 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20"
                         >
                             <div className="flex items-start justify-between gap-4">
                                 <div>
@@ -63,7 +66,7 @@ export default function ResumeCurriculumCard({
                                         </span>
                                     </div>
 
-                                    <p className="mt-2 text-base sm:text-lg leading-relaxed text-slate-600 dark:text-slate-300">
+                                    <p className="mt-2 text-base leading-relaxed text-slate-600 dark:text-slate-300 sm:text-lg">
                                         {completed}/{total} completed · {progressPercent}% done
                                     </p>
                                 </div>
@@ -73,7 +76,7 @@ export default function ResumeCurriculumCard({
                                 </span>
                             </div>
 
-                            <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                            <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200/90 dark:bg-slate-800/80">
                                 <div
                                     className="h-full rounded-full transition-all"
                                     style={{

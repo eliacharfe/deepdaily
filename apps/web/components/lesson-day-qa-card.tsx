@@ -80,7 +80,7 @@ export default function LessonDayQaCard({
     }
 
     return (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-[#334155] dark:bg-[#111827]">
+        <section className="dd-surface dd-surface-top-line rounded-2xl border p-6 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
                 AI Coach
             </p>
@@ -93,13 +93,13 @@ export default function LessonDayQaCard({
                 Get a clear explanation, examples, or test your understanding.
             </p>
 
-            <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
+            <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
                 Based on today’s lesson content
             </p>
 
             <div
                 dir="auto"
-                className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900/60"
+                className="dd-surface-soft mt-4 rounded-xl border px-4 py-3 text-sm"
             >
                 <p
                     dir="auto"
@@ -139,12 +139,12 @@ export default function LessonDayQaCard({
                     placeholder="Ask anything about today’s lesson..."
                     rows={4}
                     disabled={loading || disabled}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                    className="dd-surface-soft w-full rounded-xl border px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 disabled:opacity-50 dark:text-white"
                 />
             </div>
 
             <div className="mt-4 flex items-center justify-between gap-3">
-                <p className="text-xs text-slate-400 dark:text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                     Ask a focused question for the best answer
                 </p>
 
@@ -165,7 +165,7 @@ export default function LessonDayQaCard({
             ) : null}
 
             {(loading || answer) ? (
-                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
+                <div className="dd-surface-soft mt-4 rounded-2xl border p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
                         <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                             Answer
@@ -175,7 +175,7 @@ export default function LessonDayQaCard({
                             <button
                                 type="button"
                                 onClick={handleCopyAnswer}
-                                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                                className="dd-surface-soft rounded-lg border px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 dark:text-slate-300 dark:hover:border-teal-500/20 dark:hover:text-teal-300"
                             >
                                 {copied ? "Copied" : "Copy"}
                             </button>
@@ -205,7 +205,7 @@ export default function LessonDayQaCard({
                                         type="button"
                                         onClick={() => handleSubmit(item)}
                                         disabled={loading || disabled}
-                                        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                                        className="dd-surface-soft rounded-full border px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:text-slate-300 dark:hover:border-teal-500/20 dark:hover:text-teal-300"
                                     >
                                         {item}
                                     </button>
@@ -227,7 +227,7 @@ export default function LessonDayQaCard({
                                         handleSubmit("Go deeper on the most important idea here.")
                                     }
                                     disabled={loading || disabled}
-                                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                                    className="dd-surface-soft rounded-full border px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:text-slate-300 dark:hover:border-teal-500/20 dark:hover:text-teal-300"
                                 >
                                     Go deeper
                                 </button>
@@ -238,7 +238,7 @@ export default function LessonDayQaCard({
                                         handleSubmit("Give me a concrete real-world example.")
                                     }
                                     disabled={loading || disabled}
-                                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                                    className="dd-surface-soft rounded-full border px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:text-slate-300 dark:hover:border-teal-500/20 dark:hover:text-teal-300"
                                 >
                                     Give an example
                                 </button>
@@ -249,7 +249,7 @@ export default function LessonDayQaCard({
                                         handleSubmit("Test me with 3 short questions.")
                                     }
                                     disabled={loading || disabled}
-                                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                                    className="dd-surface-soft rounded-full border px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:text-slate-300 dark:hover:border-teal-500/20 dark:hover:text-teal-300"
                                 >
                                     Quiz me
                                 </button>
@@ -260,7 +260,7 @@ export default function LessonDayQaCard({
                                         handleSubmit("Summarize this answer in 3 short bullet points.")
                                     }
                                     disabled={loading || disabled}
-                                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                                    className="dd-surface-soft rounded-full border px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:text-slate-300 dark:hover:border-teal-500/20 dark:hover:text-teal-300"
                                 >
                                     Summarize this
                                 </button>
