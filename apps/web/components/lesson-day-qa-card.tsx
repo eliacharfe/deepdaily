@@ -215,50 +215,56 @@ export default function LessonDayQaCard({
                     ) : null}
 
                     {answer && !loading ? (
-                        <div className="mt-4 flex flex-wrap gap-2">
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    handleSubmit("Go deeper on the most important idea here.")
-                                }
-                                disabled={loading || disabled}
-                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
-                            >
-                                Go deeper
-                            </button>
+                        <div className="mt-4">
+                            <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                                Try one of these next
+                            </p>
 
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    handleSubmit("Give me a concrete real-world example.")
-                                }
-                                disabled={loading || disabled}
-                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
-                            >
-                                Give an example
-                            </button>
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handleSubmit("Go deeper on the most important idea here.")
+                                    }
+                                    disabled={loading || disabled}
+                                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                                >
+                                    Go deeper
+                                </button>
 
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    handleSubmit("Test me with 3 short questions.")
-                                }
-                                disabled={loading || disabled}
-                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
-                            >
-                                Quiz me
-                            </button>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handleSubmit("Give me a concrete real-world example.")
+                                    }
+                                    disabled={loading || disabled}
+                                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                                >
+                                    Give an example
+                                </button>
 
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    handleSubmit("Summarize this answer in 3 short bullet points.")
-                                }
-                                disabled={loading || disabled}
-                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
-                            >
-                                Summarize this
-                            </button>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handleSubmit("Test me with 3 short questions.")
+                                    }
+                                    disabled={loading || disabled}
+                                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                                >
+                                    Quiz me
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handleSubmit("Summarize this answer in 3 short bullet points.")
+                                    }
+                                    disabled={loading || disabled}
+                                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-200 hover:text-teal-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500/30 dark:hover:text-teal-300"
+                                >
+                                    Summarize this
+                                </button>
+                            </div>
                         </div>
                     ) : null}
                 </div>
