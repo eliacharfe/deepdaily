@@ -519,7 +519,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             backLessonId={curriculum.lessonId}
             className="px-4 py-6 pt-10 sm:px-6 sm:py-12 sm:pt-20"
         >
-            <div className="mx-auto max-w-6xl space-y-6 pt-2 sm:space-y-8 sm:pt-6 lg:pt-6 px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-6xl space-y-6 pt-2 sm:space-y-8 sm:pt-6 lg:pt-6 ">
                 <section className="dd-surface dd-surface-top-line overflow-hidden rounded-3xl border shadow-sm">
                     <div className="border-b border-teal-100 bg-linear-to-r from-teal-50 via-white to-cyan-50 p-8 dark:border-teal-900/30 dark:from-teal-950/30 dark:via-transparent dark:to-cyan-950/20">
                         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-teal-700 dark:text-teal-300">
