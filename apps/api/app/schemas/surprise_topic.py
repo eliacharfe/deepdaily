@@ -1,6 +1,6 @@
 # apps/api/app/schemas/surprise_topic.py
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field  # pyright: ignore[reportMissingImports]
 
 
 class SurpriseTopicRequest(BaseModel):

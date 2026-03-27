@@ -370,7 +370,7 @@ export default function TopicGeneratorForm() {
                                             ? "Checking session..."
                                             : isSubmitting
                                                 ? "Preparing..."
-                                                : "Generate lesson"}
+                                                : "Create learning plan"}
                                     </button>
                                 </div>
                             </div>

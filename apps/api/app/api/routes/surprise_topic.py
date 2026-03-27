@@ -1,7 +1,7 @@
 
 # apps/api/app/api/routes/surprise_topic.py
 
-from fastapi import APIRouter
+from fastapi import APIRouter  # pyright: ignore[reportMissingImports]
 
 from app.schemas.surprise_topic import SurpriseTopicRequest, SurpriseTopicResponse
 from app.services.surprise_topic import get_surprise_topics

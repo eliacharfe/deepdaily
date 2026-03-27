@@ -7,13 +7,17 @@ import type { Curriculum } from "@/types/curriculum";
 
 type Props = {
     curricula: Curriculum[];
+    containerRef?: React.RefObject<HTMLDivElement | null>;
 };
 
-export default function ResumeCurriculumCard({ curricula }: Props) {
+export default function ResumeCurriculumCard({
+    curricula,
+    containerRef,
+}: Props) {
     if (curricula.length === 0) return null;
 
     return (
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+        <div ref={containerRef} className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
                 Continue learning
             </p>

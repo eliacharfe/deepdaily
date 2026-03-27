@@ -197,6 +197,17 @@ export default function LearnPageClient(props: Props) {
     const isAutoSavingStreamRef = useRef(false);
     const lastAutoSavedStreamRef = useRef("");
 
+    const curriculumRef = useRef<HTMLDivElement | null>(null);
+    const resumeCurriculumRef = useRef<HTMLDivElement | null>(null);
+
+    const has7DayCurriculum = existingCurricula.some(
+        (curriculum) => curriculum.durationDays === 7
+    );
+
+    const has30DayCurriculum = existingCurricula.some(
+        (curriculum) => curriculum.durationDays === 30
+    );
+
     const router = useRouter();
 
     useEffect(() => {
@@ -490,6 +501,17 @@ export default function LearnPageClient(props: Props) {
         }
     }
 
+
+    function scrollToNextStep() {
+        const targetRef =
+            existingCurricula.length > 0 ? resumeCurriculumRef : curriculumRef;
+
+        targetRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+        });
+    }
+
     if (loading) {
         return (
             <PageShell className="px-6 py-12 pt-20 dark:bg-[#1F2428] dark:text-[#ECFDF5]">
@@ -502,7 +524,7 @@ export default function LearnPageClient(props: Props) {
                     <h1 className="mt-3 text-2xl font-semibold">
                         {isSavedLessonMode
                             ? "Loading saved lesson..."
-                            : "Generating your lesson..."}
+                            : "Designing your learning path…"}
                     </h1>
 
                     <p className="mt-3 text-slate-600 dark:text-slate-300">
@@ -651,6 +673,34 @@ export default function LearnPageClient(props: Props) {
                                     Today&apos;s focus
                                 </h2>
 
+                                <div
+                                    className="mt-6 rounded-xl border border-teal-200 bg-teal-50/70 p-4 sm:p-5 dark:border-teal-900/30 dark:bg-teal-950/10"
+                                >
+                                    <h2 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">
+                                        Start here
+                                    </h2>
+
+                                    <ul className="mt-3 space-y-2 text-sm sm:text-base text-slate-700 dark:text-slate-300">
+                                        <li>1. Read today’s focus</li>
+                                        <li>2. Go through the lesson sections</li>
+                                        <li>3. Explore 1–2 resources</li>
+                                    </ul>
+
+
+                                    <button
+                                        onClick={scrollToNextStep}
+                                        className="mt-4 rounded-xl px-4 py-2 text-sm font-semibold text-white transition hover:scale-[1.02]"
+                                        style={{
+                                            background: "linear-gradient(135deg, #19c2b3 0%, #0f8f86 100%)",
+                                        }}
+                                    >
+                                        {existingCurricula.length > 0
+                                            ? "Continue your curriculum"
+                                            : "Start today’s lesson"}
+                                    </button>
+
+                                </div>
+
                                 <p
                                     dir="auto"
                                     className="mt-2 text-base sm:text-lg text-slate-900 dark:text-slate-100 text-start"
@@ -679,7 +729,10 @@ export default function LearnPageClient(props: Props) {
 
                     {existingCurricula.length > 0 && (
                         <div className="px-1 sm:px-0">
-                            <ResumeCurriculumCard curricula={existingCurricula} />
+                            <ResumeCurriculumCard
+                                curricula={existingCurricula}
+                                containerRef={resumeCurriculumRef}
+                            />
                         </div>
                     )}
 
@@ -822,6 +875,11 @@ export default function LearnPageClient(props: Props) {
                     </div>
 
                     <CurriculumCtaCard
+                        compact
+                        curricula={existingCurricula}
+                        has7DayCurriculum={has7DayCurriculum}
+                        has30DayCurriculum={has30DayCurriculum}
+                        containerRef={curriculumRef}
                         isCreatingCurriculum={isCreatingCurriculum}
                         selectedDuration={selectedDuration}
                         curriculumMessage={curriculumMessage}
