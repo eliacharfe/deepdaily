@@ -281,7 +281,7 @@ export default function SavedLessonsSidebar({
                                                                     className={[
                                                                         "rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]",
                                                                         isActive
-                                                                            ? "dd-surface-soft border-teal-200 text-teal-700 dark:border-teal-400/30 dark:text-teal-300"
+                                                                            ? "border-teal-400 bg-teal-400/10 text-teal-300"
                                                                             : "dd-surface-soft text-slate-600 dark:text-slate-300"
                                                                     ].join(" ")}
                                                                 >
@@ -298,7 +298,12 @@ export default function SavedLessonsSidebar({
                                                             </p>
                                                         </div>
 
-                                                        <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                                                        <ChevronRight
+                                                            className={[
+                                                                "mt-0.5 h-4 w-4 shrink-0",
+                                                                isActive ? "text-teal-300" : "text-slate-400",
+                                                            ].join(" ")}
+                                                        />
                                                     </div>
                                                 </Link>
                                             </div>
