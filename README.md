@@ -2,9 +2,24 @@
 
 > Learn anything deeply — one day at a time.
 
-🌐 **Live App:** https://deepdaily.net/
+🌐 **Live App:** https://deepdaily.net/  
+🎥 **Demo Video:** https://www.youtube.com/watch?v=wp6DZ94k9Jo
 
-DeepDaily is an AI-powered learning platform that generates structured, day-by-day learning experiences for any topic. It is powered by a system of custom-built AI agents developed from scratch, combining LLM-driven lesson generation, intelligent resource discovery, and personalized curricula into a seamless learning journey.
+DeepDaily helps you learn new topics without getting lost in scattered tabs, random tutorials, and inconsistent progress.
+
+Enter any topic, choose your level, and DeepDaily generates a structured 7-day or 30-day learning path with daily lessons, curated resources, and progress tracking.
+
+## ✅ What You Can Do
+
+- Generate a structured 7-day or 30-day learning path for any topic
+- Choose your level: beginner, intermediate, or advanced
+- Follow one lesson per day with clear progression
+- Get curated resources for each day
+- Ask AI questions about the lesson you’re currently studying
+- Track progress and resume where you left off
+- 💬 **Lesson Q&A**
+  - Ask questions about the lesson of the current day
+  - Get focused follow-up explanations without leaving the learning flow
 
 ---
 
@@ -44,11 +59,11 @@ Access high-quality resources, including articles, books, and embedded videos �
 - 📚 **AI-Generated Lessons**
   - Structured lessons generated in real-time using LLMs
   - Clear explanations, examples, and exercises
-
-- 🗺️ **Daily Curriculum System**
-  - Multi-day learning paths
+ 
+- 🗺️ **Structured Learning Paths**
+  - Generate full 7-day or 30-day curricula
   - Progressive difficulty and topic breakdown
-  - Resume where you left off
+  - Resume exactly where you left off
 
 - 🎯 **Level-Adaptive Learning**
   - Choose your level: Beginner / Intermediate / Advanced
@@ -84,7 +99,7 @@ Access high-quality resources, including articles, books, and embedded videos �
 
 ## 🤖 Agent Architecture
 
-DeepDaily is powered by a system of **custom-built AI agents developed from scratch**, each responsible for a specific part of the learning pipeline. :contentReference[oaicite:0]{index=0}  
+DeepDaily is powered by a system of **custom-built AI agents developed from scratch**, each responsible for a specific part of the learning pipeline.
 
 These agents collaborate to transform a user-defined topic into a structured, level-adapted, multi-day learning experience.
 
@@ -164,6 +179,16 @@ Ensures quality, clarity, and coherence across all generated content.
 
 ---
 
+## Why DeepDaily Exists
+
+A common problem with self-learning is not lack of information — it is lack of structure.
+
+People often start with motivation, open too many tabs, consume disconnected resources, and lose momentum after a few days.
+
+DeepDaily is built to reduce that friction by turning any topic into a focused daily learning path.
+
+---
+
 ## 🚀 Why DeepDaily is Different
 
 Unlike typical AI tools that generate one-off answers, DeepDaily:
@@ -240,6 +265,12 @@ Unlike typical AI tools that generate one-off answers, DeepDaily:
 ---
 
 ## 🚀 Getting Started
+
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/eliacharfe/deepdaily.git
+cd deepdaily
 
 ### Backend
 
@@ -326,3 +357,8 @@ MIT License
 ## ❤️ Philosophy
 
 > Consistent, structured daily learning compounds into mastery.
+
+## Try DeepDaily
+
+- Live app: https://deepdaily.net/
+- Demo: https://www.youtube.com/watch?v=wp6DZ94k9Jo
