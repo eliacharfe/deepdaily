@@ -609,15 +609,13 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                 <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[280px_1fr]">
                     <aside className="lg:sticky lg:top-24 lg:h-fit">
                         <div className="dd-surface dd-surface-top-line rounded-2xl border p-4 shadow-sm">
-                            <h2 className="mb-4 hidden text-xs font-bold uppercase text-slate-400 lg:block">
+                            <h2 className="mb-4 hidden text-xs font-bold uppercase tracking-[0.18em] text-slate-400 lg:block">
                                 Schedule
                             </h2>
 
-                            <div className="flex flex-row gap-3 overflow-x-auto pb-2 scrollbar-hide lg:max-h-[600px] lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pb-0">
+                            <div className="flex flex-row gap-3 overflow-x-auto pb-2 scrollbar-hide lg:max-h-[600px] lg:flex-col lg:gap-2 lg:overflow-x-hidden lg:overflow-y-auto lg:pb-0">
                                 {curriculum.days.map((day) => {
-                                    const isCompleted = curriculum.completedDays.includes(
-                                        day.dayNumber
-                                    );
+                                    const isCompleted = curriculum.completedDays.includes(day.dayNumber);
                                     const isCurrent = curriculum.currentDay === day.dayNumber;
                                     const isSelected = selectedDayNumber === day.dayNumber;
                                     const isGenerated = day.isGenerated;
@@ -628,36 +626,37 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                             type="button"
                                             onClick={() => handleSelectDay(day.dayNumber)}
                                             className={[
-                                                "w-full rounded-2xl border p-4 text-left transition",
+                                                "w-full rounded-2xl border px-4 py-3 text-left transition",
                                                 isSelected
-                                                    ? "dd-surface-soft border-teal-300 shadow-sm dark:border-teal-500/40"
+                                                    ? "border-teal-500 bg-teal-950/30 shadow-sm"
                                                     : "dd-surface-soft hover:border-teal-200 dark:hover:border-teal-500/20",
                                             ].join(" ")}
                                         >
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                                                        Day {day.dayNumber}
-                                                    </p>
-                                                    <p className="mt-1 text-sm leading-6 text-slate-700 dark:text-slate-300">
+                                            <div className="flex items-start gap-3">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                                            Day {day.dayNumber}
+                                                        </p>
+
+                                                        {isCompleted ? (
+                                                            <span className="rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-teal-700 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300">
+                                                                Done
+                                                            </span>
+                                                        ) : !isGenerated ? (
+                                                            <span className="dd-surface rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                                                                Ready
+                                                            </span>
+                                                        ) : isCurrent ? (
+                                                            <span className="rounded-full bg-teal-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white dark:bg-teal-400 dark:text-slate-900">
+                                                                Current
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
+
+                                                    <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-700 dark:text-slate-300">
                                                         {day.title}
                                                     </p>
-                                                </div>
-
-                                                <div className="shrink-0">
-                                                    {isCompleted ? (
-                                                        <span className="rounded-full border border-teal-200 bg-teal-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-teal-700 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300">
-                                                            Done
-                                                        </span>
-                                                    ) : !isGenerated ? (
-                                                        <span className="dd-surface rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                                                            Ready
-                                                        </span>
-                                                    ) : isCurrent ? (
-                                                        <span className="rounded-full bg-teal-600 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white dark:bg-teal-400 dark:text-slate-900">
-                                                            Current
-                                                        </span>
-                                                    ) : null}
                                                 </div>
                                             </div>
                                         </button>

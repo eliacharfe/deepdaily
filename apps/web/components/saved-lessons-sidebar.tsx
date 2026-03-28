@@ -254,7 +254,8 @@ export default function SavedLessonsSidebar({
                             <div className="space-y-3">
                                 {lessons.map((lesson) => {
                                     const href = `/lessons/${lesson.id}`;
-                                    const isActive = pathname === href;
+                                    const isActive =
+                                        pathname === href || pathname.startsWith(`${href}/`);
                                     const isDeleting = deletingLessonId === lesson.id;
 
                                     return (
@@ -263,7 +264,7 @@ export default function SavedLessonsSidebar({
                                             className={[
                                                 "group rounded-2xl border p-4 shadow-sm transition",
                                                 isActive
-                                                    ? "dd-surface border-teal-200 ring-1 ring-teal-200/50 dark:border-teal-500/30 dark:ring-teal-500/20"
+                                                    ? "border-2 border-teal-400 bg-teal-950/30 shadow-[0_0_0_1px_rgba(45,212,191,0.18),0_10px_30px_rgba(8,145,178,0.12)]"
                                                     : "dd-surface hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md dark:hover:border-teal-500/20",
                                             ].join(" ")}
                                         >
