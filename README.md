@@ -265,80 +265,76 @@ Unlike typical AI tools that generate one-off answers, DeepDaily:
 
 ## 🚀 Getting Started
 
-
 ### 1. Clone the repo
 
-```bash
-git clone https://github.com/eliacharfe/deepdaily.git
+git clone https://github.com/eliacharfe/deepdaily.git  
 cd deepdaily
 
-### Backend
+### 2. Start the backend
 
-    cd apps/api
-    python -m venv .venv
-    source .venv/bin/activate
-    pip install -r requirements.txt
-    python -m uvicorn app.main:app --reload
+cd apps/api  
+python -m venv .venv  
+source .venv/bin/activate  
+pip install -r requirements.txt  
+uvicorn app.main:app --reload
+
+### 3. Start the frontend
+
+cd apps/web  
+npm install  
+npm run dev
+
+### 4. Configure environment variables
+
+Create `.env` files for both backend and frontend.
+
+#### Frontend (`apps/web/.env.local`)
+
+NEXT_PUBLIC_API_URL=http://localhost:8000  
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000  
+
+NEXT_PUBLIC_FIREBASE_API_KEY=your_key  
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com  
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id  
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com  
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id  
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id  
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id  
 
 ---
 
-### Frontend
+#### Backend (`apps/api/.env`)
 
-    cd apps/web
-    npm install
-    npm run dev
-
----
-
-## 🔑 Environment Variables
-
-### Backend
-
-    OPENAI_API_KEY=your_key
-    DATABASE_URL=your_db_url
-
-### Frontend
-
-    NEXT_PUBLIC_API_URL=http://localhost:8000
-    NEXT_PUBLIC_FIREBASE_API_KEY=...
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
-
----
-
-## 🔄 API Overview
-
-### Lessons
-
-    POST /lessons
-    GET /lessons
-    GET /lessons/{id}
-
-### Curricula
-
-    POST /curricula
-    POST /curricula/{id}/generate-day
-    POST /curricula/{id}/complete-day
+APP_NAME=DeepDaily API  
+APP_ENV=development  
+APP_HOST=0.0.0.0  
+APP_PORT=8000  
+FRONTEND_URL=http://localhost:3000  
+FIREBASE_ADMIN_CREDENTIALS_PATH=./firebase.json  
+OPENAI_API_KEY=your_key  
+TAVILY_API_KEY=your_key  
+TAVILY_SEARCH_DEPTH=advanced  
+DATABASE_URL=your_database_url  
 
 ---
 
 ## 💡 Future Improvements
 
-- [ ] Spaced repetition system  
-- [ ] Daily push notifications  
+- [ ] Regenerate today's lesson/resources  
+- [ ] Smarter review & retention system  
+- [ ] Improved lesson Q&A memory  
+- [ ] Better topic discovery ("Surprise me")  
 - [ ] Mobile app (Flutter)  
-- [ ] Social learning  
-- [ ] Offline mode  
-- [ ] AI tutor memory  
 
 ---
 
 ## 🧑‍💻 Author
 
-Eliachar Feig
+Eliachar Feig  
 
-- https://www.eliacharfeig.com/
-- https://www.linkedin.com/in/eliachar-feig/
-- https://github.com/eliacharfe
+- https://www.eliacharfeig.com/  
+- https://www.linkedin.com/in/eliachar-feig/  
+- https://github.com/eliacharfe  
 
 ---
 
@@ -356,9 +352,11 @@ MIT License
 
 ## ❤️ Philosophy
 
-> Consistent, structured daily learning compounds into mastery.
+Consistent, structured daily learning compounds into mastery.
+
+---
 
 ## Try DeepDaily
 
-- Live app: https://deepdaily.net/
-- Demo: https://www.youtube.com/watch?v=wp6DZ94k9Jo
+- Live app: https://deepdaily.net/  
+- Demo: https://www.youtube.com/watch?v=wp6DZ94k9Jo  
