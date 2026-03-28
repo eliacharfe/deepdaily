@@ -8,6 +8,14 @@ DeepDaily is an AI-powered learning platform that generates structured, day-by-d
 
 ---
 
+## 🎥 Demo
+
+[![Watch the demo](https://img.youtube.com/vi/wp6DZ94k9Jo/maxresdefault.jpg)](https://www.youtube.com/watch?v=wp6DZ94k9Jo)
+
+👉 Click to watch the full demo
+
+---
+
 ## 📸 Product Preview
 
 ### 🏠 Generate a Learning Path
