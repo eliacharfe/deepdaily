@@ -361,4 +361,4 @@ MIT License
 ## Try DeepDaily
 
 - Live app: https://deepdaily.net/
-- Demo: https://www.youtube.com/watch?v=wp6DZ94k9Jo
+- Demo: [https://www.youtube.com/watch?v=wp6DZ94k9Jo](https://www.youtube.com/watch?v=wp6DZ94k9Jo)
