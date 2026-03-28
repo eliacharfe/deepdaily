@@ -69,6 +69,14 @@ class ResourceDiscoveryAgent:
         "pinterest.com": -3,
     }
 
+    MAX_SEARCH_QUERY_LENGTH = 360
+
+    def clamp_query(self, query: str) -> str:
+        normalized = " ".join((query or "").split()).strip()
+        if len(normalized) <= self.MAX_SEARCH_QUERY_LENGTH:
+            return normalized
+        return normalized[: self.MAX_SEARCH_QUERY_LENGTH].rstrip()
+
     async def search(self, query: str, max_results: int = 5) -> list[dict[str, Any]]:
         results = await self.search_client.search(query=query, max_results=max_results)
 
@@ -392,21 +400,15 @@ class ResourceDiscoveryAgent:
             normalize_title(title) for title in (used_titles or set()) if title
         }
 
-        section_titles: list[str] = []
-        for section in sections[:3]:
-            if isinstance(section, dict):
-                title = (section.get("title") or "").strip()
-                if title:
-                    section_titles.append(title)
-
-        section_hint = " ".join(section_titles[:2])
-        summary_hint = " ".join((day_summary or "").split()[:20])
+        base_topic = " ".join((topic or "").split()[:20]).strip()
+        base_day_title = " ".join((day_title or "").split()[:12]).strip()
+        base_level = (level or "").strip()
 
         queries = [
-            f"{topic} {day_title} {day_objective} {level} tutorial",
-            f"{topic} {day_title} {section_hint} guide".strip(),
-            f"{topic} {day_title} explained video youtube",
-            f"{topic} {day_objective} {summary_hint} practical example".strip(),
+            self.clamp_query(f"{base_topic} {base_day_title} {base_level} tutorial"),
+            self.clamp_query(f"{base_topic} {base_day_title} guide"),
+            self.clamp_query(f"{base_topic} {base_day_title} youtube explained"),
+            self.clamp_query(f"{base_topic} practical example"),
         ]
 
         collected: list[tuple[int, dict[str, Any]]] = []
@@ -414,7 +416,11 @@ class ResourceDiscoveryAgent:
         seen_titles: set[str] = set()
 
         for query in queries:
-            results = await self.search(query=query, max_results=8)
+            try:
+                results = await self.search(query=query, max_results=8)
+            except Exception as exc:
+                print(f"Daily resource search failed for query='{query}': {exc}")
+                continue
 
             for item in results:
                 url = (item.get("url") or "").strip()
