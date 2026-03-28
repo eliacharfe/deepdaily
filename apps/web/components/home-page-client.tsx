@@ -105,7 +105,7 @@ export default function HomePageClient() {
         <>
 
             {!loading && user && !isLoadingCurricula && !hasAnyCurricula ? (
-                <div className="mb-6 w-full max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                <div className="mb-6 mt-6 w-full max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
                         Start learning
                     </p>
@@ -121,7 +121,7 @@ export default function HomePageClient() {
             ) : null}
 
             {!loading && user && !isLoadingCurricula && hasAnyCurricula && !hasActiveCurricula ? (
-                <div className="mb-6 w-full max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
+                <div className="mb-6 mt-6 w-full max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-[#334155] dark:bg-[#111827]">
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
                         Great progress
                     </p>
