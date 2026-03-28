@@ -15,7 +15,6 @@ Enter any topic, choose your level, and DeepDaily generates a structured 7-day o
 - Choose your level: beginner, intermediate, or advanced
 - Follow one lesson per day with clear progression
 - Get curated resources for each day
-- Ask AI questions about the lesson you’re currently studying
 - Track progress and resume where you left off
 - 💬 **Lesson Q&A**
   - Ask questions about the lesson of the current day
@@ -268,6 +267,7 @@ Unlike typical AI tools that generate one-off answers, DeepDaily:
 
 
 ### 1. Clone the repo
+
 ```bash
 git clone https://github.com/eliacharfe/deepdaily.git
 cd deepdaily
