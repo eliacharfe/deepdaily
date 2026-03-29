@@ -94,7 +94,7 @@ function ResourceCard({
                 <div className="min-w-0 flex-1">
                     <MarkdownContent
                         content={title}
-                        className="[&_p]:my-0 [&_h1]:my-0 [&_h2]:my-0 [&_h3]:my-0 [&_h4]:my-0 break-words text-base font-semibold leading-tight text-slate-900 sm:text-lg dark:text-white"
+                        className="[&_p]:my-0 [&_h1]:my-0 [&_h2]:my-0 [&_h3]:my-0 [&_h4]:my-0 wrap-break-word text-base font-semibold leading-tight text-slate-900 sm:text-lg dark:text-white"
                     />
                 </div>
 
@@ -113,7 +113,7 @@ function ResourceCard({
             {reason ? (
                 <MarkdownContent
                     content={reason}
-                    className="mt-2 break-words text-sm text-slate-600 sm:text-base dark:text-slate-300 [&_p]:my-0 [&_a]:break-all"
+                    className="mt-2 wrap-break-word text-sm text-slate-600 sm:text-base dark:text-slate-300 [&_p]:my-0 [&_a]:break-all"
                 />
             ) : null}
 
@@ -125,11 +125,11 @@ function ResourceCard({
                             line-clamp-6
                             text-xs leading-relaxed text-slate-500 sm:text-sm dark:text-slate-400
                             [&_p]:my-0
-                            [&_*]:max-w-full
-                            [&_*]:break-words
+                            **:max-w-full
+                            **:wrap-break-word
                             [&_a]:break-all
                             [&_pre]:overflow-x-auto
-                            [&_code]:break-words
+                            [&_code]:wrap-break-word
                             [&_hr]:my-3
                         "
                     />

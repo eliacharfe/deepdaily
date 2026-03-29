@@ -6,6 +6,8 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 import AppShell from "@/components/app-shell";
 import { Toaster } from "sonner";
 import SplashScreen from "@/components/splash-screen";
+import PwaRegister from "@/components/pwa-register";
+import InstallAppPopup from "@/components/install-app-popup";
 
 export const metadata: Metadata = {
   title: "DeepDaily",
@@ -15,6 +17,12 @@ export const metadata: Metadata = {
     shortcut: "/favicon.png",
     apple: "/favicon.png",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "DeepDaily",
+  },
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({
@@ -46,12 +54,14 @@ export default function RootLayout({
         />
       </head>
 
-      <body className="bg-white text-slate-900 dark:bg-[#1f1f23] dark:text-[#F1E7DF]">
+      <body className="bg-white text-slate-900 dark:bg-[#1f1f23] dark:text-[#F1E7DF]" suppressHydrationWarning>
+        <PwaRegister />
         <SplashScreen />
         <Toaster richColors position="top-center" />
         <AuthProvider>
           <AppShell>{children}</AppShell>
         </AuthProvider>
+        <InstallAppPopup />
       </body>
     </html>
   );
