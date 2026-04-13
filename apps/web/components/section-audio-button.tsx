@@ -19,6 +19,8 @@ type AudioState = "idle" | "loading" | "playing" | "paused" | "error";
 let activeAudio: HTMLAudioElement | null = null;
 let activeAudioKey: string | null = null;
 
+const audioCache = new Map<string, string>();
+
 function buildAudioKey(title: string, content: string, language?: string) {
     return `${language ?? "auto"}::${title}::${content}`;
 }
@@ -74,6 +76,7 @@ export default function SectionAudioButton({
     const [state, setState] = useState<AudioState>("idle");
     const [errorMessage, setErrorMessage] = useState("");
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const ownedBlobUrlRef = useRef<string | null>(null);
 
     const audioKey = buildAudioKey(title, content, language);
 
@@ -89,8 +92,17 @@ export default function SectionAudioButton({
 
                 audioRef.current = null;
             }
+
+            // Only revoke blob URLs that are NOT kept in the shared cache.
+            // Cached URLs should stay alive for reuse during this session.
+            const ownedBlobUrl = ownedBlobUrlRef.current;
+            if (ownedBlobUrl && !audioCache.has(audioKey)) {
+                URL.revokeObjectURL(ownedBlobUrl);
+            }
+
+            ownedBlobUrlRef.current = null;
         };
-    }, []);
+    }, [audioKey]);
 
     async function handleClick() {
         try {
@@ -121,13 +133,24 @@ export default function SectionAudioButton({
                 activeAudio.pause();
             }
 
-            const audioUrl = await fetchSectionAudio({
-                title,
-                content,
-                language,
-            });
+            let audioUrl = audioCache.get(audioKey);
+
+            if (!audioUrl) {
+                audioUrl = await fetchSectionAudio({
+                    title,
+                    content,
+                    language,
+                });
+
+                audioCache.set(audioKey, audioUrl);
+            }
+
+            if (audioRef.current) {
+                audioRef.current.pause();
+            }
 
             const audio = new Audio(audioUrl);
+            ownedBlobUrlRef.current = audioUrl;
 
             audio.onplay = () => {
                 activeAudio = audio;
