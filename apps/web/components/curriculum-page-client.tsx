@@ -736,23 +736,21 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                             key={i}
                                             className="dd-surface dd-surface-top-line rounded-2xl border p-6 shadow-sm"
                                         >
-                                            <div className="mb-4 flex items-start justify-between gap-3">
-                                                <h3
-                                                    dir="auto"
-                                                    className="min-w-0 text-lg font-bold text-slate-900 dark:text-white"
-                                                >
-                                                    {section.title}
-                                                </h3>
-
-                                                <SectionAudioButton
-                                                    title={section.title}
-                                                    content={section.content}
-                                                />
-                                            </div>
+                                            <h3
+                                                dir="auto"
+                                                className="mb-4 text-lg font-bold text-slate-900 dark:text-white"
+                                            >
+                                                {section.title}
+                                            </h3>
 
                                             <div className="prose prose-sm max-w-none dark:prose-invert">
                                                 <MarkdownContent content={section.content} />
                                             </div>
+
+                                            <SectionAudioButton
+                                                title={section.title}
+                                                content={section.content}
+                                            />
                                         </article>
                                     ))}
                                 </section>

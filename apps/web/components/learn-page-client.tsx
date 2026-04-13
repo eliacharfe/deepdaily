@@ -752,19 +752,12 @@ export default function LearnPageClient(props: Props) {
                                             key={section.title}
                                             className="dd-surface-soft rounded-xl border p-4 transition hover:border-teal-200 dark:hover:border-teal-500/20 sm:p-5"
                                         >
-                                            <div className="flex items-start justify-between gap-3">
-                                                <h3
-                                                    dir="auto"
-                                                    className="min-w-0 text-base font-semibold text-slate-900 dark:text-white sm:text-lg"
-                                                >
-                                                    {section.title}
-                                                </h3>
-
-                                                <SectionAudioButton
-                                                    title={section.title}
-                                                    content={section.content}
-                                                />
-                                            </div>
+                                            <h3
+                                                dir="auto"
+                                                className="text-base font-semibold text-slate-900 dark:text-white sm:text-lg"
+                                            >
+                                                {section.title}
+                                            </h3>
 
                                             <div className="prose prose-base mt-2 max-w-none dark:prose-invert sm:prose-lg">
                                                 <MarkdownContent
@@ -772,6 +765,11 @@ export default function LearnPageClient(props: Props) {
                                                     className="text-slate-700 dark:text-slate-300"
                                                 />
                                             </div>
+
+                                            <SectionAudioButton
+                                                title={section.title}
+                                                content={section.content}
+                                            />
                                         </article>
                                     ))}
                                 </div>
