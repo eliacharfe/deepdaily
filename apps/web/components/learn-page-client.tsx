@@ -18,6 +18,7 @@ import ResumeCurriculumCard from "@/components/resume-curriculum-card";
 import type { Curriculum } from "@/types/curriculum";
 import PageShell from "@/components/page-shell";
 import MarkdownContent from "@/components/markdown-content";
+import SectionAudioButton from "@/components/section-audio-button";
 
 type Props =
     | {
@@ -751,12 +752,20 @@ export default function LearnPageClient(props: Props) {
                                             key={section.title}
                                             className="dd-surface-soft rounded-xl border p-4 transition hover:border-teal-200 dark:hover:border-teal-500/20 sm:p-5"
                                         >
-                                            <h3
-                                                dir="auto"
-                                                className="text-base font-semibold text-slate-900 dark:text-white sm:text-lg"
-                                            >
-                                                {section.title}
-                                            </h3>
+                                            <div className="flex items-start justify-between gap-3">
+                                                <h3
+                                                    dir="auto"
+                                                    className="min-w-0 text-base font-semibold text-slate-900 dark:text-white sm:text-lg"
+                                                >
+                                                    {section.title}
+                                                </h3>
+
+                                                <SectionAudioButton
+                                                    title={section.title}
+                                                    content={section.content}
+                                                />
+                                            </div>
+
                                             <div className="prose prose-base mt-2 max-w-none dark:prose-invert sm:prose-lg">
                                                 <MarkdownContent
                                                     content={section.content}

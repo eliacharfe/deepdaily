@@ -19,6 +19,7 @@ import MarkdownContent from "@/components/markdown-content";
 import PageShell from "@/components/page-shell";
 import LessonDayQaCard from "@/components/lesson-day-qa-card";
 import { streamLessonQuestion } from "@/lib/lesson-qa-api";
+import SectionAudioButton from "@/components/section-audio-button";
 
 type Props = {
     curriculumId: string;
@@ -735,12 +736,20 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                             key={i}
                                             className="dd-surface dd-surface-top-line rounded-2xl border p-6 shadow-sm"
                                         >
-                                            <h3
-                                                dir="auto"
-                                                className="mb-4 text-lg font-bold text-slate-900 dark:text-white"
-                                            >
-                                                {section.title}
-                                            </h3>
+                                            <div className="mb-4 flex items-start justify-between gap-3">
+                                                <h3
+                                                    dir="auto"
+                                                    className="min-w-0 text-lg font-bold text-slate-900 dark:text-white"
+                                                >
+                                                    {section.title}
+                                                </h3>
+
+                                                <SectionAudioButton
+                                                    title={section.title}
+                                                    content={section.content}
+                                                />
+                                            </div>
+
                                             <div className="prose prose-sm max-w-none dark:prose-invert">
                                                 <MarkdownContent content={section.content} />
                                             </div>
