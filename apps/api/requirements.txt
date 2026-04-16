@@ -64,3 +64,4 @@ uvloop==0.22.1
 watchfiles==1.1.1
 websockets==16.0
 beautifulsoup4==4.12.3
+lxml==5.2.1
