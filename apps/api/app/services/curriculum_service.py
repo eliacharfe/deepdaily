@@ -19,9 +19,13 @@ import httpx
 from bs4 import BeautifulSoup
 from app.schemas.curriculum import CurriculumResourcePayload
 from app.services.llm.client import client, generate_json_response
+from collections.abc import Awaitable, Callable
 
 MAX_ARTICLE_CHARS = 12000
 FETCH_TIMEOUT_SECONDS = 10
+
+StatusCallback = Callable[[str], Awaitable[None]]
+ChunkCallback = Callable[[str], Awaitable[None]]
 
 logger = logging.getLogger(__name__)
 
@@ -902,5 +906,110 @@ Resource content:
 
     if not summary:
         raise ValueError("Empty summary generated")
+
+    return summary
+
+
+async def stream_resource_summary_for_curriculum(
+    user_id: str,
+    curriculum_id: str,
+    day_number: int,
+    resource: CurriculumResourcePayload,
+    on_status: StatusCallback | None = None,
+    on_chunk: ChunkCallback | None = None,
+) -> str:
+    async def emit_status(message: str):
+        if on_status:
+            await on_status(message)
+
+    async def emit_chunk(chunk: str):
+        if on_chunk:
+            await on_chunk(chunk)
+
+    if not resource.title.strip():
+        raise ValueError("Resource title is required")
+
+    await emit_status("Fetching article...")
+
+    article_text: Optional[str] = None
+    if resource.url:
+        article_text = await _fetch_resource_text(resource.url)
+
+    fallback_text_parts = [
+        f"Title: {resource.title.strip()}",
+        f"Type: {resource.type.strip()}" if resource.type else None,
+        f"Reason: {resource.reason.strip()}" if resource.reason else None,
+        f"Snippet: {resource.snippet.strip()}" if resource.snippet else None,
+        f"URL: {resource.url.strip()}" if resource.url else None,
+    ]
+    fallback_text = "\n".join(part for part in fallback_text_parts if part)
+
+    source_text = article_text or fallback_text
+
+    if not source_text.strip():
+        raise ValueError("No resource content available to summarize")
+
+    await emit_status("Summarizing article...")
+
+    prompt = f"""
+You are summarizing a learning resource inside DeepDaily.
+
+Write a clear, structured, and insightful summary for a learner.
+
+Goals:
+- Help the user truly understand the content
+- Highlight key ideas, reasoning, and practical meaning
+- Make it feel like a mini learning recap
+
+Structure:
+- Start with a short "Core Idea" paragraph
+- Then break down into 3–5 sections such as:
+  - Why it matters
+  - Key concepts
+  - Practical implications
+  - Examples if relevant
+- End with a short "Takeaway" or "Outcome"
+
+Rules:
+- Be clear and practical, not vague
+- Expand on ideas, not just list them
+- Use short paragraphs and bullet points where helpful
+- Do not mention missing data or internal processing
+- If content is limited, still produce the best useful structured summary
+
+Length:
+- Aim for about 250–400 words
+- Prefer depth over brevity
+
+Resource context:
+{fallback_text}
+
+Resource content:
+{source_text}
+""".strip()
+
+    stream = await client.responses.create(
+        model="gpt-4.1-mini",
+        input=prompt,
+        stream=True,
+    )
+
+    chunks: list[str] = []
+
+    async for event in stream:
+        event_type = getattr(event, "type", "")
+
+        if event_type == "response.output_text.delta":
+            delta = getattr(event, "delta", "") or ""
+            if delta:
+                chunks.append(delta)
+                await emit_chunk(delta)
+
+    summary = "".join(chunks).strip()
+
+    if not summary:
+        raise ValueError("Empty summary generated")
+
+    await emit_status("Summary ready")
 
     return summary

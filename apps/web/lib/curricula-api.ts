@@ -343,3 +343,97 @@ export async function summarizeCurriculumResource(
 
     return response.json();
 }
+
+export async function streamCurriculumResourceSummary(
+    payload: SummarizeResourceRequest,
+    token: string,
+    handlers: {
+        onStatus?: (message: string) => void;
+        onChunk?: (chunk: string) => void;
+    } = {}
+): Promise<SummarizeResourceResponse> {
+    const response = await fetch(`${config.apiBaseUrl}/curricula/resources/summarize/stream`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            Accept: "text/event-stream",
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const contentType = response.headers.get("content-type") || "";
+
+    if (!response.ok) {
+        if (contentType.includes("application/json")) {
+            const err = await response.json();
+            throw new Error(err.detail || "Failed to summarize resource");
+        }
+        throw new Error("Failed to summarize resource");
+    }
+
+    if (!response.body) {
+        throw new Error("No response body returned from resource summary stream");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let finalSummary = "";
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        const events = buffer.split("\n\n");
+        buffer = events.pop() || "";
+
+        for (const eventChunk of events) {
+            const lines = eventChunk.split("\n");
+            const dataLine = lines.find((line) => line.startsWith("data: "));
+            if (!dataLine) continue;
+
+            const raw = dataLine.replace(/^data:\s*/, "");
+
+            try {
+                const event = JSON.parse(raw) as
+                    | { type: "status"; message: string }
+                    | { type: "chunk"; content: string }
+                    | { type: "done"; summary?: string }
+                    | { type: "error"; message: string };
+
+                if (event.type === "status") {
+                    handlers.onStatus?.(event.message);
+                    continue;
+                }
+
+                if (event.type === "chunk") {
+                    finalSummary += event.content;
+                    handlers.onChunk?.(event.content);
+                    continue;
+                }
+
+                if (event.type === "done") {
+                    if (typeof event.summary === "string" && event.summary.trim()) {
+                        finalSummary = event.summary;
+                    }
+                    continue;
+                }
+
+                if (event.type === "error") {
+                    throw new Error(event.message || "Failed to summarize resource");
+                }
+            } catch (parseError) {
+                console.error("Failed to parse resource summary stream event:", parseError, raw);
+            }
+        }
+    }
+
+    if (!finalSummary.trim()) {
+        throw new Error("Summary stream ended without a final result");
+    }
+
+    return { summary: finalSummary };
+}

@@ -29,6 +29,7 @@ from app.services.curriculum_service import (
     retry_curriculum_day_resources,
     regenerate_curriculum_day,
     summarize_resource_for_curriculum,
+    stream_resource_summary_for_curriculum,
 )
 from sqlalchemy import select
 from app.models.curriculum import Curriculum
@@ -642,3 +643,93 @@ async def summarize_curriculum_resource(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to summarize resource",
         )
+
+
+@router.post("/resources/summarize/stream")
+async def stream_summarize_curriculum_resource(
+    payload: SummarizeCurriculumResourceRequest,
+    current_user=Depends(get_current_user),
+):
+    async def event_stream():
+        queue: asyncio.Queue[str | None] = asyncio.Queue()
+
+        async def on_status(message: str):
+            await queue.put(
+                json.dumps(
+                    {
+                        "type": "status",
+                        "message": message,
+                    }
+                )
+            )
+
+        async def on_chunk(chunk: str):
+            await queue.put(
+                json.dumps(
+                    {
+                        "type": "chunk",
+                        "content": chunk,
+                    }
+                )
+            )
+
+        async def run_summary():
+            try:
+                summary = await stream_resource_summary_for_curriculum(
+                    user_id=current_user["uid"],
+                    curriculum_id=payload.curriculumId,
+                    day_number=payload.dayNumber,
+                    resource=payload.resource,
+                    on_status=on_status,
+                    on_chunk=on_chunk,
+                )
+
+                await queue.put(
+                    json.dumps(
+                        {
+                            "type": "done",
+                            "summary": summary,
+                        }
+                    )
+                )
+            except ValueError as exc:
+                await queue.put(
+                    json.dumps(
+                        {
+                            "type": "error",
+                            "message": str(exc),
+                        }
+                    )
+                )
+            except Exception as exc:
+                await queue.put(
+                    json.dumps(
+                        {
+                            "type": "error",
+                            "message": str(exc) or "Failed to summarize resource",
+                        }
+                    )
+                )
+            finally:
+                await queue.put(None)
+
+        task = asyncio.create_task(run_summary())
+
+        try:
+            while True:
+                item = await queue.get()
+                if item is None:
+                    break
+                yield f"data: {item}\n\n"
+        finally:
+            task.cancel()
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
