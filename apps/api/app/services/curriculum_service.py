@@ -795,7 +795,7 @@ async def regenerate_curriculum_day(
 
 
 def _extract_text_from_html(html: str) -> str:
-    soup = BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(html, "lxml")
 
     for tag in soup(["script", "style", "noscript"]):
         tag.decompose()
