@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { streamLesson } from "@/lib/stream-lesson";
 import MarkdownContent from "@/components/markdown-content";
+import SectionAudioButton from "@/components/section-audio-button";
 
 type Props = {
     topic: string;
@@ -15,6 +16,12 @@ type Props = {
 };
 
 type Status = "idle" | "loading" | "done" | "error";
+
+type LessonSegment = {
+    id: string;
+    title: string;
+    content: string;
+};
 
 function normalizeStreamingMarkdown(text: string): string {
     if (!text) return text;
@@ -43,6 +50,17 @@ export default function StreamingLesson({
     onComplete,
 }: Props) {
     const [content, setContent] = useState(initialContent);
+    const [segments, setSegments] = useState<LessonSegment[]>(
+        initialContent
+            ? [
+                {
+                    id: "initial",
+                    title: "Main lesson",
+                    content: initialContent,
+                },
+            ]
+            : []
+    );
     const [status, setStatus] = useState<Status>(
         initialContent ? "done" : "idle"
     );
@@ -57,6 +75,21 @@ export default function StreamingLesson({
     useEffect(() => {
         onContentChange?.(content);
     }, [content, onContentChange]);
+
+    useEffect(() => {
+        if (!initialContent) return;
+
+        contentRef.current = initialContent;
+        setContent(initialContent);
+        setSegments([
+            {
+                id: "initial",
+                title: "Main lesson",
+                content: initialContent,
+            },
+        ]);
+        setStatus("done");
+    }, [topic, level]);
 
     function scrollToBottom(behavior: ScrollBehavior = "smooth") {
         if (!scrollContainerRef.current) return;
@@ -101,12 +134,16 @@ export default function StreamingLesson({
 
         contentRef.current = "";
         setContent("");
+        setSegments([]);
+
+        let currentSegment = "";
 
         try {
             await streamLesson(
                 { topic, level },
                 {
                     onChunk: (chunk) => {
+                        currentSegment += chunk;
                         contentRef.current += chunk;
                         setContent(contentRef.current);
                     },
@@ -115,6 +152,14 @@ export default function StreamingLesson({
                             finalLength: contentRef.current.length,
                             preview: contentRef.current.slice(0, 120),
                         });
+
+                        setSegments([
+                            {
+                                id: `segment-${Date.now()}`,
+                                title: "Main lesson",
+                                content: currentSegment.trim(),
+                            },
+                        ]);
 
                         setStatus("done");
                         await onComplete?.(contentRef.current);
@@ -138,15 +183,21 @@ export default function StreamingLesson({
     async function handleGoDeeper() {
         console.log("[StreamingLesson] handleGoDeeper start", {
             currentLength: contentRef.current.length,
+            segmentCount: segments.length,
         });
 
         setError("");
         setStatus("loading");
         setShouldAutoScroll(true);
 
-        const prefix = "\n\n---\n\n## Going deeper\n\n";
+        const deeperIndex =
+            segments.filter((segment) => segment.title.startsWith("Deep dive")).length + 1;
+
+        const prefix = `\n\n---\n\n## Deep dive ${deeperIndex}\n\n`;
         contentRef.current += prefix;
         setContent(contentRef.current);
+
+        let currentSegment = "";
 
         try {
             await streamLesson(
@@ -158,6 +209,7 @@ export default function StreamingLesson({
                 },
                 {
                     onChunk: (chunk) => {
+                        currentSegment += chunk;
                         contentRef.current += chunk;
                         setContent(contentRef.current);
                     },
@@ -166,6 +218,15 @@ export default function StreamingLesson({
                             finalLength: contentRef.current.length,
                             preview: contentRef.current.slice(0, 120),
                         });
+
+                        setSegments((prev) => [
+                            ...prev,
+                            {
+                                id: `segment-${Date.now()}`,
+                                title: `Deep dive ${deeperIndex}`,
+                                content: currentSegment.trim(),
+                            },
+                        ]);
 
                         setStatus("done");
                         await onComplete?.(contentRef.current);
@@ -249,14 +310,36 @@ export default function StreamingLesson({
                         )}
 
                         {status === "done" && content && (
-                            <div className="mt-6 flex justify-center">
-                                <button
-                                    type="button"
-                                    onClick={handleGoDeeper}
-                                    className="dd-surface-soft rounded-2xl border px-5 py-3 text-sm font-medium text-slate-800 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:text-slate-100 dark:hover:border-teal-500/20"
-                                >
-                                    Go deeper with examples
-                                </button>
+                            <div className="mt-6 space-y-4">
+                                {segments.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {segments.map((segment) => (
+                                            <div
+                                                key={segment.id}
+                                                className="dd-surface rounded-2xl border px-4 py-3"
+                                            >
+                                                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
+                                                    {segment.title}
+                                                </p>
+
+                                                <SectionAudioButton
+                                                    title={`${topic} - ${segment.title}`}
+                                                    content={segment.content}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : null}
+
+                                <div className="flex justify-center">
+                                    <button
+                                        type="button"
+                                        onClick={handleGoDeeper}
+                                        className="dd-surface-soft rounded-2xl border px-5 py-3 text-sm font-medium text-slate-800 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:text-slate-100 dark:hover:border-teal-500/20"
+                                    >
+                                        Go deeper with examples
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
