@@ -13,12 +13,24 @@ import type { TopicLevel } from "@/types/topic";
 import type { LessonData, SavedLesson } from "@/types/lesson";
 import CurriculumCtaCard from "@/components/curriculum-cta-card";
 import { useRouter } from "next/navigation";
-import { createCurriculum, getCurriculaByLesson } from "@/lib/curricula-api";
+import {
+    createCurriculum,
+    getCurriculaByLesson,
+    streamCurriculumResourceSummary,
+} from "@/lib/curricula-api";
 import ResumeCurriculumCard from "@/components/resume-curriculum-card";
 import type { Curriculum } from "@/types/curriculum";
 import PageShell from "@/components/page-shell";
 import MarkdownContent from "@/components/markdown-content";
 import SectionAudioButton from "@/components/section-audio-button";
+
+type ResourceSummaryState = {
+    summary?: string;
+    isLoading: boolean;
+    isComplete?: boolean;
+    statusMessage?: string;
+    error?: string;
+};
 
 type Props =
     | {
@@ -92,6 +104,13 @@ type ResourceCardProps = {
     reason: string;
     snippet?: string | null;
     url?: string | null;
+    summary?: string;
+    summaryError?: string;
+    isSummarizing?: boolean;
+    isSummaryComplete?: boolean;
+    summaryStatusMessage?: string;
+    onSummarize?: () => void;
+    audioTitle?: string;
 };
 
 function ResourceCard({
@@ -100,10 +119,27 @@ function ResourceCard({
     reason,
     snippet,
     url,
+    summary,
+    summaryError,
+    isSummarizing,
+    isSummaryComplete,
+    summaryStatusMessage,
+    onSummarize,
+    audioTitle,
 }: ResourceCardProps) {
     const youtubeEmbedUrl = getYouTubeEmbedUrl(url);
     const youtubeThumbnail = getYouTubeThumbnail(url);
     const isYouTube = Boolean(youtubeEmbedUrl);
+
+    const normalizedType = type.trim().toLowerCase();
+    const canSummarize =
+        !isYouTube &&
+        Boolean(url) &&
+        (normalizedType.includes("article") ||
+            normalizedType.includes("blog") ||
+            normalizedType.includes("guide") ||
+            normalizedType.includes("documentation") ||
+            normalizedType.includes("web"));
 
     return (
         <div className="dd-surface-soft rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20 sm:p-5">
@@ -139,6 +175,53 @@ function ResourceCard({
                 >
                     {snippet}
                 </p>
+            ) : null}
+
+            {canSummarize ? (
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={onSummarize}
+                        disabled={isSummarizing}
+                        className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300 dark:hover:bg-teal-950/30"
+                    >
+                        {isSummarizing ? "Summarizing..." : "Summarize"}
+                    </button>
+                </div>
+            ) : null}
+
+            {summary ? (
+                <div className="mt-4 overflow-hidden rounded-xl border border-teal-200/70 bg-teal-50/50 px-4 py-3 dark:border-teal-900/30 dark:bg-teal-950/10">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
+                            Summary
+                        </p>
+
+                        {isSummarizing ? (
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                                {summaryStatusMessage || "Summarizing..."}
+                            </span>
+                        ) : null}
+                    </div>
+
+                    <MarkdownContent
+                        content={summary}
+                        className="text-sm leading-relaxed text-slate-700 dark:text-slate-200 [&_p]:my-0"
+                    />
+
+                    {isSummaryComplete ? (
+                        <SectionAudioButton
+                            title={audioTitle || `${title} summary`}
+                            content={summary}
+                        />
+                    ) : null}
+                </div>
+            ) : null}
+
+            {summaryError ? (
+                <div className="mt-4 rounded-xl border border-red-200 px-4 py-3 text-sm text-red-600 dark:border-red-900/40 dark:text-red-400">
+                    {summaryError}
+                </div>
             ) : null}
 
             {isYouTube && youtubeEmbedUrl ? (
@@ -218,6 +301,11 @@ export default function LearnPageClient(props: Props) {
     const has30DayCurriculum = existingCurricula.some(
         (curriculum) => curriculum.durationDays === 30
     );
+
+    const [resourceSummaries, setResourceSummaries] = useState<
+        Record<string, ResourceSummaryState>
+    >({});
+
 
     const router = useRouter();
 
@@ -423,6 +511,99 @@ export default function LearnPageClient(props: Props) {
             );
         } finally {
             setIsCreatingCurriculum(false);
+        }
+    }
+
+    async function handleSummarizeResource(
+        resourceKey: string,
+        resource: {
+            title: string;
+            type?: string | null;
+            url?: string | null;
+            snippet?: string | null;
+            reason?: string | null;
+        }
+    ) {
+        if (!user || !data) return;
+
+        setResourceSummaries((prev) => ({
+            ...prev,
+            [resourceKey]: {
+                summary: "",
+                isLoading: true,
+                isComplete: false,
+                statusMessage: "Starting...",
+                error: undefined,
+            },
+        }));
+
+        try {
+            const token = await user.getIdToken();
+
+            const lessonScopedId = savedLessonId ?? data.id;
+            if (!lessonScopedId) {
+                throw new Error("Lesson must be saved before summarizing resources.");
+            }
+
+            const result = await streamCurriculumResourceSummary(
+                {
+                    curriculumId: lessonScopedId,
+                    dayNumber: 1,
+                    resource: {
+                        title: resource.title,
+                        type: resource.type,
+                        url: resource.url,
+                        snippet: resource.snippet,
+                        reason: resource.reason,
+                    },
+                },
+                token,
+                {
+                    onStatus: (message) => {
+                        setResourceSummaries((prev) => ({
+                            ...prev,
+                            [resourceKey]: {
+                                ...prev[resourceKey],
+                                statusMessage: message,
+                            },
+                        }));
+                    },
+                    onChunk: (chunk) => {
+                        setResourceSummaries((prev) => ({
+                            ...prev,
+                            [resourceKey]: {
+                                ...prev[resourceKey],
+                                summary: (prev[resourceKey]?.summary || "") + chunk,
+                            },
+                        }));
+                    },
+                }
+            );
+
+            setResourceSummaries((prev) => ({
+                ...prev,
+                [resourceKey]: {
+                    summary: result.summary,
+                    isLoading: false,
+                    isComplete: true,
+                    statusMessage: undefined,
+                    error: undefined,
+                },
+            }));
+        } catch (err) {
+            setResourceSummaries((prev) => ({
+                ...prev,
+                [resourceKey]: {
+                    ...prev[resourceKey],
+                    isLoading: false,
+                    isComplete: false,
+                    statusMessage: undefined,
+                    error:
+                        err instanceof Error
+                            ? err.message
+                            : "Failed to summarize this resource.",
+                },
+            }));
         }
     }
 
@@ -784,12 +965,32 @@ export default function LearnPageClient(props: Props) {
                                 </p>
 
                                 <div className="mt-6 space-y-4">
-                                    {data.resources.map((resource) => (
-                                        <ResourceCard
-                                            key={`${resource.title}-${resource.url}`}
-                                            {...resource}
-                                        />
-                                    ))}
+                                    {data.resources.map((resource, index) => {
+                                        const resourceKey = `resources-${index}-${resource.title}-${resource.url ?? "no-url"}`;
+                                        const summaryState = resourceSummaries[resourceKey];
+
+                                        return (
+                                            <ResourceCard
+                                                key={resourceKey}
+                                                {...resource}
+                                                audioTitle={`${resource.title} summary`}
+                                                summary={summaryState?.summary}
+                                                summaryError={summaryState?.error}
+                                                isSummarizing={summaryState?.isLoading}
+                                                isSummaryComplete={summaryState?.isComplete}
+                                                summaryStatusMessage={summaryState?.statusMessage}
+                                                onSummarize={() =>
+                                                    handleSummarizeResource(resourceKey, {
+                                                        title: resource.title,
+                                                        type: resource.type,
+                                                        url: resource.url,
+                                                        snippet: resource.snippet,
+                                                        reason: resource.reason,
+                                                    })
+                                                }
+                                            />
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
@@ -828,12 +1029,32 @@ export default function LearnPageClient(props: Props) {
                                 </p>
 
                                 <div className="mt-6 space-y-4">
-                                    {(data.deepDive ?? []).map((item) => (
-                                        <ResourceCard
-                                            key={`${item.title}-${item.url ?? item.type}`}
-                                            {...item}
-                                        />
-                                    ))}
+                                    {(data.deepDive ?? []).map((item, index) => {
+                                        const resourceKey = `deepdive-${index}-${item.title}-${item.url ?? item.type ?? "no-url"}`;
+                                        const summaryState = resourceSummaries[resourceKey];
+
+                                        return (
+                                            <ResourceCard
+                                                key={resourceKey}
+                                                {...item}
+                                                audioTitle={`${item.title} summary`}
+                                                summary={summaryState?.summary}
+                                                summaryError={summaryState?.error}
+                                                isSummarizing={summaryState?.isLoading}
+                                                isSummaryComplete={summaryState?.isComplete}
+                                                summaryStatusMessage={summaryState?.statusMessage}
+                                                onSummarize={() =>
+                                                    handleSummarizeResource(resourceKey, {
+                                                        title: item.title,
+                                                        type: item.type,
+                                                        url: item.url,
+                                                        snippet: item.snippet,
+                                                        reason: item.reason,
+                                                    })
+                                                }
+                                            />
+                                        );
+                                    })}
                                 </div>
                             </div>
 
