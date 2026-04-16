@@ -20,12 +20,15 @@ from app.schemas.curriculum import (
     CompleteCurriculumDayRequest,
     UpdateLastOpenedDayRequest,
     GenerateCurriculumDayRequest,
+    SummarizeCurriculumResourceRequest,
+    SummarizeCurriculumResourceResponse,
 )
 from app.services.curriculum_service import (
     generate_curriculum_outline,
     generate_curriculum_day,
     retry_curriculum_day_resources,
     regenerate_curriculum_day,
+    summarize_resource_for_curriculum,
 )
 from sqlalchemy import select
 from app.models.curriculum import Curriculum
@@ -610,3 +613,32 @@ async def regenerate_day_route(
         day_number=day_number,
     )
     return build_curriculum_response(updated)
+
+
+
+@router.post(
+    "/resources/summarize",
+    response_model=SummarizeCurriculumResourceResponse,
+)
+async def summarize_curriculum_resource(
+    payload: SummarizeCurriculumResourceRequest,
+    current_user=Depends(get_current_user),
+):
+    try:
+        summary = await summarize_resource_for_curriculum(
+            user_id=current_user["uid"],
+            curriculum_id=payload.curriculumId,
+            day_number=payload.dayNumber,
+            resource=payload.resource,
+        )
+        return SummarizeCurriculumResourceResponse(summary=summary)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        )
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to summarize resource",
+        )

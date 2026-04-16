@@ -293,3 +293,53 @@ export async function regenerateCurriculumDay(
 
     return res.json();
 }
+
+const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL;
+
+export type SummarizeResourceRequest = {
+    curriculumId: string;
+    dayNumber: number;
+    resource: {
+        title: string;
+        type?: string | null;
+        url?: string | null;
+        snippet?: string | null;
+        reason?: string | null;
+    };
+};
+
+export type SummarizeResourceResponse = {
+    summary: string;
+};
+
+export async function summarizeCurriculumResource(
+    payload: SummarizeResourceRequest,
+    token: string
+): Promise<SummarizeResourceResponse> {
+    const response = await fetch(`${API_BASE_URL}/curricula/resources/summarize`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        let message = "Failed to summarize resource";
+
+        try {
+            const errorData = await response.json();
+            if (typeof errorData?.detail === "string") {
+                message = errorData.detail;
+            }
+        } catch {
+            // ignore json parse errors
+        }
+
+        throw new Error(message);
+    }
+
+    return response.json();
+}

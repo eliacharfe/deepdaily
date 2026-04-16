@@ -12,6 +12,7 @@ import {
     getCurriculum,
     regenerateCurriculumDay,
     retryCurriculumDayResources,
+    summarizeCurriculumResource,
     updateCurriculumLastOpenedDay,
 } from "@/lib/curricula-api";
 import type { Curriculum } from "@/types/curriculum";
@@ -28,6 +29,12 @@ type Props = {
 type LessonQaTurn = {
     role: "user" | "assistant";
     content: string;
+};
+
+type ResourceSummaryState = {
+    summary?: string;
+    isLoading: boolean;
+    error?: string;
 };
 
 function getYouTubeVideoId(url?: string | null): string | null {
@@ -77,6 +84,11 @@ type ResourceCardProps = {
     reason?: string | null;
     snippet?: string | null;
     url?: string | null;
+    summary?: string;
+    summaryError?: string;
+    isSummarizing?: boolean;
+    onSummarize?: () => void;
+    audioTitle?: string;
 };
 
 function ResourceCard({
@@ -85,9 +97,24 @@ function ResourceCard({
     reason,
     snippet,
     url,
+    summary,
+    summaryError,
+    isSummarizing,
+    onSummarize,
+    audioTitle,
 }: ResourceCardProps) {
     const youtubeEmbedUrl = getYouTubeEmbedUrl(url);
     const isYouTube = Boolean(youtubeEmbedUrl);
+
+    const normalizedType = type.trim().toLowerCase();
+    const canSummarize =
+        !isYouTube &&
+        Boolean(url) &&
+        (normalizedType.includes("article") ||
+            normalizedType.includes("blog") ||
+            normalizedType.includes("guide") ||
+            normalizedType.includes("documentation") ||
+            normalizedType.includes("web"));
 
     return (
         <div className="dd-surface-soft overflow-hidden rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20 sm:p-5">
@@ -134,6 +161,43 @@ function ResourceCard({
                             [&_hr]:my-3
                         "
                     />
+                </div>
+            ) : null}
+
+            {canSummarize ? (
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={onSummarize}
+                        disabled={isSummarizing}
+                        className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300 dark:hover:bg-teal-950/30"
+                    >
+                        {isSummarizing ? "Summarizing..." : "Summarize"}
+                    </button>
+                </div>
+            ) : null}
+
+            {summary ? (
+                <div className="mt-4 overflow-hidden rounded-xl border border-teal-200/70 bg-teal-50/50 px-4 py-3 dark:border-teal-900/30 dark:bg-teal-950/10">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">
+                        Summary
+                    </p>
+
+                    <MarkdownContent
+                        content={summary}
+                        className="text-sm leading-relaxed text-slate-700 dark:text-slate-200 [&_p]:my-0"
+                    />
+
+                    <SectionAudioButton
+                        title={audioTitle || `${title} summary`}
+                        content={summary}
+                    />
+                </div>
+            ) : null}
+
+            {summaryError ? (
+                <div className="mt-4 rounded-xl border border-red-200 px-4 py-3 text-sm text-red-600 dark:border-red-900/40 dark:text-red-400">
+                    {summaryError}
                 </div>
             ) : null}
 
@@ -195,6 +259,10 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
     const [isRetryingResources, setIsRetryingResources] = useState(false);
     const [isRegeneratingDay, setIsRegeneratingDay] = useState(false);
 
+    const [resourceSummaries, setResourceSummaries] = useState<
+        Record<string, ResourceSummaryState>
+    >({});
+
     useEffect(() => {
         if (!curriculum) return;
         void ensureDayGenerated(selectedDayNumber);
@@ -203,6 +271,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
     useEffect(() => {
         setLessonQaAnswer("");
         setLessonQaHistory([]);
+        setResourceSummaries({});
     }, [selectedDayNumber]);
 
     useEffect(() => {
@@ -387,6 +456,68 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             lastOpenedDay: next.lastOpenedDay ?? prev.lastOpenedDay,
             days: next.days,
         };
+    }
+
+    async function handleSummarizeResource(
+        resourceKey: string,
+        resource: {
+            title: string;
+            type?: string | null;
+            url?: string | null;
+            snippet?: string | null;
+            reason?: string | null;
+        }
+    ) {
+        if (!user || !curriculum || !selectedDay) return;
+
+        setResourceSummaries((prev) => ({
+            ...prev,
+            [resourceKey]: {
+                ...prev[resourceKey],
+                isLoading: true,
+                error: undefined,
+            },
+        }));
+
+        try {
+            const token = await user.getIdToken();
+
+            const result = await summarizeCurriculumResource(
+                {
+                    curriculumId: curriculum.id,
+                    dayNumber: selectedDay.dayNumber,
+                    resource: {
+                        title: resource.title,
+                        type: resource.type,
+                        url: resource.url,
+                        snippet: resource.snippet,
+                        reason: resource.reason,
+                    },
+                },
+                token
+            );
+
+            setResourceSummaries((prev) => ({
+                ...prev,
+                [resourceKey]: {
+                    summary: result.summary,
+                    isLoading: false,
+                    error: undefined,
+                },
+            }));
+        } catch (err) {
+            setResourceSummaries((prev) => ({
+                ...prev,
+                [resourceKey]: {
+                    ...prev[resourceKey],
+                    isLoading: false,
+                    error:
+                        err instanceof Error
+                            ? err.message
+                            : "Failed to summarize this resource.",
+                },
+            }));
+        }
     }
 
     async function handleRetryResources() {
@@ -760,9 +891,30 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                         <h2 className="px-1 text-sm font-bold uppercase text-slate-400">
                                             Daily resources
                                         </h2>
-                                        {selectedDay.resources.map((res, i) => (
-                                            <ResourceCard key={i} {...res} />
-                                        ))}
+                                        {selectedDay.resources.map((res, i) => {
+                                            const resourceKey = `${selectedDay.dayNumber}-${i}`;
+                                            const summaryState = resourceSummaries[resourceKey];
+
+                                            return (
+                                                <ResourceCard
+                                                    key={resourceKey}
+                                                    {...res}
+                                                    audioTitle={`${res.title} summary`}
+                                                    summary={summaryState?.summary}
+                                                    summaryError={summaryState?.error}
+                                                    isSummarizing={summaryState?.isLoading}
+                                                    onSummarize={() =>
+                                                        handleSummarizeResource(resourceKey, {
+                                                            title: res.title,
+                                                            type: res.type,
+                                                            url: res.url,
+                                                            snippet: res.snippet,
+                                                            reason: res.reason,
+                                                        })
+                                                    }
+                                                />
+                                            );
+                                        })}
                                     </section>
                                 ) : null}
 

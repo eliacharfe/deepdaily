@@ -14,6 +14,15 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from app.models.curriculum import Curriculum
 
+from typing import Optional
+import httpx
+from bs4 import BeautifulSoup
+from app.schemas.curriculum import CurriculumResourcePayload
+from app.services.llm.client import client, generate_json_response
+
+MAX_ARTICLE_CHARS = 12000
+FETCH_TIMEOUT_SECONDS = 10
+
 logger = logging.getLogger(__name__)
 
 ProgressCallback = Callable[[str], Awaitable[None]]
@@ -779,3 +788,119 @@ async def regenerate_curriculum_day(
     await db.refresh(curriculum)
 
     return curriculum
+
+
+def _extract_text_from_html(html: str) -> str:
+    soup = BeautifulSoup(html, "html.parser")
+
+    for tag in soup(["script", "style", "noscript"]):
+        tag.decompose()
+
+    text = soup.get_text("\n")
+    lines = [line.strip() for line in text.splitlines()]
+    cleaned = [line for line in lines if line]
+
+    return "\n".join(cleaned)
+
+
+async def _fetch_resource_text(url: str) -> Optional[str]:
+    try:
+        async with httpx.AsyncClient(
+            follow_redirects=True,
+            timeout=FETCH_TIMEOUT_SECONDS,
+            headers={
+                "User-Agent": "Mozilla/5.0 (compatible; DeepDailyBot/1.0)"
+            },
+        ) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+
+        content_type = response.headers.get("content-type", "").lower()
+        if "text/html" not in content_type and "application/xhtml+xml" not in content_type:
+            return None
+
+        text = _extract_text_from_html(response.text)
+        if not text.strip():
+            return None
+
+        return text[:MAX_ARTICLE_CHARS]
+    except Exception:
+        return None
+
+
+async def summarize_resource_for_curriculum(
+    user_id: str,
+    curriculum_id: str,
+    day_number: int,
+    resource: CurriculumResourcePayload,
+) -> str:
+    if not resource.title.strip():
+        raise ValueError("Resource title is required")
+
+    article_text: Optional[str] = None
+    if resource.url:
+        article_text = await _fetch_resource_text(resource.url)
+
+    fallback_text_parts = [
+        f"Title: {resource.title.strip()}",
+        f"Type: {resource.type.strip()}" if resource.type else None,
+        f"Reason: {resource.reason.strip()}" if resource.reason else None,
+        f"Snippet: {resource.snippet.strip()}" if resource.snippet else None,
+        f"URL: {resource.url.strip()}" if resource.url else None,
+    ]
+    fallback_text = "\n".join(part for part in fallback_text_parts if part)
+
+    source_text = article_text or fallback_text
+
+    if not source_text.strip():
+        raise ValueError("No resource content available to summarize")
+
+    prompt = f"""
+You are summarizing a learning resource inside DeepDaily.
+
+Write a clear, structured, and insightful summary for a learner.
+
+Goals:
+- Help the user truly understand the content (not just skim it)
+- Highlight key ideas, reasoning, and practical meaning
+- Make it feel like a mini learning recap
+
+Structure:
+- Start with a short "Core Idea" paragraph
+- Then break down into 3–5 sections such as:
+  - Why it matters
+  - Key concepts
+  - Practical implications
+  - Examples (if relevant)
+- End with a short "Takeaway" or "Outcome"
+
+Rules:
+- Be clear and practical, not vague
+- Expand on ideas (not just list them)
+- Use short paragraphs and bullet points where helpful
+- Do not mention missing data or internal processing
+- If content is limited, still produce the best useful structured summary
+
+Length:
+- Aim for ~250–400 words
+- Prefer depth over brevity
+
+Resource context:
+{fallback_text}
+
+Resource content:
+{source_text}
+""".strip()
+
+    response = await client.responses.create(
+        model="gpt-5-nano",
+        input=prompt,
+    )
+
+    summary = getattr(response, "output_text", "") or ""
+    summary = summary.strip()
+
+    if not summary:
+        raise ValueError("Empty summary generated")
+
+    return summary

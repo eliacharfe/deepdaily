@@ -1,7 +1,8 @@
 # apps/api/app/schemas/curriculum.py
 
-from pydantic import BaseModel  # pyright: ignore[reportMissingImports]
+from pydantic import BaseModel, HttpUrl  # pyright: ignore[reportMissingImports]
 from typing import Literal
+from typing import Optional
 
 
 class CurriculumDayResourceResponse(BaseModel):
@@ -58,3 +59,20 @@ class UpdateLastOpenedDayRequest(BaseModel):
 
 class GenerateCurriculumDayRequest(BaseModel):
     dayNumber: int
+
+class CurriculumResourcePayload(BaseModel):
+    title: str
+    type: Optional[str] = None
+    url: Optional[str] = None
+    snippet: Optional[str] = None
+    reason: Optional[str] = None
+
+
+class SummarizeCurriculumResourceRequest(BaseModel):
+    curriculumId: str
+    dayNumber: int
+    resource: CurriculumResourcePayload
+
+
+class SummarizeCurriculumResourceResponse(BaseModel):
+    summary: str
