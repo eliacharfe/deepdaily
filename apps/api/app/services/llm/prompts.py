@@ -83,9 +83,9 @@ Use this exact JSON structure:
 Additional rules:
 - title should be short and natural.
 - today_focus should be one sentence.
-- summary should be 2 to 4 sentences.
-- sections must contain exactly 3 sections.
-- each section content should be 2 to 4 sentences.
+- summary should be 4 to 8 sentences.
+- sections must contain 3-5 sections.
+- each section content should be 4 to 8 sentences.
 - next_step should naturally point to the next concept.
 - deepDive must contain 0 to 3 items.
 - deepDive items should be genuinely useful for someone who wants to continue learning after this lesson.
