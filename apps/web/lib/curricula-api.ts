@@ -437,3 +437,30 @@ export async function streamCurriculumResourceSummary(
 
     return { summary: finalSummary };
 }
+
+export async function markCurriculumDayItemRead(
+    curriculumId: string,
+    dayNumber: number,
+    itemKey: string,
+    token: string
+): Promise<Curriculum> {
+    const res = await fetch(
+        `${config.apiBaseUrl}/curricula/${curriculumId}/days/${dayNumber}/read-item`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                itemKey,
+            }),
+        }
+    );
+
+    if (!res.ok) {
+        throw new Error("Failed to mark item as read");
+    }
+
+    return res.json();
+}

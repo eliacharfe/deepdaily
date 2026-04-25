@@ -22,6 +22,7 @@ from app.schemas.curriculum import (
     GenerateCurriculumDayRequest,
     SummarizeCurriculumResourceRequest,
     SummarizeCurriculumResourceResponse,
+    MarkCurriculumDayItemReadRequest,
 )
 from app.services.curriculum_service import (
     generate_curriculum_outline,
@@ -54,6 +55,7 @@ def build_curriculum_response(curriculum: Curriculum) -> CurriculumResponse:
                 "exercise": day.get("exercise", ""),
                 "resources": day.get("resources", []),
                 "isGenerated": day.get("isGenerated", True),
+                "readItems": day.get("readItems", []),
             }
         )
 
@@ -733,3 +735,86 @@ async def stream_summarize_curriculum_resource(
             "X-Accel-Buffering": "no",
         },
     )
+
+@router.post(
+    "/{curriculum_id}/days/{day_number}/read-item",
+    response_model=CurriculumResponse,
+)
+async def mark_curriculum_day_item_read(
+    curriculum_id: str,
+    day_number: int,
+    payload: MarkCurriculumDayItemReadRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Curriculum).where(
+            Curriculum.id == curriculum_id,
+            Curriculum.user_id == current_user["uid"],
+        )
+    )
+    curriculum = result.scalar_one_or_none()
+
+    if not curriculum:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Curriculum not found",
+        )
+
+    if day_number < 1 or day_number > curriculum.duration_days:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid day number",
+        )
+
+    item_key = payload.itemKey.strip()
+
+    if not item_key:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Item key is required",
+        )
+
+    if not (
+        item_key.startswith("section:")
+        or item_key.startswith("resource:")
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid item key",
+        )
+
+    content = dict(curriculum.content_json or {})
+    days = list(content.get("days", []))
+
+    day_index = next(
+        (
+            index
+            for index, day in enumerate(days)
+            if day.get("dayNumber") == day_number
+        ),
+        None,
+    )
+
+    if day_index is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Day not found",
+        )
+
+    day = dict(days[day_index])
+    read_items = list(day.get("readItems", []))
+
+    if item_key not in read_items:
+        read_items.append(item_key)
+
+    day["readItems"] = read_items
+    days[day_index] = day
+    content["days"] = days
+
+    curriculum.content_json = content
+
+    await db.commit()
+    await db.refresh(curriculum)
+
+    return build_curriculum_response(curriculum)

@@ -25,8 +25,9 @@ export type CurriculumDay = {
     exercise?: string;
     resources: CurriculumDayResource[];
 
-    // IMPORTANT — tells UI if the day needs generation
     isGenerated: boolean;
+
+    readItems: string[];
 };
 
 export type Curriculum = {

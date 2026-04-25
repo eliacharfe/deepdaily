@@ -14,6 +14,7 @@ import {
     retryCurriculumDayResources,
     streamCurriculumResourceSummary,
     updateCurriculumLastOpenedDay,
+    markCurriculumDayItemRead,
 } from "@/lib/curricula-api";
 import type { Curriculum } from "@/types/curriculum";
 import MarkdownContent from "@/components/markdown-content";
@@ -93,6 +94,9 @@ type ResourceCardProps = {
     summaryStatusMessage?: string;
     onSummarize?: () => void;
     audioTitle?: string;
+    isRead?: boolean;
+    isSavingRead?: boolean;
+    onMarkRead?: () => void;
 };
 
 function ResourceCard({
@@ -108,6 +112,9 @@ function ResourceCard({
     summaryStatusMessage,
     onSummarize,
     audioTitle,
+    isRead,
+    isSavingRead,
+    onMarkRead,
 }: ResourceCardProps) {
     const youtubeEmbedUrl = getYouTubeEmbedUrl(url);
     const isYouTube = Boolean(youtubeEmbedUrl);
@@ -121,6 +128,35 @@ function ResourceCard({
             normalizedType.includes("guide") ||
             normalizedType.includes("documentation") ||
             normalizedType.includes("web"));
+
+    function ReadStatusAction({
+        isRead,
+        isSaving,
+        onMarkRead,
+    }: {
+        isRead: boolean;
+        isSaving: boolean;
+        onMarkRead: () => void;
+    }) {
+        return (
+            <div className="mt-5 flex justify-end">
+                {isRead ? (
+                    <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300">
+                        Read ✓
+                    </span>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={onMarkRead}
+                        disabled={isSaving}
+                        className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300 dark:hover:bg-teal-950/30"
+                    >
+                        {isSaving ? "Saving..." : "Mark as read"}
+                    </button>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="dd-surface-soft overflow-hidden rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20 sm:p-5">
@@ -249,6 +285,44 @@ function ResourceCard({
                     {url}
                 </p>
             ) : null}
+
+            {onMarkRead ? (
+                <ReadStatusAction
+                    isRead={Boolean(isRead)}
+                    isSaving={Boolean(isSavingRead)}
+                    onMarkRead={onMarkRead}
+                />
+            ) : null}
+
+        </div>
+    );
+}
+
+function ReadStatusAction({
+    isRead,
+    isSaving,
+    onMarkRead,
+}: {
+    isRead: boolean;
+    isSaving: boolean;
+    onMarkRead: () => void;
+}) {
+    return (
+        <div className="mt-5 flex justify-end">
+            {isRead ? (
+                <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300">
+                    Read ✓
+                </span>
+            ) : (
+                <button
+                    type="button"
+                    onClick={onMarkRead}
+                    disabled={isSaving}
+                    className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300 dark:hover:bg-teal-950/30"
+                >
+                    {isSaving ? "Saving..." : "Mark as read"}
+                </button>
+            )}
         </div>
     );
 }
@@ -278,6 +352,8 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
     const [resourceSummaries, setResourceSummaries] = useState<
         Record<string, ResourceSummaryState>
     >({});
+
+    const [markingReadKey, setMarkingReadKey] = useState<string | null>(null);
 
     useEffect(() => {
         if (!curriculum) return;
@@ -416,6 +492,32 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             );
         } finally {
             setIsCompletingDay(false);
+        }
+    }
+
+    async function handleMarkItemRead(itemKey: string) {
+        if (!user || !curriculum || !selectedDay || markingReadKey) return;
+
+        try {
+            setMarkingReadKey(itemKey);
+            setError("");
+
+            const token = await user.getIdToken();
+
+            const updated = await markCurriculumDayItemRead(
+                curriculum.id,
+                selectedDay.dayNumber,
+                itemKey,
+                token
+            );
+
+            setCurriculum((prev) => mergeCurriculumState(prev, updated));
+        } catch (err) {
+            setError(
+                err instanceof Error ? err.message : "Failed to mark item as read"
+            );
+        } finally {
+            setMarkingReadKey(null);
         }
     }
 
@@ -904,28 +1006,39 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                 </section>
 
                                 <section className="space-y-4">
-                                    {selectedDay.sections.map((section, i) => (
-                                        <article
-                                            key={i}
-                                            className="dd-surface dd-surface-top-line rounded-2xl border p-6 shadow-sm"
-                                        >
-                                            <h3
-                                                dir="auto"
-                                                className="mb-4 text-lg font-bold text-slate-900 dark:text-white"
+                                    {selectedDay.sections.map((section, i) => {
+                                        const itemKey = `section:${i}`;
+                                        const isRead = selectedDay.readItems?.includes(itemKey) ?? false;
+
+                                        return (
+                                            <article
+                                                key={itemKey}
+                                                className="dd-surface dd-surface-top-line rounded-2xl border p-6 shadow-sm"
                                             >
-                                                {section.title}
-                                            </h3>
+                                                <h3
+                                                    dir="auto"
+                                                    className="mb-4 text-lg font-bold text-slate-900 dark:text-white"
+                                                >
+                                                    {section.title}
+                                                </h3>
 
-                                            <div className="prose prose-sm max-w-none dark:prose-invert">
-                                                <MarkdownContent content={section.content} />
-                                            </div>
+                                                <div className="prose prose-sm max-w-none dark:prose-invert">
+                                                    <MarkdownContent content={section.content} />
+                                                </div>
 
-                                            <SectionAudioButton
-                                                title={section.title}
-                                                content={section.content}
-                                            />
-                                        </article>
-                                    ))}
+                                                <SectionAudioButton
+                                                    title={section.title}
+                                                    content={section.content}
+                                                />
+
+                                                <ReadStatusAction
+                                                    isRead={isRead}
+                                                    isSaving={markingReadKey === itemKey}
+                                                    onMarkRead={() => handleMarkItemRead(itemKey)}
+                                                />
+                                            </article>
+                                        );
+                                    })}
                                 </section>
 
                                 {selectedDay.resources?.length ? (
@@ -935,12 +1048,17 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                         </h2>
                                         {selectedDay.resources.map((res, i) => {
                                             const resourceKey = `${selectedDay.dayNumber}-${i}`;
+                                            const itemKey = `resource:${i}`;
+                                            const isRead = selectedDay.readItems.includes(itemKey);
                                             const summaryState = resourceSummaries[resourceKey];
 
                                             return (
                                                 <ResourceCard
                                                     key={resourceKey}
                                                     {...res}
+                                                    isRead={isRead}
+                                                    isSavingRead={markingReadKey === itemKey}
+                                                    onMarkRead={() => handleMarkItemRead(itemKey)}
                                                     audioTitle={`${res.title} summary`}
                                                     summary={summaryState?.summary}
                                                     summaryError={summaryState?.error}

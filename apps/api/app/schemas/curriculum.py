@@ -26,6 +26,7 @@ class CurriculumDayResponse(BaseModel):
     exercise: str | None = None
     resources: list[CurriculumDayResourceResponse]
     isGenerated: bool
+    readItems: list[str] = []
 
 
 class CreateCurriculumRequest(BaseModel):
@@ -59,6 +60,9 @@ class UpdateLastOpenedDayRequest(BaseModel):
 
 class GenerateCurriculumDayRequest(BaseModel):
     dayNumber: int
+
+class MarkCurriculumDayItemReadRequest(BaseModel):
+    itemKey: str
 
 class CurriculumResourcePayload(BaseModel):
     title: str
