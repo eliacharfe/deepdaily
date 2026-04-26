@@ -3,7 +3,7 @@
 
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import LoginRequiredModal from "@/components/auth/login-required-modal";
 import { useAuth } from "@/components/providers/auth-provider";
 import {
@@ -364,10 +364,38 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 
     const [markingReadKey, setMarkingReadKey] = useState<string | null>(null);
 
+    const scheduleScrollRef = useRef<HTMLDivElement | null>(null);
+    const didScrollToCurrentDayRef = useRef(false);
+
     useEffect(() => {
         if (!curriculum) return;
         void ensureDayGenerated(selectedDayNumber);
     }, [curriculum?.id, selectedDayNumber]);
+
+    useEffect(() => {
+        if (!curriculum || didScrollToCurrentDayRef.current) return;
+
+        const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+
+        const container = scheduleScrollRef.current;
+        if (!container) return;
+
+        const currentDayButton = container.querySelector<HTMLButtonElement>(
+            `[data-day-number="${curriculum.currentDay}"]`
+        );
+
+        if (!currentDayButton) return;
+
+        didScrollToCurrentDayRef.current = true;
+
+        setTimeout(() => {
+            currentDayButton.scrollIntoView({
+                behavior: "smooth",
+                block: isDesktop ? "start" : "nearest",
+                inline: isDesktop ? "nearest" : "center", // 👈 KEY CHANGE
+            });
+        }, 300);
+    }, [curriculum]);
 
     useEffect(() => {
         setLessonQaAnswer("");
@@ -898,7 +926,10 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                 Schedule
                             </h2>
 
-                            <div className="flex flex-row gap-3 overflow-x-auto pb-2 scrollbar-hide lg:max-h-[600px] lg:flex-col lg:gap-2 lg:overflow-x-hidden lg:overflow-y-auto lg:pb-0">
+                            <div
+                                ref={scheduleScrollRef}
+                                className="flex scroll-pt-4 flex-row gap-3 overflow-x-auto pb-2 scrollbar-hide lg:max-h-[600px] lg:flex-col lg:gap-2 lg:overflow-x-hidden lg:overflow-y-auto lg:pb-0"
+                            >
                                 {curriculum.days.map((day) => {
                                     const isCompleted = curriculum.completedDays.includes(day.dayNumber);
                                     const isCurrent = curriculum.currentDay === day.dayNumber;
@@ -909,6 +940,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                         <button
                                             key={day.dayNumber}
                                             type="button"
+                                            data-day-number={day.dayNumber}
                                             onClick={() => handleSelectDay(day.dayNumber)}
                                             className={[
                                                 "w-full rounded-2xl border px-4 py-3 text-left transition",
