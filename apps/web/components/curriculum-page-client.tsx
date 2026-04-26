@@ -159,7 +159,16 @@ function ResourceCard({
     }
 
     return (
-        <div className="dd-surface-soft overflow-hidden rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20 sm:p-5">
+        <div
+            className={`relative dd-surface-soft overflow-hidden rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20 sm:p-5
+                    ${isRead
+                    ? "border-teal-400/60 bg-teal-50/40 ring-1 ring-teal-300/40 dark:border-teal-500/40 dark:bg-teal-950/20 dark:ring-teal-500/20"
+                    : ""
+                }`}
+        >
+            {isRead && (
+                <div className="pointer-events-none absolute right-0 top-0 h-full w-1 rounded-l-2xl bg-teal-400" />
+            )}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div className="min-w-0 flex-1">
                     <MarkdownContent
@@ -1013,8 +1022,15 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                         return (
                                             <article
                                                 key={itemKey}
-                                                className="dd-surface dd-surface-top-line rounded-2xl border p-6 shadow-sm"
+                                                className={`relative dd-surface-soft overflow-hidden rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20 sm:p-5
+                                                    ${isRead
+                                                        ? "border-teal-400/60 bg-teal-50/40 ring-1 ring-teal-300/40 dark:border-teal-500/40 dark:bg-teal-950/20 dark:ring-teal-500/20"
+                                                        : ""
+                                                    }`}
                                             >
+                                                {isRead && (
+                                                    <div className="pointer-events-none absolute right-0 top-0 h-full w-1 rounded-l-2xl bg-teal-400" />
+                                                )}
                                                 <h3
                                                     dir="auto"
                                                     className="mb-4 text-lg font-bold text-slate-900 dark:text-white"
