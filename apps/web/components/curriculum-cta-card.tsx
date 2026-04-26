@@ -1,6 +1,7 @@
 // apps/web/components/curriculum-cta-card.tsx
 
 import type { Curriculum } from "@/types/curriculum";
+import { useRouter } from "next/navigation";
 
 type Props = {
     isCreatingCurriculum: boolean;
@@ -26,6 +27,10 @@ export default function CurriculumCtaCard({
     has30DayCurriculum = false,
 }: Props) {
     const hasAnyCurriculum = curricula.length > 0;
+
+    const router = useRouter();
+
+    const existingCurriculum = curricula?.[0]; // or smarter selection if needed
 
     return (
         <div
@@ -64,10 +69,11 @@ export default function CurriculumCtaCard({
                         return (
                             <div
                                 key={curriculum.id}
-                                className="dd-surface-soft rounded-2xl border p-5"
+                                onClick={() => router.push(`/curriculum/${curriculum.id}`)}
+                                className="dd-surface-soft cursor-pointer rounded-2xl border p-5 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20"
                             >
                                 <div className="flex items-start justify-between gap-4">
-                                    <div>
+                                    <div className="flex-1">
                                         <div className="flex items-center gap-2">
                                             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                                                 {curriculum.durationDays}-Day{" "}
@@ -93,6 +99,11 @@ export default function CurriculumCtaCard({
                                             {progressPercent}% done
                                         </p>
                                     </div>
+
+                                    {/* Arrow */}
+                                    <span className="text-teal-600 transition group-hover:translate-x-0.5 dark:text-teal-300">
+                                        →
+                                    </span>
                                 </div>
 
                                 <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200/90 dark:bg-slate-800/80">
