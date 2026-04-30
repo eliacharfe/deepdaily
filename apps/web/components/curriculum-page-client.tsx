@@ -348,6 +348,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
     const didScrollToCurrentDayRef = useRef(false);
 
     const [progressBanner, setProgressBanner] = useState<ProgressBannerState>(null);
+    const [totalXp, setTotalXp] = useState(0);
 
     useEffect(() => {
         if (!curriculum) return;
@@ -491,13 +492,13 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
     const progressTimeoutRef = useRef<number | null>(null);
 
     function showProgressBanner(title: string, message: string, xp?: number) {
-        if (progressTimeoutRef.current) {
-            clearTimeout(progressTimeoutRef.current);
+        if (xp) {
+            setTotalXp((prev) => prev + xp)
         }
 
         setProgressBanner({ title, message, xp });
 
-        progressTimeoutRef.current = window.setTimeout(() => {
+        window.setTimeout(() => {
             setProgressBanner(null);
         }, 3500);
     }
@@ -911,9 +912,21 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                 <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
                                     {curriculum.completedDays.length}/{curriculum.durationDays}
                                 </p>
-                                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                                    Day {curriculum.currentDay} is your current step
-                                </p>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-600 dark:text-slate-300">
+                                    <span>
+                                        Day {curriculum.currentDay} of {curriculum.durationDays}
+                                    </span>
+
+                                    <span className="hidden sm:inline text-slate-300">|</span>
+
+                                    <span>{progressPercent}% completed</span>
+
+                                    <span className="hidden sm:inline text-slate-300">|</span>
+
+                                    <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 dark:border-teal-500/20 dark:bg-teal-950/20 dark:text-teal-300">
+                                        {totalXp} XP
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1090,6 +1103,11 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                                 </h3>
 
                                                 <div className="prose prose-sm max-w-none dark:prose-invert">
+                                                    <div className="mb-4 flex justify-end">
+                                                        <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 dark:border-teal-500/20 dark:bg-teal-950/20 dark:text-teal-300">
+                                                            Total XP: {totalXp} 🔥
+                                                        </span>
+                                                    </div>
                                                     <MarkdownContent content={section.content} />
                                                 </div>
 

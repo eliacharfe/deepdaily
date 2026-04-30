@@ -318,6 +318,7 @@ export default function LearnPageClient(props: Props) {
     >({});
 
     const [progressBanner, setProgressBanner] = useState<ProgressBannerState>(null);
+    const [totalXp, setTotalXp] = useState(0);
 
     const router = useRouter();
 
@@ -484,13 +485,13 @@ export default function LearnPageClient(props: Props) {
     const progressTimeoutRef = useRef<number | null>(null);
 
     function showProgressBanner(title: string, message: string, xp?: number) {
-        if (progressTimeoutRef.current) {
-            clearTimeout(progressTimeoutRef.current);
+        if (xp) {
+            setTotalXp((prev) => prev + xp);
         }
 
         setProgressBanner({ title, message, xp });
 
-        progressTimeoutRef.current = window.setTimeout(() => {
+        window.setTimeout(() => {
             setProgressBanner(null);
         }, 3500);
     }
@@ -869,6 +870,12 @@ export default function LearnPageClient(props: Props) {
                                                 {data.level}
                                             </span>
                                         </p>
+
+                                        <span className="hidden text-slate-300 sm:inline">|</span>
+
+                                        <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 dark:border-teal-500/20 dark:bg-teal-950/20 dark:text-teal-300">
+                                            {totalXp} XP
+                                        </span>
                                     </div>
                                 </div>
 
