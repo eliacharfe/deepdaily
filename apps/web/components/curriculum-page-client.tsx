@@ -25,6 +25,7 @@ import SectionAudioButton from "@/components/section-audio-button";
 import ProgressBanner from "@/components/progress-banner";
 import { getRandomProgressMessage } from "@/lib/progress-messages";
 import { getProgressXp } from "@/lib/progress-xp";
+import { addUserXp, getUserProgress } from "@/lib/user-progress-api";
 
 type Props = {
     curriculumId: string;
@@ -403,6 +404,8 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                 setError("");
 
                 const token = await user.getIdToken();
+                const progress = await getUserProgress(token);
+                setTotalXp(progress.total_xp);
                 const data = await getCurriculum(curriculumId, token);
 
                 if (!cancelled) {
@@ -491,9 +494,16 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 
     const progressTimeoutRef = useRef<number | null>(null);
 
-    function showProgressBanner(title: string, message: string, xp?: number) {
-        if (xp) {
-            setTotalXp((prev) => prev + xp)
+    async function showProgressBanner(title: string, message: string, xp?: number) {
+        if (xp && user) {
+            try {
+                const token = await user.getIdToken();
+                const updated = await addUserXp(token, xp, "progress_reward");
+                setTotalXp(updated.total_xp);
+            } catch (error) {
+                console.error("Failed to sync XP", error);
+                setTotalXp((prev) => prev + xp);
+            }
         }
 
         setProgressBanner({ title, message, xp });
@@ -522,7 +532,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             window.dispatchEvent(new Event("curricula:refresh"));
 
             const progress = getRandomProgressMessage("day_complete");
-            showProgressBanner(
+            await showProgressBanner(
                 progress.title,
                 progress.message,
                 getProgressXp("day_complete")
@@ -556,7 +566,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             setCurriculum((prev) => mergeCurriculumState(prev, updated));
 
             const progress = getRandomProgressMessage("resource_read");
-            showProgressBanner(
+            await showProgressBanner(
                 progress.title,
                 progress.message,
                 getProgressXp("resource_read")

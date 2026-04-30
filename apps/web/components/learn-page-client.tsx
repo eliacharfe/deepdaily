@@ -26,6 +26,7 @@ import SectionAudioButton from "@/components/section-audio-button";
 import ProgressBanner from "@/components/progress-banner";
 import { getRandomProgressMessage } from "@/lib/progress-messages";
 import { getProgressXp } from "@/lib/progress-xp";
+import { addUserXp, getUserProgress } from "@/lib/user-progress-api";
 
 type ResourceSummaryState = {
     summary?: string;
@@ -346,6 +347,8 @@ export default function LearnPageClient(props: Props) {
                 setCurrentGenerationMessage("");
 
                 const token = await user.getIdToken();
+                const progress = await getUserProgress(token);
+                setTotalXp(progress.total_xp);
 
                 if (isSavedLessonMode && lessonId) {
                     const savedLesson = await getSavedLessonById(lessonId, token);
@@ -484,9 +487,16 @@ export default function LearnPageClient(props: Props) {
 
     const progressTimeoutRef = useRef<number | null>(null);
 
-    function showProgressBanner(title: string, message: string, xp?: number) {
-        if (xp) {
-            setTotalXp((prev) => prev + xp);
+    async function showProgressBanner(title: string, message: string, xp?: number) {
+        if (xp && user) {
+            try {
+                const token = await user.getIdToken();
+                const updated = await addUserXp(token, xp, "progress_reward");
+                setTotalXp(updated.total_xp);
+            } catch (error) {
+                console.error("Failed to sync XP", error);
+                setTotalXp((prev) => prev + xp);
+            }
         }
 
         setProgressBanner({ title, message, xp });
@@ -565,7 +575,7 @@ export default function LearnPageClient(props: Props) {
         }));
 
         const progress = getRandomProgressMessage("summary_ready");
-        showProgressBanner(
+        await showProgressBanner(
             progress.title,
             progress.message,
             getProgressXp("summary_ready")
@@ -717,7 +727,7 @@ export default function LearnPageClient(props: Props) {
             window.dispatchEvent(new Event("lessons:refresh"));
 
             const progress = getRandomProgressMessage("lesson_saved");
-            showProgressBanner(
+            await showProgressBanner(
                 progress.title,
                 progress.message,
                 getProgressXp("lesson_saved")
@@ -874,7 +884,7 @@ export default function LearnPageClient(props: Props) {
                                         <span className="hidden text-slate-300 sm:inline">|</span>
 
                                         <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 dark:border-teal-500/20 dark:bg-teal-950/20 dark:text-teal-300">
-                                            {totalXp} XP
+                                            Total XP: {totalXp} 🔥
                                         </span>
                                     </div>
                                 </div>

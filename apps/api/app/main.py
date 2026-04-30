@@ -17,6 +17,8 @@ from app.api.routes.curriculum import router as curriculum_router
 from app.api.routes.lesson_qa import router as lesson_qa_router
 from app.api.routes.surprise_topic import router as surprise_topic_router
 from app.api.routes.audio import router as audio_router
+from app.api.routes import user_progress
+from app.models.user_progress import UserProgress
 
 # IMPORTANT: import models so SQLAlchemy knows about them
 from app.models.lesson import Lesson
@@ -52,6 +54,7 @@ app.include_router(curriculum_router)
 app.include_router(lesson_qa_router)
 app.include_router(surprise_topic_router)
 app.include_router(audio_router)
+app.include_router(user_progress.router)
 
 print("DB URL:", settings.database_url)
 
