@@ -23,6 +23,9 @@ import type { Curriculum } from "@/types/curriculum";
 import PageShell from "@/components/page-shell";
 import MarkdownContent from "@/components/markdown-content";
 import SectionAudioButton from "@/components/section-audio-button";
+import ProgressBanner from "@/components/progress-banner";
+import { getRandomProgressMessage } from "@/lib/progress-messages";
+import { getProgressXp } from "@/lib/progress-xp";
 
 type ResourceSummaryState = {
     summary?: string;
@@ -35,6 +38,7 @@ type ResourceSummaryState = {
 type ProgressBannerState = {
     title: string;
     message: string;
+    xp?: number;
 } | null;
 
 type Props =
@@ -477,10 +481,16 @@ export default function LearnPageClient(props: Props) {
         };
     }, [authLoading, user, isSavedLessonMode, lessonId, topic, level]);
 
-    function showProgressBanner(title: string, message: string) {
-        setProgressBanner({ title, message });
+    const progressTimeoutRef = useRef<number | null>(null);
 
-        window.setTimeout(() => {
+    function showProgressBanner(title: string, message: string, xp?: number) {
+        if (progressTimeoutRef.current) {
+            clearTimeout(progressTimeoutRef.current);
+        }
+
+        setProgressBanner({ title, message, xp });
+
+        progressTimeoutRef.current = window.setTimeout(() => {
             setProgressBanner(null);
         }, 3500);
     }
@@ -553,9 +563,11 @@ export default function LearnPageClient(props: Props) {
             },
         }));
 
+        const progress = getRandomProgressMessage("summary_ready");
         showProgressBanner(
-            "Summary ready ✨",
-            "Nice. You turned a resource into something easier to review."
+            progress.title,
+            progress.message,
+            getProgressXp("summary_ready")
         );
 
         try {
@@ -703,9 +715,11 @@ export default function LearnPageClient(props: Props) {
 
             window.dispatchEvent(new Event("lessons:refresh"));
 
+            const progress = getRandomProgressMessage("lesson_saved");
             showProgressBanner(
-                "Lesson saved ✓",
-                "Your deeper lesson was saved. Keep building momentum."
+                progress.title,
+                progress.message,
+                getProgressXp("lesson_saved")
             );
 
             console.log("[autoSave] local state updated", {
@@ -1152,16 +1166,11 @@ export default function LearnPageClient(props: Props) {
             />
 
             {progressBanner ? (
-                <div className="fixed bottom-5 right-5 z-50 max-w-sm animate-in fade-in slide-in-from-bottom-3 duration-300">
-                    <div className="rounded-2xl border border-teal-200 bg-white/95 p-4 shadow-lg backdrop-blur dark:border-teal-500/30 dark:bg-slate-950/95">
-                        <p className="text-sm font-semibold text-teal-700 dark:text-teal-300">
-                            {progressBanner.title}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                            {progressBanner.message}
-                        </p>
-                    </div>
-                </div>
+                <ProgressBanner
+                    title={progressBanner.title}
+                    message={progressBanner.message}
+                    xp={progressBanner.xp}
+                />
             ) : null}
         </>
     );

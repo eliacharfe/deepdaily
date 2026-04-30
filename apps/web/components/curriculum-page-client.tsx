@@ -22,6 +22,9 @@ import PageShell from "@/components/page-shell";
 import LessonDayQaCard from "@/components/lesson-day-qa-card";
 import { streamLessonQuestion } from "@/lib/lesson-qa-api";
 import SectionAudioButton from "@/components/section-audio-button";
+import ProgressBanner from "@/components/progress-banner";
+import { getRandomProgressMessage } from "@/lib/progress-messages";
+import { getProgressXp } from "@/lib/progress-xp";
 
 type Props = {
     curriculumId: string;
@@ -43,6 +46,7 @@ type ResourceSummaryState = {
 type ProgressBannerState = {
     title: string;
     message: string;
+    xp?: number;
 } | null;
 
 function getYouTubeVideoId(url?: string | null): string | null {
@@ -484,10 +488,16 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         ];
     }, [selectedDay]);
 
-    function showProgressBanner(title: string, message: string) {
-        setProgressBanner({ title, message });
+    const progressTimeoutRef = useRef<number | null>(null);
 
-        window.setTimeout(() => {
+    function showProgressBanner(title: string, message: string, xp?: number) {
+        if (progressTimeoutRef.current) {
+            clearTimeout(progressTimeoutRef.current);
+        }
+
+        setProgressBanner({ title, message, xp });
+
+        progressTimeoutRef.current = window.setTimeout(() => {
             setProgressBanner(null);
         }, 3500);
     }
@@ -510,10 +520,13 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             setSelectedDayNumber(updated.currentDay);
             window.dispatchEvent(new Event("curricula:refresh"));
 
+            const progress = getRandomProgressMessage("day_complete");
             showProgressBanner(
-                "Day completed 🎉",
-                `Nice progress. Day ${updated.currentDay} is ready when you are.`
+                progress.title,
+                progress.message,
+                getProgressXp("day_complete")
             );
+
         } catch (err) {
             setError(
                 err instanceof Error ? err.message : "Failed to complete day"
@@ -541,10 +554,13 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 
             setCurriculum((prev) => mergeCurriculumState(prev, updated));
 
+            const progress = getRandomProgressMessage("resource_read");
             showProgressBanner(
-                "Marked as read ✓",
-                "Small step completed. Keep the momentum going."
+                progress.title,
+                progress.message,
+                getProgressXp("resource_read")
             );
+
         } catch (err) {
             setError(
                 err instanceof Error ? err.message : "Failed to mark item as read"
@@ -631,6 +647,13 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                 error: undefined,
             },
         }));
+
+        const progress = getRandomProgressMessage("summary_ready");
+        showProgressBanner(
+            progress.title,
+            progress.message,
+            getProgressXp("summary_ready")
+        );
 
         try {
             const token = await user.getIdToken();
@@ -1197,16 +1220,11 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             />
 
             {progressBanner ? (
-                <div className="fixed bottom-5 right-5 z-50 max-w-sm animate-in fade-in slide-in-from-bottom-3 duration-300">
-                    <div className="rounded-2xl border border-teal-200 bg-white/95 p-4 shadow-lg backdrop-blur dark:border-teal-500/30 dark:bg-slate-950/95">
-                        <p className="text-sm font-semibold text-teal-700 dark:text-teal-300">
-                            {progressBanner.title}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                            {progressBanner.message}
-                        </p>
-                    </div>
-                </div>
+                <ProgressBanner
+                    title={progressBanner.title}
+                    message={progressBanner.message}
+                    xp={progressBanner.xp}
+                />
             ) : null}
         </PageShell>
     );
