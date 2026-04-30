@@ -40,6 +40,11 @@ type ResourceSummaryState = {
     error?: string;
 };
 
+type ProgressBannerState = {
+    title: string;
+    message: string;
+} | null;
+
 function getYouTubeVideoId(url?: string | null): string | null {
     if (!url) return null;
 
@@ -128,35 +133,6 @@ function ResourceCard({
             normalizedType.includes("guide") ||
             normalizedType.includes("documentation") ||
             normalizedType.includes("web"));
-
-    function ReadStatusAction({
-        isRead,
-        isSaving,
-        onMarkRead,
-    }: {
-        isRead: boolean;
-        isSaving: boolean;
-        onMarkRead: () => void;
-    }) {
-        return (
-            <div className="mt-5 flex justify-end">
-                {isRead ? (
-                    <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300">
-                        Read ✓
-                    </span>
-                ) : (
-                    <button
-                        type="button"
-                        onClick={onMarkRead}
-                        disabled={isSaving}
-                        className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300 dark:hover:bg-teal-950/30"
-                    >
-                        {isSaving ? "Saving..." : "Mark as read"}
-                    </button>
-                )}
-            </div>
-        );
-    }
 
     return (
         <div
@@ -367,6 +343,8 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
     const scheduleScrollRef = useRef<HTMLDivElement | null>(null);
     const didScrollToCurrentDayRef = useRef(false);
 
+    const [progressBanner, setProgressBanner] = useState<ProgressBannerState>(null);
+
     useEffect(() => {
         if (!curriculum) return;
         void ensureDayGenerated(selectedDayNumber);
@@ -392,7 +370,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             currentDayButton.scrollIntoView({
                 behavior: "smooth",
                 block: isDesktop ? "start" : "nearest",
-                inline: isDesktop ? "nearest" : "center", // 👈 KEY CHANGE
+                inline: isDesktop ? "nearest" : "center",
             });
         }, 300);
     }, [curriculum]);
@@ -506,6 +484,14 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         ];
     }, [selectedDay]);
 
+    function showProgressBanner(title: string, message: string) {
+        setProgressBanner({ title, message });
+
+        window.setTimeout(() => {
+            setProgressBanner(null);
+        }, 3500);
+    }
+
     async function handleCompleteDay() {
         if (!user || !curriculum || !selectedDay || isCompletingDay) return;
 
@@ -523,6 +509,11 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             setCurriculum((prev) => mergeCurriculumState(prev, updated));
             setSelectedDayNumber(updated.currentDay);
             window.dispatchEvent(new Event("curricula:refresh"));
+
+            showProgressBanner(
+                "Day completed 🎉",
+                `Nice progress. Day ${updated.currentDay} is ready when you are.`
+            );
         } catch (err) {
             setError(
                 err instanceof Error ? err.message : "Failed to complete day"
@@ -549,6 +540,11 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             );
 
             setCurriculum((prev) => mergeCurriculumState(prev, updated));
+
+            showProgressBanner(
+                "Marked as read ✓",
+                "Small step completed. Keep the momentum going."
+            );
         } catch (err) {
             setError(
                 err instanceof Error ? err.message : "Failed to mark item as read"
@@ -1199,6 +1195,19 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                 open={showLoginModal}
                 onClose={() => setShowLoginModal(false)}
             />
+
+            {progressBanner ? (
+                <div className="fixed bottom-5 right-5 z-50 max-w-sm animate-in fade-in slide-in-from-bottom-3 duration-300">
+                    <div className="rounded-2xl border border-teal-200 bg-white/95 p-4 shadow-lg backdrop-blur dark:border-teal-500/30 dark:bg-slate-950/95">
+                        <p className="text-sm font-semibold text-teal-700 dark:text-teal-300">
+                            {progressBanner.title}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                            {progressBanner.message}
+                        </p>
+                    </div>
+                </div>
+            ) : null}
         </PageShell>
     );
 }

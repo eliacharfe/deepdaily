@@ -32,6 +32,11 @@ type ResourceSummaryState = {
     error?: string;
 };
 
+type ProgressBannerState = {
+    title: string;
+    message: string;
+} | null;
+
 type Props =
     | {
         topic: string;
@@ -43,6 +48,8 @@ type Props =
         topic?: never;
         level?: never;
     };
+
+
 
 function normalizeSavedLesson(savedLesson: SavedLesson): LessonData {
     return {
@@ -306,6 +313,7 @@ export default function LearnPageClient(props: Props) {
         Record<string, ResourceSummaryState>
     >({});
 
+    const [progressBanner, setProgressBanner] = useState<ProgressBannerState>(null);
 
     const router = useRouter();
 
@@ -469,6 +477,14 @@ export default function LearnPageClient(props: Props) {
         };
     }, [authLoading, user, isSavedLessonMode, lessonId, topic, level]);
 
+    function showProgressBanner(title: string, message: string) {
+        setProgressBanner({ title, message });
+
+        window.setTimeout(() => {
+            setProgressBanner(null);
+        }, 3500);
+    }
+
     async function handleCreateCurriculum(durationDays: 7 | 30) {
         if (!user || !data || isCreatingCurriculum) return;
 
@@ -536,6 +552,11 @@ export default function LearnPageClient(props: Props) {
                 error: undefined,
             },
         }));
+
+        showProgressBanner(
+            "Summary ready ✨",
+            "Nice. You turned a resource into something easier to review."
+        );
 
         try {
             const token = await user.getIdToken();
@@ -681,6 +702,11 @@ export default function LearnPageClient(props: Props) {
             );
 
             window.dispatchEvent(new Event("lessons:refresh"));
+
+            showProgressBanner(
+                "Lesson saved ✓",
+                "Your deeper lesson was saved. Keep building momentum."
+            );
 
             console.log("[autoSave] local state updated", {
                 savedLessonId: result.id,
@@ -1124,6 +1150,19 @@ export default function LearnPageClient(props: Props) {
                 open={showLoginModal}
                 onClose={() => setShowLoginModal(false)}
             />
+
+            {progressBanner ? (
+                <div className="fixed bottom-5 right-5 z-50 max-w-sm animate-in fade-in slide-in-from-bottom-3 duration-300">
+                    <div className="rounded-2xl border border-teal-200 bg-white/95 p-4 shadow-lg backdrop-blur dark:border-teal-500/30 dark:bg-slate-950/95">
+                        <p className="text-sm font-semibold text-teal-700 dark:text-teal-300">
+                            {progressBanner.title}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                            {progressBanner.message}
+                        </p>
+                    </div>
+                </div>
+            ) : null}
         </>
     );
 }
