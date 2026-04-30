@@ -27,6 +27,7 @@ import ProgressBanner from "@/components/progress-banner";
 import { getRandomProgressMessage } from "@/lib/progress-messages";
 import { getProgressXp } from "@/lib/progress-xp";
 import { addUserXp, getUserProgress } from "@/lib/user-progress-api";
+import { getProgressLevel } from "@/lib/progress-level";
 
 type ResourceSummaryState = {
     summary?: string;
@@ -884,7 +885,7 @@ export default function LearnPageClient(props: Props) {
                                         <span className="hidden text-slate-300 sm:inline">|</span>
 
                                         <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 dark:border-teal-500/20 dark:bg-teal-950/20 dark:text-teal-300">
-                                            Total XP: {totalXp} 🔥
+                                            Level {getProgressLevel(totalXp)} • {totalXp} XP 🔥
                                         </span>
                                     </div>
                                 </div>
