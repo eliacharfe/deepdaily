@@ -27,6 +27,7 @@ import { getRandomProgressMessage } from "@/lib/progress-messages";
 import { getProgressXp } from "@/lib/progress-xp";
 import { addUserXp, getUserProgress } from "@/lib/user-progress-api";
 import { getProgressLevel } from "@/lib/progress-level";
+import DayCompleteBurst from "./day-complete-celebration";
 
 type Props = {
     curriculumId: string;
@@ -352,6 +353,12 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
     const [progressBanner, setProgressBanner] = useState<ProgressBannerState>(null);
     const [totalXp, setTotalXp] = useState(0);
 
+    const [burstTrigger, setBurstTrigger] = useState(0);
+
+    function triggerBurst() {
+        setBurstTrigger(Date.now());
+    }
+
     useEffect(() => {
         if (!curriculum) return;
         void ensureDayGenerated(selectedDayNumber);
@@ -529,6 +536,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             );
 
             setCurriculum((prev) => mergeCurriculumState(prev, updated));
+            triggerBurst();
             setSelectedDayNumber(updated.currentDay);
             window.dispatchEvent(new Event("curricula:refresh"));
 
@@ -1240,7 +1248,11 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 
                                 <section className="dd-surface dd-surface-top-line rounded-2xl border p-6 shadow-sm">
                                     <button
-                                        onClick={handleCompleteDay}
+                                        onClick={() => {
+                                            triggerBurst();
+                                            handleCompleteDay();
+                                        }}
+                                        // onClick={handleCompleteDay}
                                         disabled={isCompletingDay || curriculum.completedDays.includes(selectedDay.dayNumber)}
                                         className="w-full rounded-xl bg-teal-600 py-4 text-sm font-bold text-white transition hover:bg-teal-700 disabled:opacity-50 dark:bg-teal-500"
                                     >
@@ -1250,6 +1262,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                                 ? "Saving..."
                                                 : "Mark day as finished"}
                                     </button>
+                                    <DayCompleteBurst trigger={burstTrigger} />
                                 </section>
                             </>
                         )}
@@ -1269,6 +1282,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                     xp={progressBanner.xp}
                 />
             ) : null}
+
         </PageShell>
     );
 }
