@@ -32,7 +32,7 @@ from app.services.curriculum_service import (
     summarize_resource_for_curriculum,
     stream_resource_summary_for_curriculum,
 )
-from sqlalchemy import select
+from sqlalchemy import select  # pyright: ignore[reportMissingImports]
 from app.models.curriculum import Curriculum
 from datetime import date, timedelta
 

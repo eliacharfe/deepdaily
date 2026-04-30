@@ -27,7 +27,7 @@ import { getRandomProgressMessage } from "@/lib/progress-messages";
 import { getProgressXp } from "@/lib/progress-xp";
 import { addUserXp, getUserProgress } from "@/lib/user-progress-api";
 import { getProgressLevel } from "@/lib/progress-level";
-import DayCompleteBurst from "./day-complete-celebration";
+import DayCompleteBurst from "./day-complete-burst";
 
 type Props = {
     curriculumId: string;
@@ -81,11 +81,6 @@ function getYouTubeVideoId(url?: string | null): string | null {
     } catch {
         return null;
     }
-}
-
-function getYouTubeThumbnail(url?: string | null): string | null {
-    const id = getYouTubeVideoId(url);
-    return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
 }
 
 function getYouTubeEmbedUrl(url?: string | null): string | null {
@@ -143,15 +138,15 @@ function ResourceCard({
 
     return (
         <div
-            className={`relative dd-surface-soft overflow-hidden rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20 sm:p-5
-                    ${isRead
-                    ? "border-teal-400/60 bg-teal-50/40 ring-1 ring-teal-300/40 dark:border-teal-500/40 dark:bg-teal-950/20 dark:ring-teal-500/20"
-                    : ""
+            className={`relative dd-surface-soft overflow-hidden rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20 sm:p-5 ${isRead
+                ? "border-teal-400/60 bg-teal-50/40 ring-1 ring-teal-300/40 dark:border-teal-500/40 dark:bg-teal-950/20 dark:ring-teal-500/20"
+                : ""
                 }`}
         >
             {isRead && (
                 <div className="pointer-events-none absolute right-0 top-0 h-full w-1 rounded-l-2xl bg-teal-400" />
             )}
+
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div className="min-w-0 flex-1">
                     <MarkdownContent
@@ -183,17 +178,7 @@ function ResourceCard({
                 <div className="mt-3 overflow-hidden rounded-xl border border-slate-200/70 px-4 py-3 dark:border-white/10">
                     <MarkdownContent
                         content={snippet}
-                        className="
-                            line-clamp-6
-                            text-xs leading-relaxed text-slate-500 sm:text-sm dark:text-slate-400
-                            [&_p]:my-0
-                            **:max-w-full
-                            **:wrap-break-word
-                            [&_a]:break-all
-                            [&_pre]:overflow-x-auto
-                            [&_code]:wrap-break-word
-                            [&_hr]:my-3
-                        "
+                        className="line-clamp-6 text-xs leading-relaxed text-slate-500 sm:text-sm dark:text-slate-400 [&_p]:my-0 **:max-w-full **:wrap-break-word [&_a]:break-all [&_pre]:overflow-x-auto [&_code]:wrap-break-word [&_hr]:my-3"
                     />
                 </div>
             ) : null}
@@ -285,7 +270,6 @@ function ResourceCard({
                     onMarkRead={onMarkRead}
                 />
             ) : null}
-
         </div>
     );
 }
@@ -322,7 +306,7 @@ function ReadStatusAction({
 export default function CurriculumPageClient({ curriculumId }: Props) {
     const { user, loading: authLoading } = useAuth();
 
-    const [isGeneratingDay, setIsGeneratingDay] = useState(false);
+    const [generatingDayNumber, setGeneratingDayNumber] = useState<number | null>(null);
     const [curriculum, setCurriculum] = useState<Curriculum | null>(null);
     const [selectedDayNumber, setSelectedDayNumber] = useState<number>(1);
 
@@ -331,7 +315,6 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
     const [showLoginModal, setShowLoginModal] = useState(false);
 
     const [isCompletingDay, setIsCompletingDay] = useState(false);
-    const [isUpdatingOpenedDay, setIsUpdatingOpenedDay] = useState(false);
 
     const [currentDayGenerationMessage, setCurrentDayGenerationMessage] = useState("");
 
@@ -368,7 +351,6 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         if (!curriculum || didScrollToCurrentDayRef.current) return;
 
         const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
-
         const container = scheduleScrollRef.current;
         if (!container) return;
 
@@ -414,6 +396,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                 const token = await user.getIdToken();
                 const progress = await getUserProgress(token);
                 setTotalXp(progress.total_xp);
+
                 const data = await getCurriculum(curriculumId, token);
 
                 if (!cancelled) {
@@ -445,33 +428,42 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         return curriculum?.days.find((day) => day.dayNumber === selectedDayNumber) ?? null;
     }, [curriculum, selectedDayNumber]);
 
-    async function handleSelectDay(dayNumber: number) {
-        if (!user || !curriculum || isUpdatingOpenedDay) return;
+    const isSelectedDayGenerating =
+        generatingDayNumber !== null && generatingDayNumber === selectedDay?.dayNumber;
+
+    const lastOpenedSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    function handleSelectDay(dayNumber: number) {
+        if (!user || !curriculum) return;
 
         setSelectedDayNumber(dayNumber);
 
-        try {
-            setIsUpdatingOpenedDay(true);
-            setError("");
-
-            const token = await user.getIdToken();
-            const updated = await updateCurriculumLastOpenedDay(
-                curriculum.id,
-                dayNumber,
-                token
-            );
-
-            setCurriculum((prev) => mergeCurriculumState(prev, updated));
-        } catch (err) {
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : "Failed to update selected day"
-            );
-        } finally {
-            setIsUpdatingOpenedDay(false);
+        if (lastOpenedSaveTimeoutRef.current) {
+            clearTimeout(lastOpenedSaveTimeoutRef.current);
         }
+
+        lastOpenedSaveTimeoutRef.current = setTimeout(async () => {
+            try {
+                const token = await user.getIdToken();
+
+                await updateCurriculumLastOpenedDay(
+                    curriculum.id,
+                    dayNumber,
+                    token
+                );
+            } catch (err) {
+                console.error("Failed to update selected day", err);
+            }
+        }, 500);
     }
+
+    useEffect(() => {
+        return () => {
+            if (lastOpenedSaveTimeoutRef.current) {
+                clearTimeout(lastOpenedSaveTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const lessonQaRecentQuestions = useMemo(() => {
         const userQuestions = lessonQaHistory
@@ -499,8 +491,6 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             "Test me with 3 questions",
         ];
     }, [selectedDay]);
-
-    const progressTimeoutRef = useRef<number | null>(null);
 
     async function showProgressBanner(title: string, message: string, xp?: number) {
         if (xp && user) {
@@ -546,11 +536,8 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                 progress.message,
                 getProgressXp("day_complete")
             );
-
         } catch (err) {
-            setError(
-                err instanceof Error ? err.message : "Failed to complete day"
-            );
+            setError(err instanceof Error ? err.message : "Failed to complete day");
         } finally {
             setIsCompletingDay(false);
         }
@@ -580,18 +567,15 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                 progress.message,
                 getProgressXp("resource_read")
             );
-
         } catch (err) {
-            setError(
-                err instanceof Error ? err.message : "Failed to mark item as read"
-            );
+            setError(err instanceof Error ? err.message : "Failed to mark item as read");
         } finally {
             setMarkingReadKey(null);
         }
     }
 
     async function ensureDayGenerated(dayNumber: number, force = false) {
-        if (!user || !curriculum || isGeneratingDay) return;
+        if (!user || !curriculum || generatingDayNumber !== null) return;
 
         const day = curriculum.days.find((item) => item.dayNumber === dayNumber);
         if (!day) return;
@@ -599,7 +583,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         if (day.isGenerated && !force) return;
 
         try {
-            setIsGeneratingDay(true);
+            setGeneratingDayNumber(dayNumber);
             setError("");
             setCurrentDayGenerationMessage("");
 
@@ -621,7 +605,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to generate day");
         } finally {
-            setIsGeneratingDay(false);
+            setGeneratingDayNumber(null);
         }
     }
 
@@ -682,13 +666,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                 {
                     curriculumId: curriculum.id,
                     dayNumber: selectedDay.dayNumber,
-                    resource: {
-                        title: resource.title,
-                        type: resource.type,
-                        url: resource.url,
-                        snippet: resource.snippet,
-                        reason: resource.reason,
-                    },
+                    resource,
                 },
                 token,
                 {
@@ -756,9 +734,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 
             setCurriculum((prev) => mergeCurriculumState(prev, updated));
         } catch (err) {
-            setError(
-                err instanceof Error ? err.message : "Failed to retry resources"
-            );
+            setError(err instanceof Error ? err.message : "Failed to retry resources");
         } finally {
             setIsRetryingResources(false);
         }
@@ -782,9 +758,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 
             setCurriculum((prev) => mergeCurriculumState(prev, updated));
         } catch (err) {
-            setError(
-                err instanceof Error ? err.message : "Failed to regenerate day"
-            );
+            setError(err instanceof Error ? err.message : "Failed to regenerate day");
         } finally {
             setIsRegeneratingDay(false);
         }
@@ -871,7 +845,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
             backLessonId={curriculum.lessonId}
             className="px-4 py-6 pt-10 sm:px-6 sm:py-12 sm:pt-20"
         >
-            <div className="mx-auto max-w-6xl space-y-6 pt-2 sm:space-y-8 sm:pt-6 lg:pt-6 ">
+            <div className="mx-auto max-w-6xl space-y-6 pt-2 sm:space-y-8 sm:pt-6 lg:pt-6">
                 <section className="dd-surface dd-surface-top-line overflow-hidden rounded-3xl border shadow-sm">
                     <div className="border-b border-teal-100 bg-linear-to-r from-teal-50 via-white to-cyan-50 p-8 dark:border-teal-900/30 dark:from-teal-950/30 dark:via-transparent dark:to-cyan-950/20">
                         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-teal-700 dark:text-teal-300">
@@ -887,31 +861,19 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                     {curriculum.title}
                                 </h1>
 
-                                <p
-                                    dir="auto"
-                                    className="mt-4 text-sm text-slate-600 dark:text-slate-300"
-                                >
+                                <p dir="auto" className="mt-4 text-sm text-slate-600 dark:text-slate-300">
                                     Topic:{" "}
-                                    <span
-                                        dir="auto"
-                                        className="font-medium text-slate-800 dark:text-slate-100"
-                                    >
+                                    <span className="font-medium text-slate-800 dark:text-slate-100">
                                         {curriculum.topic}
                                     </span>
                                     {" · "}
                                     Level:{" "}
-                                    <span
-                                        dir="auto"
-                                        className="font-medium capitalize text-slate-800 dark:text-slate-100"
-                                    >
+                                    <span className="font-medium capitalize text-slate-800 dark:text-slate-100">
                                         {curriculum.level}
                                     </span>
                                     {" · "}
                                     Plan:{" "}
-                                    <span
-                                        dir="auto"
-                                        className="font-medium text-slate-800 dark:text-slate-100"
-                                    >
+                                    <span className="font-medium text-slate-800 dark:text-slate-100">
                                         {curriculum.durationDays} days
                                     </span>
                                 </p>
@@ -935,12 +897,8 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                     <span>
                                         Day {curriculum.currentDay} of {curriculum.durationDays}
                                     </span>
-
-                                    <span className="hidden sm:inline text-slate-300">|</span>
-
+                                    <span className="hidden text-slate-300 sm:inline">|</span>
                                     <span>{progressPercent}% completed</span>
-
-                                    <span className="hidden sm:inline text-slate-300">|</span>
                                 </div>
                             </div>
                         </div>
@@ -994,6 +952,8 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                     const isCurrent = curriculum.currentDay === day.dayNumber;
                                     const isSelected = selectedDayNumber === day.dayNumber;
                                     const isGenerated = day.isGenerated;
+                                    const isGeneratingThisDay =
+                                        generatingDayNumber === day.dayNumber;
 
                                     return (
                                         <button
@@ -1019,6 +979,10 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                                             <span className="rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-teal-700 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300">
                                                                 Done
                                                             </span>
+                                                        ) : isGeneratingThisDay ? (
+                                                            <span className="dd-surface rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                                                                Loading
+                                                            </span>
                                                         ) : !isGenerated ? (
                                                             <span className="dd-surface rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
                                                                 Ready
@@ -1043,7 +1007,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                     </aside>
 
                     <main className="min-w-0 space-y-6">
-                        {!selectedDay.isGenerated || isGeneratingDay || isRegeneratingDay ? (
+                        {!selectedDay.isGenerated || isSelectedDayGenerating || isRegeneratingDay ? (
                             <div className="dd-surface dd-surface-top-line rounded-2xl border p-8 text-center shadow-sm">
                                 <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
                                 <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -1060,6 +1024,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                             <span className="dd-surface-soft rounded-full border px-2 py-1 text-[10px] font-bold text-slate-700 dark:text-slate-200">
                                                 DAY {selectedDay.dayNumber}
                                             </span>
+
                                             {curriculum.completedDays.includes(selectedDay.dayNumber) && (
                                                 <span className="text-[10px] font-bold text-teal-600 dark:text-teal-300">
                                                     ✓ COMPLETED
@@ -1072,7 +1037,11 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                                 <button
                                                     type="button"
                                                     onClick={handleRetryResources}
-                                                    disabled={isRetryingResources || isRegeneratingDay || isGeneratingDay}
+                                                    disabled={
+                                                        isRetryingResources ||
+                                                        isRegeneratingDay ||
+                                                        isSelectedDayGenerating
+                                                    }
                                                     className="dd-surface-soft rounded-lg border px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-teal-200 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-200 dark:hover:border-teal-500/20"
                                                 >
                                                     {isRetryingResources ? "Retrying..." : "Retry resources"}
@@ -1082,7 +1051,11 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                             <button
                                                 type="button"
                                                 onClick={handleRegenerateDay}
-                                                disabled={isRegeneratingDay || isRetryingResources || isGeneratingDay}
+                                                disabled={
+                                                    isRegeneratingDay ||
+                                                    isRetryingResources ||
+                                                    isSelectedDayGenerating
+                                                }
                                                 className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-900/30 dark:bg-teal-950/20 dark:text-teal-300 dark:hover:bg-teal-950/30"
                                             >
                                                 {isRegeneratingDay ? "Regenerating..." : "Regenerate day"}
@@ -1108,23 +1081,24 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                 <section className="space-y-4">
                                     {selectedDay.sections.map((section, i) => {
                                         const itemKey = `section:${i}`;
-                                        const isRead = selectedDay.readItems?.includes(itemKey) ?? false;
+                                        const isRead =
+                                            selectedDay.readItems?.includes(itemKey) ?? false;
 
                                         return (
                                             <article
                                                 key={itemKey}
-                                                className={`relative dd-surface-soft overflow-hidden rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20 sm:p-5
-                                                    ${isRead
-                                                        ? "border-teal-400/60 bg-teal-50/40 ring-1 ring-teal-300/40 dark:border-teal-500/40 dark:bg-teal-950/20 dark:ring-teal-500/20"
-                                                        : ""
+                                                className={`relative dd-surface-soft overflow-hidden rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-sm dark:hover:border-teal-500/20 sm:p-5 ${isRead
+                                                    ? "border-teal-400/60 bg-teal-50/40 ring-1 ring-teal-300/40 dark:border-teal-500/40 dark:bg-teal-950/20 dark:ring-teal-500/20"
+                                                    : ""
                                                     }`}
                                             >
                                                 {isRead && (
                                                     <div className="pointer-events-none absolute right-0 top-0 h-full w-1 rounded-l-2xl bg-teal-400" />
                                                 )}
+
                                                 <h3
                                                     dir="auto"
-                                                    className="mb-4 text-lg font-bold text-slate-900 dark:text-white"
+                                                    className="mb-4 text-lg font-semibold text-slate-900 dark:text-white"
                                                 >
                                                     {section.title}
                                                 </h3>
@@ -1141,6 +1115,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                                             </span>
                                                         ) : null}
                                                     </div>
+
                                                     <MarkdownContent content={section.content} />
                                                 </div>
 
@@ -1164,6 +1139,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                         <h2 className="px-1 text-sm font-bold uppercase text-slate-400">
                                             Daily resources
                                         </h2>
+
                                         {selectedDay.resources.map((res, i) => {
                                             const resourceKey = `${selectedDay.dayNumber}-${i}`;
                                             const itemKey = `resource:${i}`;
@@ -1201,7 +1177,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                 <LessonDayQaCard
                                     dayTitle={selectedDay.title}
                                     dayObjective={selectedDay.objective}
-                                    disabled={!selectedDay.isGenerated || isGeneratingDay}
+                                    disabled={!selectedDay.isGenerated || isSelectedDayGenerating}
                                     answer={lessonQaAnswer}
                                     quickActions={lessonQaQuickActions}
                                     recentQuestions={lessonQaRecentQuestions}
@@ -1211,7 +1187,6 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                         }
 
                                         const token = await user.getIdToken();
-
                                         const previousHistory = lessonQaHistory.slice(-4);
                                         let streamedAnswer = "";
 
@@ -1252,8 +1227,10 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                             triggerBurst();
                                             handleCompleteDay();
                                         }}
-                                        // onClick={handleCompleteDay}
-                                        disabled={isCompletingDay || curriculum.completedDays.includes(selectedDay.dayNumber)}
+                                        disabled={
+                                            isCompletingDay ||
+                                            curriculum.completedDays.includes(selectedDay.dayNumber)
+                                        }
                                         className="w-full rounded-xl bg-teal-600 py-4 text-sm font-bold text-white transition hover:bg-teal-700 disabled:opacity-50 dark:bg-teal-500"
                                     >
                                         {curriculum.completedDays.includes(selectedDay.dayNumber)
@@ -1262,6 +1239,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                                 ? "Saving..."
                                                 : "Mark day as finished"}
                                     </button>
+
                                     <DayCompleteBurst trigger={burstTrigger} />
                                 </section>
                             </>
@@ -1282,7 +1260,6 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                     xp={progressBanner.xp}
                 />
             ) : null}
-
         </PageShell>
     );
 }

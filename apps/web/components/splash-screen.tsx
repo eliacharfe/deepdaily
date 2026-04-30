@@ -42,7 +42,7 @@ export default function SplashScreen() {
 
     return (
         <div
-            className={`fixed inset-0 z-[9999] flex items-center justify-center transition-all duration-700 ${fadeOut ? "opacity-0 scale-110" : "opacity-100 scale-100"
+            className={`fixed inset-0 z-9999 flex items-center justify-center transition-all duration-700 ${fadeOut ? "opacity-0 scale-110" : "opacity-100 scale-100"
                 }`}
             style={{
                 background: "rgba(7, 32, 35, 0.56)",
@@ -53,8 +53,8 @@ export default function SplashScreen() {
             <div className="relative flex items-center justify-center">
                 <div
                     className={`absolute rounded-full bg-teal-400/15 blur-3xl transition-all duration-700 ${fadeOut
-                            ? "h-56 w-56 scale-150 opacity-0"
-                            : "h-36 w-36 sm:h-44 sm:w-44 md:h-56 md:w-56 lg:h-72 lg:w-72 scale-100 opacity-100"
+                        ? "h-56 w-56 scale-150 opacity-0"
+                        : "h-36 w-36 sm:h-44 sm:w-44 md:h-56 md:w-56 lg:h-72 lg:w-72 scale-100 opacity-100"
                         }`}
                 />
 
