@@ -933,10 +933,6 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                     <span>{progressPercent}% completed</span>
 
                                     <span className="hidden sm:inline text-slate-300">|</span>
-
-                                    <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 dark:border-teal-500/20 dark:bg-teal-950/20 dark:text-teal-300">
-                                        Level {getProgressLevel(totalXp)} • {totalXp} XP 🔥
-                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -953,6 +949,18 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                             {progressPercent}% complete
                         </p>
+                    </div>
+
+                    <div className="mb-4 flex flex-wrap justify-end gap-2 pr-5">
+                        <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 dark:border-teal-500/20 dark:bg-teal-950/20 dark:text-teal-300">
+                            Level {getProgressLevel(totalXp)} • {totalXp} XP 🔥
+                        </span>
+
+                        {curriculum.streakCount > 0 ? (
+                            <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700 dark:border-orange-500/20 dark:bg-orange-950/20 dark:text-orange-300">
+                                {curriculum.streakCount}-Step Streak 🔥
+                            </span>
+                        ) : null}
                     </div>
                 </section>
 
@@ -1114,10 +1122,16 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
                                                 </h3>
 
                                                 <div className="prose prose-sm max-w-none dark:prose-invert">
-                                                    <div className="mb-4 flex justify-end">
+                                                    <div className="mb-4 flex flex-wrap justify-end gap-2">
                                                         <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 dark:border-teal-500/20 dark:bg-teal-950/20 dark:text-teal-300">
                                                             Level {getProgressLevel(totalXp)} • {totalXp} XP 🔥
                                                         </span>
+
+                                                        {curriculum.streakCount > 0 ? (
+                                                            <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700 dark:border-orange-500/20 dark:bg-orange-950/20 dark:text-orange-300">
+                                                                {curriculum.streakCount}-Day Streak 🔥
+                                                            </span>
+                                                        ) : null}
                                                     </div>
                                                     <MarkdownContent content={section.content} />
                                                 </div>

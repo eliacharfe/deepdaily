@@ -3,7 +3,7 @@
 from pydantic import BaseModel, HttpUrl  # pyright: ignore[reportMissingImports]
 from typing import Literal
 from typing import Optional
-
+from datetime import date
 
 class CurriculumDayResourceResponse(BaseModel):
     title: str
@@ -48,6 +48,9 @@ class CurriculumResponse(BaseModel):
     days: list[CurriculumDayResponse]
     createdAt: str
     updatedAt: str
+    streakCount: int = 0
+    longestStreak: int = 0
+    lastCompletedOn: date | None = None
 
 
 class CompleteCurriculumDayRequest(BaseModel):

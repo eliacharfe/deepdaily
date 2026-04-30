@@ -49,4 +49,8 @@ export type Curriculum = {
 
     createdAt: string;
     updatedAt: string;
+
+    streakCount: number;
+    longestStreak: number;
+    lastCompletedOn?: string | null;
 };

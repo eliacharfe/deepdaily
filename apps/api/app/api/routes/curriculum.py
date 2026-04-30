@@ -34,6 +34,7 @@ from app.services.curriculum_service import (
 )
 from sqlalchemy import select
 from app.models.curriculum import Curriculum
+from datetime import date, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,9 @@ def build_curriculum_response(curriculum: Curriculum) -> CurriculumResponse:
         days=normalized_days,
         createdAt=curriculum.created_at.isoformat(),
         updatedAt=curriculum.updated_at.isoformat(),
+        streakCount=curriculum.streak_count or 0,
+        longestStreak=curriculum.longest_streak or 0,
+        lastCompletedOn=curriculum.last_completed_on,
     )
 
 def build_mock_days(topic: str, duration_days: int) -> list[dict]:
@@ -347,6 +351,17 @@ async def complete_curriculum_day(
     if payload.dayNumber not in existing_completed_days:
         existing_completed_days.append(payload.dayNumber)
 
+        today = date.today()
+
+        curriculum.streak_count = (curriculum.streak_count or 0) + 1
+
+        curriculum.longest_streak = max(
+            curriculum.longest_streak or 0,
+            curriculum.streak_count or 0,
+        )
+
+        curriculum.last_completed_on = today
+
     curriculum.completed_days_json = sorted(existing_completed_days)
 
     if payload.dayNumber >= curriculum.current_day and payload.dayNumber < curriculum.duration_days:
@@ -518,7 +533,7 @@ async def generate_day_for_curriculum(
                     json.dumps(
                         {
                             "type": "done",
-                            "data": build_curriculum_response(curriculum).model_dump(),
+                            "data": build_curriculum_response(curriculum).model_dump(mode="json"),
                         }
                     )
                 )

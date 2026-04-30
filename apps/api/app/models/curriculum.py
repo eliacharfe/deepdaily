@@ -1,8 +1,8 @@
 # apps/api/app/models/curriculum.py
 
-from sqlalchemy import String, Integer, DateTime, ForeignKey, JSON
+from sqlalchemy import String, Integer, DateTime, ForeignKey, JSON, Date
 from sqlalchemy.orm import Mapped, mapped_column
-from datetime import datetime, UTC
+from datetime import datetime, UTC, date
 import uuid
 
 from app.db.base import Base
@@ -48,3 +48,6 @@ class Curriculum(Base):
         onupdate=lambda: datetime.now(UTC),
         nullable=False
     )
+    streak_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    longest_streak: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_completed_on: Mapped[date | None] = mapped_column(Date, nullable=True)
