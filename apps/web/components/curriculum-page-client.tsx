@@ -924,7 +924,7 @@ export default function CurriculumPageClient({ curriculumId }: Props) {
 
                         {curriculum.streakCount > 0 ? (
                             <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700 dark:border-orange-500/20 dark:bg-orange-950/20 dark:text-orange-300">
-                                {curriculum.streakCount}-Step Streak 🔥
+                                {curriculum.streakCount}-Day Streak 🔥
                             </span>
                         ) : null}
                     </div>
