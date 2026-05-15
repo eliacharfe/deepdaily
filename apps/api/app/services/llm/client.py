@@ -8,9 +8,9 @@ from app.core.config import settings
 client = AsyncOpenAI(api_key=settings.openai_api_key)
 
 MODEL_ROADMAP = "gpt-5.4-mini"
-MODEL_LESSON = "gpt-5.4"
-MODEL_STREAMING_LESSON = "gpt-5.4"
-MODEL_JSON = "gpt-5.4"
+MODEL_LESSON = "gpt-5" # gpt-5-mini
+MODEL_STREAMING_LESSON = "gpt-5" # gpt-5-mini
+MODEL_JSON = "gpt-5" # gpt-5-mini
 MODEL_ASK = "gpt-5.4-mini"
 
 

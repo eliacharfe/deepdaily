@@ -1,4 +1,3 @@
-
 // apps/web/components/back-button.tsx
 
 "use client";
@@ -7,16 +6,25 @@ import { useRouter } from "next/navigation";
 import IconButton from "@/components/ui/icon-button";
 
 type Props = {
-    lessonId: string;
+    lessonId?: string;
 };
 
 export default function BackButton({ lessonId }: Props) {
     const router = useRouter();
 
+    function handleBack() {
+        if (lessonId) {
+            router.push(`/lessons/${lessonId}`);
+            return;
+        }
+
+        router.back();
+    }
+
     return (
         <IconButton
-            onClick={() => router.push(`/lessons/${lessonId}`)}
-            ariaLabel="Back to lesson"
+            onClick={handleBack}
+            ariaLabel="Go back"
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -26,7 +34,11 @@ export default function BackButton({ lessonId }: Props) {
                 stroke="currentColor"
                 strokeWidth="2"
             >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 19l-7-7 7-7"
+                />
             </svg>
         </IconButton>
     );
