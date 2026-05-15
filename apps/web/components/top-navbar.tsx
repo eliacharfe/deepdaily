@@ -29,7 +29,7 @@ export default function TopNavbar({
 }: Props) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     return (
-        <div className="fixed inset-x-0 top-0 z-40">
+        <div className="fixed inset-x-0 top-0 z-200">
             <div className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(3,25,28,0.82),rgba(5,20,24,0.58))] backdrop-blur-xl">
                 <div className="flex h-20 items-center justify-between px-5 sm:px-6">
                     <NavbarBrand />
@@ -59,7 +59,12 @@ export default function TopNavbar({
                             </div>
                         ) : null}
 
-                        {showThemeToggle ? <ThemeToggle /> : null}
+                        {/* {showThemeToggle ? <ThemeToggle /> : null} */}
+                        {showThemeToggle ? (
+                            <div className="hidden sm:block">
+                                <ThemeToggle />
+                            </div>
+                        ) : null}
 
                         <button
                             type="button"
@@ -79,14 +84,17 @@ export default function TopNavbar({
                     <>
                         <button
                             type="button"
+                            aria-label="Close menu"
                             onClick={() => setMobileMenuOpen(false)}
-                            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px] sm:hidden"
+                            className="fixed inset-0 z-210 bg-black/40 backdrop-blur-[1px] sm:hidden"
                         />
 
-                        <div className="fixed right-0 top-20 z-50 h-[calc(100vh-5rem)] w-72 border-l border-slate-200 bg-white p-5 text-slate-900 shadow-2xl dark:border-white/10 dark:bg-[#08111D]/98 dark:text-white sm:hidden">
+                        <div
+                            className="fixed right-0 top-20 z-200 h-[calc(100vh-5rem)] w-72 border-l border-slate-200 bg-white p-5 text-slate-900 shadow-2xl dark:border-white/10 dark:bg-[#08111D]/98 dark:text-white sm:hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
                             <div className="flex h-full flex-col">
                                 <div className="flex flex-col gap-3">
-                                    {/* {showHome ? ( */}
                                     <Link
                                         href="/"
                                         onClick={() => setMobileMenuOpen(false)}
@@ -95,7 +103,6 @@ export default function TopNavbar({
                                         <Home className="h-5 w-5" />
                                         Home
                                     </Link>
-                                    {/* ) : null} */}
 
                                     <Link
                                         href="/training"
@@ -105,6 +112,20 @@ export default function TopNavbar({
                                         <Dumbbell className="h-5 w-5" />
                                         Training
                                     </Link>
+
+                                    {showThemeToggle ? (
+                                        <div className="flex items-center justify-between rounded-xl px-4 py-3 text-slate-800 transition hover:bg-slate-100 dark:text-white/90 dark:hover:bg-white/5">
+                                            <div className="flex items-center gap-3">
+                                                <span className="flex h-5 w-5 items-center justify-center text-teal-600 dark:text-teal-300">
+                                                    ✦
+                                                </span>
+                                                <span className="text-base font-medium">Theme</span>
+                                            </div>
+
+                                            <ThemeToggle />
+                                        </div>
+                                    ) : null}
+
                                 </div>
 
                                 {showAuth ? (

@@ -45,6 +45,7 @@ export default function AuthButton() {
             className="
                 flex items-center gap-2
                 rounded-full
+                justify-between
                 border border-teal-400/25
                 bg-teal-500/10
                 px-2 py-1
