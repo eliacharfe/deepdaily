@@ -86,16 +86,16 @@ export default function TopNavbar({
                         <div className="fixed right-0 top-20 z-50 h-[calc(100vh-5rem)] w-72 border-l border-slate-200 bg-white p-5 text-slate-900 shadow-2xl dark:border-white/10 dark:bg-[#08111D]/98 dark:text-white sm:hidden">
                             <div className="flex h-full flex-col">
                                 <div className="flex flex-col gap-3">
-                                    {showHome ? (
-                                        <Link
-                                            href="/"
-                                            onClick={() => setMobileMenuOpen(false)}
-                                            className="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-800 transition hover:bg-slate-100 dark:text-white/90 dark:hover:bg-white/5"
-                                        >
-                                            <Home className="h-5 w-5" />
-                                            Home
-                                        </Link>
-                                    ) : null}
+                                    {/* {showHome ? ( */}
+                                    <Link
+                                        href="/"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-800 transition hover:bg-slate-100 dark:text-white/90 dark:hover:bg-white/5"
+                                    >
+                                        <Home className="h-5 w-5" />
+                                        Home
+                                    </Link>
+                                    {/* ) : null} */}
 
                                     <Link
                                         href="/training"
