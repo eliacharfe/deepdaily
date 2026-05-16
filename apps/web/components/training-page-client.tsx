@@ -4,6 +4,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Save, Trash2 } from "lucide-react";
+import DayCompleteBurst from "@/components/day-complete-burst";
 
 import {
     createTrainingTemplate,
@@ -84,6 +85,9 @@ export default function TrainingPageClient() {
     const [monthlyLogs, setMonthlyLogs] = useState<TrainingLog[]>([]);
     const [templates, setTemplates] = useState<TrainingTemplate[]>([]);
     const [templateName, setTemplateName] = useState("");
+
+    const [saveBurstTrigger, setSaveBurstTrigger] = useState(0);
+    const [showSavedPopup, setShowSavedPopup] = useState(false);
 
     const calendarDays = useMemo(
         () => getCalendarDays(visibleMonth),
@@ -220,6 +224,13 @@ export default function TrainingPageClient() {
                         }
                         : null,
             });
+
+            setSaveBurstTrigger((current) => current + 1);
+            setShowSavedPopup(true);
+
+            window.setTimeout(() => {
+                setShowSavedPopup(false);
+            }, 2200);
 
             const logs = await getTrainingLogsForMonth(visibleMonthKey);
             setMonthlyLogs(logs);
@@ -602,15 +613,28 @@ export default function TrainingPageClient() {
                 ) : null}
             </section>
 
-            <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving || loading}
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-teal-600 px-5 py-3 font-semibold text-white hover:bg-teal-700 disabled:opacity-60"
-            >
-                <Save size={18} />
-                {saving ? "Saving..." : "Save training log"}
-            </button>
+            <div className="relative mt-6">
+                <DayCompleteBurst trigger={saveBurstTrigger} />
+
+                <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={saving || loading}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-teal-600 px-5 py-3 font-semibold text-white hover:bg-teal-700 disabled:opacity-60"
+                >
+                    <Save size={18} />
+                    {saving ? "Saving..." : "Save training log"}
+                </button>
+            </div>
+
+            {showSavedPopup ? (
+                <div className="fixed bottom-6 right-6 z-[300] w-[320px] max-w-[calc(100vw-2rem)] rounded-2xl border border-teal-400/30 bg-[#08111D]/95 px-5 py-4 text-white shadow-2xl backdrop-blur-md">
+                    <p className="text-lg font-bold">Training saved 🎉</p>
+                    <p className="mt-1 text-sm text-teal-100">
+                        Another step forward. Keep building momentum.
+                    </p>
+                </div>
+            ) : null}
         </main>
     );
 }
