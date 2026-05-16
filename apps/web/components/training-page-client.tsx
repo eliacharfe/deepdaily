@@ -77,6 +77,8 @@ export default function TrainingPageClient() {
     const [exercises, setExercises] = useState<TrainingExerciseInput[]>([]);
     const [distanceKm, setDistanceKm] = useState("");
     const [timeMinutes, setTimeMinutes] = useState("");
+    const [timeSeconds, setTimeSeconds] = useState("");
+
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [monthlyLogs, setMonthlyLogs] = useState<TrainingLog[]>([]);
@@ -148,7 +150,22 @@ export default function TrainingPageClient() {
 
                 setExercises(log?.exercises ?? []);
                 setDistanceKm(log?.running?.distanceKm?.toString() ?? "");
-                setTimeMinutes(log?.running?.timeMinutes?.toString() ?? "");
+
+                const totalMinutes = log?.running?.timeMinutes;
+
+                setTimeMinutes(
+                    totalMinutes != null
+                        ? Math.floor(totalMinutes).toString()
+                        : ""
+                );
+
+                setTimeSeconds(
+                    totalMinutes != null
+                        ? Math.round(
+                            (totalMinutes - Math.floor(totalMinutes)) * 60
+                        ).toString()
+                        : ""
+                );
             } catch (error) {
                 console.error("Failed loading training log", error);
                 setExercises([]);
@@ -195,10 +212,11 @@ export default function TrainingPageClient() {
             await saveTrainingLog(selectedDate, {
                 exercises,
                 running:
-                    distanceKm && timeMinutes
+                    distanceKm && (timeMinutes || timeSeconds)
                         ? {
                             distanceKm: Number(distanceKm),
-                            timeMinutes: Number(timeMinutes),
+                            timeMinutes:
+                                Number(timeMinutes || 0) + Number(timeSeconds || 0) / 60,
                         }
                         : null,
             });
@@ -497,7 +515,55 @@ export default function TrainingPageClient() {
                     Running
                 </h2>
 
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                    <div>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                            Distance in KM
+                        </label>
+                        <input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={distanceKm}
+                            onChange={(event) => setDistanceKm(event.target.value)}
+                            placeholder="Example: 1.6"
+                            className="w-full rounded-xl border px-4 py-3 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                            Minutes
+                        </label>
+                        <input
+                            type="number"
+                            min={0}
+                            step="1"
+                            value={timeMinutes}
+                            onChange={(event) => setTimeMinutes(event.target.value)}
+                            placeholder="Example: 7"
+                            className="w-full rounded-xl border px-4 py-3 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                            Seconds
+                        </label>
+                        <input
+                            type="number"
+                            min={0}
+                            max={59}
+                            step="1"
+                            value={timeSeconds}
+                            onChange={(event) => setTimeSeconds(event.target.value)}
+                            placeholder="Example: 30"
+                            className="w-full rounded-xl border px-4 py-3 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                    </div>
+                </div>
+
+                {/* <div className="mt-4 grid gap-3 md:grid-cols-2">
                     <div>
                         <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
                             Distance in KM
@@ -527,7 +593,7 @@ export default function TrainingPageClient() {
                             className="w-full rounded-xl border px-4 py-3 dark:border-slate-700 dark:bg-slate-950"
                         />
                     </div>
-                </div>
+                </div> */}
 
                 {pace ? (
                     <p className="mt-3 text-sm font-medium text-teal-600 dark:text-teal-300">
