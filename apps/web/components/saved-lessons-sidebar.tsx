@@ -153,7 +153,7 @@ export default function SavedLessonsSidebar({
         <>
             <aside
                 className={[
-                    "fixed bottom-0 left-0 top-0 z-50 w-[320px] max-w-[85vw] border-r border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(244,248,251,0.96)_100%)] backdrop-blur transition-transform duration-300 dark:border-white/10 dark:bg-[radial-gradient(circle_at_20%_0%,rgba(45,212,191,0.08),transparent_35%),linear-gradient(180deg,rgba(8,18,27,0.94)_0%,rgba(9,20,30,0.90)_100%)]",
+                    "fixed bottom-0 left-0 top-20 z-[220] w-[320px] max-w-[85vw] border-r border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(244,248,251,0.96)_100%)] backdrop-blur transition-transform duration-300 dark:border-white/10 dark:bg-[radial-gradient(circle_at_20%_0%,rgba(45,212,191,0.08),transparent_35%),linear-gradient(180deg,rgba(8,18,27,0.94)_0%,rgba(9,20,30,0.90)_100%)]",
                     isOpen ? "translate-x-0" : "-translate-x-full",
                     desktopCollapsed ? "lg:w-[72px]" : "lg:w-[380px]",
                     "lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:translate-x-0 lg:shrink-0 lg:transition-[width] lg:duration-300",
@@ -204,19 +204,21 @@ export default function SavedLessonsSidebar({
                                         type="button"
                                         onClick={onToggleDesktop}
                                         aria-label="Collapse sidebar"
-                                        className="dd-surface hidden h-10 w-10 items-center justify-center rounded-full border text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md dark:text-slate-200 dark:hover:border-teal-500/20 lg:inline-flex"
+                                        className="dd-surface absolute right-6 top-4 hidden h-10 w-10 items-center justify-center rounded-full border text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md dark:text-slate-200 dark:hover:border-teal-500/20 lg:inline-flex"
                                     >
                                         <PanelLeftClose className="h-5 w-5" />
                                     </button>
+
 
                                     <button
                                         type="button"
                                         onClick={onClose}
                                         aria-label="Close sidebar"
-                                        className="dd-surface inline-flex h-10 w-10 items-center justify-center rounded-full border text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md dark:text-slate-200 dark:hover:border-teal-500/20 lg:hidden"
+                                        className="dd-surface absolute right-6 top-4 flex h-10 w-10 items-center justify-center rounded-full border text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md dark:text-slate-200 dark:hover:border-teal-500/20 lg:hidden"
                                     >
                                         <X className="h-5 w-5" />
                                     </button>
+
                                 </div>
                             </div>
 
