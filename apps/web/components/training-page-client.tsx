@@ -287,25 +287,27 @@ export default function TrainingPageClient() {
             </div>
 
             <section className="dd-surface-soft rounded-2xl border p-5">
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-6 flex items-center justify-between gap-3">
                     <button
                         type="button"
                         onClick={() => moveMonth(-1)}
-                        className="rounded-xl border px-3 py-2 dark:border-slate-700"
+                        aria-label="Previous month"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-900/40 text-slate-200 transition hover:border-teal-400 hover:text-teal-300"
                     >
-                        <ChevronLeft size={18} />
+                        <ChevronLeft size={20} />
                     </button>
 
-                    <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-950 dark:text-white text-center">
                         {monthTitle}
                     </h2>
 
                     <button
                         type="button"
                         onClick={() => moveMonth(1)}
-                        className="rounded-xl border px-3 py-2 dark:border-slate-700"
+                        aria-label="Next month"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-900/40 text-slate-200 transition hover:border-teal-400 hover:text-teal-300"
                     >
-                        <ChevronRight size={18} />
+                        <ChevronRight size={20} />
                     </button>
                 </div>
 
