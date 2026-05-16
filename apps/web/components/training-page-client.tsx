@@ -287,7 +287,7 @@ export default function TrainingPageClient() {
             </div>
 
             <section className="dd-surface-soft rounded-2xl border p-5">
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <button
                         type="button"
                         onClick={() => moveMonth(-1)}
@@ -452,64 +452,74 @@ export default function TrainingPageClient() {
                                     key={index}
                                     className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
                                 >
-                                    <div className="mb-2 grid gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400 md:grid-cols-[1.5fr_0.7fr_0.7fr_auto]">
-                                        <span>Exercise</span>
-                                        <span>Sets</span>
-                                        <span>{timed ? "Seconds" : "Reps"}</span>
-                                        <span />
-                                    </div>
+                                    <div className="grid gap-3 md:grid-cols-[1.5fr_0.7fr_0.7fr_auto] md:items-end">
+                                        <div>
+                                            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                                Exercise
+                                            </label>
 
-                                    <div className="grid gap-3 md:grid-cols-[1.5fr_0.7fr_0.7fr_auto]">
-                                        <select
-                                            value={exercise.exerciseName}
-                                            onChange={(event) => {
-                                                const name = event.target.value;
+                                            <select
+                                                value={exercise.exerciseName}
+                                                onChange={(event) => {
+                                                    const name = event.target.value;
 
-                                                updateExercise(index, {
-                                                    exerciseName: name,
-                                                    exerciseId: name
-                                                        .toLowerCase()
-                                                        .replaceAll(" ", "-"),
-                                                    reps: isTimedExercise(name) ? 60 : 10,
-                                                });
-                                            }}
-                                            className="rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
-                                        >
-                                            {EXERCISES.map((name) => (
-                                                <option key={name}>{name}</option>
-                                            ))}
-                                        </select>
+                                                    updateExercise(index, {
+                                                        exerciseName: name,
+                                                        exerciseId: name.toLowerCase().replaceAll(" ", "-"),
+                                                        reps: isTimedExercise(name) ? 60 : 10,
+                                                    });
+                                                }}
+                                                className="w-full rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+                                            >
+                                                {EXERCISES.map((name) => (
+                                                    <option key={name}>{name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
 
-                                        <input
-                                            type="number"
-                                            min={1}
-                                            value={exercise.sets}
-                                            onChange={(event) =>
-                                                updateExercise(index, {
-                                                    sets: Number(event.target.value),
-                                                })
-                                            }
-                                            placeholder="Sets"
-                                            className="rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
-                                        />
+                                        <div>
+                                            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                                Sets
+                                            </label>
 
-                                        <input
-                                            type="number"
-                                            min={1}
-                                            value={exercise.reps ?? ""}
-                                            onChange={(event) =>
-                                                updateExercise(index, {
-                                                    reps: Number(event.target.value),
-                                                })
-                                            }
-                                            placeholder={timed ? "Seconds" : "Reps"}
-                                            className="rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
-                                        />
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                value={exercise.sets}
+                                                onChange={(event) =>
+                                                    updateExercise(index, {
+                                                        sets: Number(event.target.value),
+                                                    })
+                                                }
+                                                placeholder="Sets"
+                                                className="w-full rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                                {timed ? "Seconds" : "Reps"}
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                value={exercise.reps ?? ""}
+                                                onChange={(event) =>
+                                                    updateExercise(index, {
+                                                        reps: Number(event.target.value),
+                                                    })
+                                                }
+                                                placeholder={timed ? "Seconds" : "Reps"}
+                                                className="w-full rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+                                            />
+                                        </div>
 
                                         <button
                                             type="button"
                                             onClick={() => removeExercise(index)}
-                                            className="rounded-lg border px-3 py-2 text-red-500 hover:bg-red-50 dark:border-slate-700 dark:hover:bg-red-950/20"
+                                            aria-label="Remove exercise"
+                                            className="flex h-11 w-full items-center justify-center rounded-lg border px-3 py-2 text-red-500 hover:bg-red-50 dark:border-slate-700 dark:hover:bg-red-950/20 md:w-12"
                                         >
                                             <Trash2 size={16} />
                                         </button>
