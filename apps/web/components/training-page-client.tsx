@@ -1,5 +1,6 @@
 
 // apps/web/components/training-page-client.tsx
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -20,19 +21,108 @@ import {
 
 
 const EXERCISES = [
+    // Bodyweight / Calisthenics
     "Push-ups",
     "Sit-ups",
-    "Squats",
-    "Pull-ups",
-    "Plank",
+    "Crunches",
+    "Bicycle crunches",
     "Leg raises",
     "Hollow body hold",
+    "Plank",
+    "Side plank",
+    "Mountain climbers",
+    "Burpees",
+    "Squats",
+    "Jump squats",
     "Lunges",
+    "Walking lunges",
+    "Glute bridges",
+    "Calf raises",
+    "Pull-ups",
+    "Chin-ups",
+    "Dips",
+    "Superman hold",
+
+    // Strength / Gym
     "Bench press",
+    "Incline bench press",
     "Shoulder press",
+    "Arnold press",
     "Bicep curls",
+    "Hammer curls",
+    "Tricep dips",
+    "Tricep extensions",
     "Deadlift",
+    "Romanian deadlift",
+    "Bent-over rows",
+    "Lat pulldown",
+    "Leg press",
+    "Leg curls",
+    "Leg extensions",
+    "Chest fly",
+    "Lateral raises",
+
+    // Cardio / Conditioning
+    "Running",
+    "Cycling",
+    "Jump rope",
+    "Rowing",
+    "Swimming",
+    "High knees",
+    "Stair climbing"
 ];
+
+const EXERCISE_VIDEOS: Record<string, string> = {
+    // Bodyweight / Calisthenics
+    "Push-ups": "IODxDxX7oi4",
+    "Sit-ups": "1fbU_MkV7NE",
+    "Crunches": "Xyd_fa5zoEU",
+    "Bicycle crunches": "9FGilxCbdz8",
+    "Leg raises": "JB2oyawG9KI",
+    "Hollow body hold": "LlDNef_Ztsc",
+    "Plank": "pSHjTRCQxIw",
+    "Side plank": "K2VljzCC16g",
+    "Mountain climbers": "nmwgirgXLYM",
+    "Burpees": "TU8QYVW0gDU",
+    "Squats": "aclHkVaku9U",
+    "Jump squats": "CVaEhXotL7M",
+    "Lunges": "QOVaHwm-Q6U",
+    "Walking lunges": "L8fvypPrzzs",
+    "Glute bridges": "wPM8icPu6H8",
+    "Calf raises": "YMmgqO8Jo-k",
+    "Pull-ups": "eGo4IYlbE5g",
+    "Chin-ups": "brhRXlOhsAM",
+    "Dips": "2z8JmcrW-As",
+    "Superman hold": "z6PJMT2y8GQ",
+
+    // Strength / Gym
+    "Bench press": "rT7DgCr-3pg",
+    "Incline bench press": "8iPEnn-ltC8",
+    "Shoulder press": "B-aVuyhvLHU",
+    "Arnold press": "6Z15_WdXmVw",
+    "Bicep curls": "ykJmrZ5v0Oo",
+    "Hammer curls": "zC3nLlEvin4",
+    "Tricep dips": "0326dy_-CzM",
+    "Tricep extensions": "YbX7Wd8jQ-Q",
+    "Deadlift": "ytGaGIn3SjE",
+    "Romanian deadlift": "2SHsk9AzdjA",
+    "Bent-over rows": "FWJR5Ve8bnQ",
+    "Lat pulldown": "CAwf7n6Luuc",
+    "Leg press": "IZxyjW7MPJQ",
+    "Leg curls": "1Tq3QdYUuHs",
+    "Leg extensions": "YyvSfVjQeL0",
+    "Chest fly": "eozdVDA78K0",
+    "Lateral raises": "3VcKaXpzqRo",
+
+    // Cardio / Conditioning
+    "Running": "brFHyOtTwH4",
+    "Cycling": "1VYhyppWTDc",
+    "Jump rope": "1BZM4xN7vPI",
+    "Rowing": "ZN0J6qKCIrI",
+    "Swimming": "7aU8sQf6xq0",
+    "High knees": "8opcQdC-V-U",
+    "Stair climbing": "dyWJk0v4sLQ",
+};
 
 const TIMED_EXERCISES = ["Plank", "Hollow body hold"];
 
@@ -526,6 +616,18 @@ export default function TrainingPageClient() {
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
+
+                                    {EXERCISE_VIDEOS[exercise.exerciseName] ? (
+                                        <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+                                            <iframe
+                                                className="aspect-video w-full"
+                                                src={`https://www.youtube.com/embed/${EXERCISE_VIDEOS[exercise.exerciseName]}`}
+                                                title={`${exercise.exerciseName} technique video`}
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            />
+                                        </div>
+                                    ) : null}
                                 </div>
                             );
                         })}
