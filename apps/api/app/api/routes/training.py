@@ -1,8 +1,6 @@
 
 # apps/api/app/api/routes/training.py
 
-from datetime import date
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,6 +29,10 @@ def to_training_response(log: TrainingLog) -> TrainingLogResponse:
         date=log.date,
         exercises=log.exercises or [],
         running=log.running,
+        walking=log.walking,
+        swimming=log.swimming,
+        cycling=log.cycling,
+        mobility=log.mobility,
         createdAt=log.created_at,
         updatedAt=log.updated_at,
     )
@@ -40,6 +42,11 @@ def to_template_response(template: TrainingTemplate) -> TrainingTemplateResponse
         id=str(template.id),
         name=template.name,
         exercises=template.exercises or [],
+        running=template.running,
+        walking=template.walking,
+        swimming=template.swimming,
+        cycling=template.cycling,
+        mobility=template.mobility,
         createdAt=template.created_at,
         updatedAt=template.updated_at,
     )
@@ -82,12 +89,20 @@ async def upsert_training_log(
     if log:
         log.exercises = [exercise.model_dump() for exercise in body.exercises]
         log.running = body.running.model_dump() if body.running else None
+        log.walking = body.walking.model_dump() if body.walking else None
+        log.swimming = body.swimming.model_dump() if body.swimming else None
+        log.cycling = body.cycling.model_dump() if body.cycling else None
+        log.mobility = body.mobility.model_dump() if body.mobility else None
     else:
         log = TrainingLog(
             user_id=user["uid"],
             date=log_date,
             exercises=[exercise.model_dump() for exercise in body.exercises],
             running=body.running.model_dump() if body.running else None,
+            walking=body.walking.model_dump() if body.walking else None,
+            swimming=body.swimming.model_dump() if body.swimming else None,
+            cycling=body.cycling.model_dump() if body.cycling else None,
+            mobility=body.mobility.model_dump() if body.mobility else None,
         )
         db.add(log)
 
@@ -147,6 +162,11 @@ async def create_training_template(
         user_id=current_user["uid"],
         name=body.name.strip(),
         exercises=[exercise.model_dump() for exercise in body.exercises],
+        running=body.running.model_dump() if body.running else None,
+        walking=body.walking.model_dump() if body.walking else None,
+        swimming=body.swimming.model_dump() if body.swimming else None,
+        cycling=body.cycling.model_dump() if body.cycling else None,
+        mobility=body.mobility.model_dump() if body.mobility else None,
     )
 
     db.add(template)

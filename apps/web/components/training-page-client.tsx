@@ -168,9 +168,25 @@ export default function TrainingPageClient() {
     const [visibleMonth, setVisibleMonth] = useState(startOfMonth(today));
 
     const [exercises, setExercises] = useState<TrainingExerciseInput[]>([]);
-    const [distanceKm, setDistanceKm] = useState("");
-    const [timeMinutes, setTimeMinutes] = useState("");
-    const [timeSeconds, setTimeSeconds] = useState("");
+
+    const [runningDistanceKm, setRunningDistanceKm] = useState("");
+    const [runningMinutes, setRunningMinutes] = useState("");
+    const [runningSeconds, setRunningSeconds] = useState("");
+
+    const [walkingDistanceKm, setWalkingDistanceKm] = useState("");
+    const [walkingMinutes, setWalkingMinutes] = useState("");
+    const [walkingSeconds, setWalkingSeconds] = useState("");
+
+    const [swimmingDistanceKm, setSwimmingDistanceKm] = useState("");
+    const [swimmingMinutes, setSwimmingMinutes] = useState("");
+    const [swimmingSeconds, setSwimmingSeconds] = useState("");
+
+    const [cyclingDistanceKm, setCyclingDistanceKm] = useState("");
+    const [cyclingMinutes, setCyclingMinutes] = useState("");
+    const [cyclingSeconds, setCyclingSeconds] = useState("");
+
+    const [mobilityMinutes, setMobilityMinutes] = useState("");
+    const [mobilityNotes, setMobilityNotes] = useState("");
 
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -222,9 +238,10 @@ export default function TrainingPageClient() {
         loadTemplates();
     }, []);
 
-    const pace = useMemo(() => {
-        const distance = Number(distanceKm);
-        const minutes = Number(timeMinutes);
+    const runningPace = useMemo(() => {
+        const distance = Number(runningDistanceKm);
+        const minutes =
+            Number(runningMinutes || 0) + Number(runningSeconds || 0) / 60;
 
         if (!distance || !minutes) return null;
 
@@ -235,7 +252,7 @@ export default function TrainingPageClient() {
             .padStart(2, "0");
 
         return `${min}:${sec} / km`;
-    }, [distanceKm, timeMinutes]);
+    }, [runningDistanceKm, runningMinutes, runningSeconds]);
 
     useEffect(() => {
         async function loadLog() {
@@ -245,28 +262,48 @@ export default function TrainingPageClient() {
                 const log = await getTrainingLog(selectedDate);
 
                 setExercises(log?.exercises ?? []);
-                setDistanceKm(log?.running?.distanceKm?.toString() ?? "");
 
-                const totalMinutes = log?.running?.timeMinutes;
 
-                setTimeMinutes(
-                    totalMinutes != null
-                        ? Math.floor(totalMinutes).toString()
+
+                setRunningDistanceKm(log?.running?.distanceKm?.toString() ?? "");
+                setWalkingDistanceKm(log?.walking?.distanceKm?.toString() ?? "");
+                setSwimmingDistanceKm(log?.swimming?.distanceKm?.toString() ?? "");
+                setCyclingDistanceKm(log?.cycling?.distanceKm?.toString() ?? "");
+
+                setActivityTime(log?.running?.timeMinutes, setRunningMinutes, setRunningSeconds);
+                setActivityTime(log?.walking?.timeMinutes, setWalkingMinutes, setWalkingSeconds);
+                setActivityTime(log?.swimming?.timeMinutes, setSwimmingMinutes, setSwimmingSeconds);
+                setActivityTime(log?.cycling?.timeMinutes, setCyclingMinutes, setCyclingSeconds);
+
+                setMobilityMinutes(
+                    log?.mobility?.timeMinutes != null
+                        ? Math.floor(log.mobility.timeMinutes).toString()
                         : ""
                 );
-
-                setTimeSeconds(
-                    totalMinutes != null
-                        ? Math.round(
-                            (totalMinutes - Math.floor(totalMinutes)) * 60
-                        ).toString()
-                        : ""
-                );
+                setMobilityNotes(log?.mobility?.notes ?? "");
             } catch (error) {
                 console.error("Failed loading training log", error);
+
                 setExercises([]);
-                setDistanceKm("");
-                setTimeMinutes("");
+
+                setRunningDistanceKm("");
+                setRunningMinutes("");
+                setRunningSeconds("");
+
+                setWalkingDistanceKm("");
+                setWalkingMinutes("");
+                setWalkingSeconds("");
+
+                setSwimmingDistanceKm("");
+                setSwimmingMinutes("");
+                setSwimmingSeconds("");
+
+                setCyclingDistanceKm("");
+                setCyclingMinutes("");
+                setCyclingSeconds("");
+
+                setMobilityMinutes("");
+                setMobilityNotes("");
             } finally {
                 setLoading(false);
             }
@@ -274,6 +311,24 @@ export default function TrainingPageClient() {
 
         loadLog();
     }, [selectedDate]);
+
+    function setActivityTime(
+        totalMinutes: number | undefined,
+        setMinutes: (value: string) => void,
+        setSeconds: (value: string) => void
+    ) {
+        if (totalMinutes == null) {
+            setMinutes("");
+            setSeconds("");
+            return;
+        }
+
+        const minutes = Math.floor(totalMinutes);
+        const seconds = Math.round((totalMinutes - minutes) * 60);
+
+        setMinutes(minutes.toString());
+        setSeconds(seconds.toString());
+    }
 
     function addExercise() {
         const name = EXERCISES[0];
@@ -307,14 +362,27 @@ export default function TrainingPageClient() {
         try {
             await saveTrainingLog(selectedDate, {
                 exercises,
-                running:
-                    distanceKm && (timeMinutes || timeSeconds)
-                        ? {
-                            distanceKm: Number(distanceKm),
-                            timeMinutes:
-                                Number(timeMinutes || 0) + Number(timeSeconds || 0) / 60,
-                        }
-                        : null,
+                running: buildDistanceActivity(
+                    runningDistanceKm,
+                    runningMinutes,
+                    runningSeconds
+                ),
+                walking: buildDistanceActivity(
+                    walkingDistanceKm,
+                    walkingMinutes,
+                    walkingSeconds
+                ),
+                swimming: buildDistanceActivity(
+                    swimmingDistanceKm,
+                    swimmingMinutes,
+                    swimmingSeconds
+                ),
+                cycling: buildDistanceActivity(
+                    cyclingDistanceKm,
+                    cyclingMinutes,
+                    cyclingSeconds
+                ),
+                mobility: buildMobilityActivity(),
             });
 
             setSaveBurstTrigger((current) => current + 1);
@@ -343,6 +411,23 @@ export default function TrainingPageClient() {
 
     function applyTemplate(template: TrainingTemplate) {
         setExercises(template.exercises);
+
+        setRunningDistanceKm(template.running?.distanceKm?.toString() ?? "");
+        setWalkingDistanceKm(template.walking?.distanceKm?.toString() ?? "");
+        setSwimmingDistanceKm(template.swimming?.distanceKm?.toString() ?? "");
+        setCyclingDistanceKm(template.cycling?.distanceKm?.toString() ?? "");
+
+        setActivityTime(template.running?.timeMinutes, setRunningMinutes, setRunningSeconds);
+        setActivityTime(template.walking?.timeMinutes, setWalkingMinutes, setWalkingSeconds);
+        setActivityTime(template.swimming?.timeMinutes, setSwimmingMinutes, setSwimmingSeconds);
+        setActivityTime(template.cycling?.timeMinutes, setCyclingMinutes, setCyclingSeconds);
+
+        setMobilityMinutes(
+            template.mobility?.timeMinutes != null
+                ? Math.floor(template.mobility.timeMinutes).toString()
+                : ""
+        );
+        setMobilityNotes(template.mobility?.notes ?? "");
     }
 
     async function handleSaveTemplate() {
@@ -351,8 +436,13 @@ export default function TrainingPageClient() {
         if (!name || exercises.length === 0) return;
 
         const template = await createTrainingTemplate({
-            name,
+            name: templateName,
             exercises,
+            running: buildDistanceActivity(runningDistanceKm, runningMinutes, runningSeconds),
+            walking: buildDistanceActivity(walkingDistanceKm, walkingMinutes, walkingSeconds),
+            swimming: buildDistanceActivity(swimmingDistanceKm, swimmingMinutes, swimmingSeconds),
+            cycling: buildDistanceActivity(cyclingDistanceKm, cyclingMinutes, cyclingSeconds),
+            mobility: buildMobilityActivity(),
         });
 
         setTemplates((current) => [template, ...current]);
@@ -362,6 +452,28 @@ export default function TrainingPageClient() {
     async function handleDeleteTemplate(id: string) {
         await deleteTrainingTemplate(id);
         setTemplates((current) => current.filter((template) => template.id !== id));
+    }
+
+    function buildDistanceActivity(
+        distanceKm: string,
+        minutes: string,
+        seconds: string
+    ) {
+        if (!distanceKm && !minutes && !seconds) return null;
+
+        return {
+            distanceKm: Number(distanceKm || 0),
+            timeMinutes: Number(minutes || 0) + Number(seconds || 0) / 60,
+        };
+    }
+
+    function buildMobilityActivity() {
+        if (!mobilityMinutes && !mobilityNotes.trim()) return null;
+
+        return {
+            timeMinutes: Number(mobilityMinutes || 0),
+            notes: mobilityNotes.trim() || undefined,
+        };
     }
 
     return (
@@ -515,8 +627,9 @@ export default function TrainingPageClient() {
 
             <section className="mt-5 dd-surface-soft rounded-2xl border p-5">
                 <div className="mb-4 flex items-center justify-between gap-3">
-                    <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
-                        {selectedDate} workout
+                    <h2 className="flex items-center gap-3 text-2xl font-semibold text-slate-950 dark:text-white">
+                        <span className="text-3xl">💪</span>
+                        <span>{selectedDate} workout</span>
                     </h2>
 
                     <button
@@ -637,27 +750,56 @@ export default function TrainingPageClient() {
                 )}
             </section>
 
+            <ActivityDistanceSection
+                title="Running"
+                emoji="🏃"
+                distanceKm={runningDistanceKm}
+                setDistanceKm={setRunningDistanceKm}
+                minutes={runningMinutes}
+                setMinutes={setRunningMinutes}
+                seconds={runningSeconds}
+                setSeconds={setRunningSeconds}
+            />
+
+            <ActivityDistanceSection
+                title="Walking"
+                emoji="🚶"
+                distanceKm={walkingDistanceKm}
+                setDistanceKm={setWalkingDistanceKm}
+                minutes={walkingMinutes}
+                setMinutes={setWalkingMinutes}
+                seconds={walkingSeconds}
+                setSeconds={setWalkingSeconds}
+            />
+
+            <ActivityDistanceSection
+                title="Swimming"
+                emoji="🏊"
+                distanceKm={swimmingDistanceKm}
+                setDistanceKm={setSwimmingDistanceKm}
+                minutes={swimmingMinutes}
+                setMinutes={setSwimmingMinutes}
+                seconds={swimmingSeconds}
+                setSeconds={setSwimmingSeconds}
+            />
+
+            <ActivityDistanceSection
+                title="Cycling"
+                emoji="🚴"
+                distanceKm={cyclingDistanceKm}
+                setDistanceKm={setCyclingDistanceKm}
+                minutes={cyclingMinutes}
+                setMinutes={setCyclingMinutes}
+                seconds={cyclingSeconds}
+                setSeconds={setCyclingSeconds}
+            />
+
             <section className="mt-5 dd-surface-soft rounded-2xl border p-5">
                 <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
-                    Running
+                    🧘 Mobility / Yoga
                 </h2>
 
-                <div className="mt-4 grid gap-3 md:grid-cols-3">
-                    <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Distance in KM
-                        </label>
-                        <input
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            value={distanceKm}
-                            onChange={(event) => setDistanceKm(event.target.value)}
-                            placeholder="Example: 1.6"
-                            className="w-full rounded-xl border px-4 py-3 dark:border-slate-700 dark:bg-slate-950"
-                        />
-                    </div>
-
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
                     <div>
                         <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
                             Minutes
@@ -666,67 +808,31 @@ export default function TrainingPageClient() {
                             type="number"
                             min={0}
                             step="1"
-                            value={timeMinutes}
-                            onChange={(event) => setTimeMinutes(event.target.value)}
-                            placeholder="Example: 7"
+                            value={mobilityMinutes}
+                            onChange={(event) => setMobilityMinutes(event.target.value)}
+                            placeholder="Example: 20"
                             className="w-full rounded-xl border px-4 py-3 dark:border-slate-700 dark:bg-slate-950"
                         />
                     </div>
 
                     <div>
                         <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Seconds
+                            Notes
                         </label>
                         <input
-                            type="number"
-                            min={0}
-                            max={59}
-                            step="1"
-                            value={timeSeconds}
-                            onChange={(event) => setTimeSeconds(event.target.value)}
-                            placeholder="Example: 30"
+                            value={mobilityNotes}
+                            onChange={(event) => setMobilityNotes(event.target.value)}
+                            placeholder="Example: hips, back, stretching"
                             className="w-full rounded-xl border px-4 py-3 dark:border-slate-700 dark:bg-slate-950"
                         />
                     </div>
                 </div>
 
-                {/* <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Distance in KM
-                        </label>
-                        <input
-                            type="number"
-                            min={0}
-                            step="0.1"
-                            value={distanceKm}
-                            onChange={(event) => setDistanceKm(event.target.value)}
-                            placeholder="Example: 5"
-                            className="w-full rounded-xl border px-4 py-3 dark:border-slate-700 dark:bg-slate-950"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Time in minutes
-                        </label>
-                        <input
-                            type="number"
-                            min={0}
-                            step="1"
-                            value={timeMinutes}
-                            onChange={(event) => setTimeMinutes(event.target.value)}
-                            placeholder="Example: 28"
-                            className="w-full rounded-xl border px-4 py-3 dark:border-slate-700 dark:bg-slate-950"
-                        />
-                    </div>
-                </div> */}
-
-                {pace ? (
-                    <p className="mt-3 text-sm font-medium text-teal-600 dark:text-teal-300">
-                        Pace: {pace}
+                {runningPace && (
+                    <p className="mt-2 text-sm text-slate-500">
+                        Pace: {runningPace}
                     </p>
-                ) : null}
+                )}
             </section>
 
             <div className="relative mt-6">
@@ -752,5 +858,66 @@ export default function TrainingPageClient() {
                 </div>
             ) : null}
         </main>
+    );
+}
+
+function ActivityDistanceSection({
+    title,
+    emoji,
+    distanceKm,
+    setDistanceKm,
+    minutes,
+    setMinutes,
+    seconds,
+    setSeconds,
+}: {
+    title: string;
+    emoji: string;
+    distanceKm: string;
+    setDistanceKm: (value: string) => void;
+    minutes: string;
+    setMinutes: (value: string) => void;
+    seconds: string;
+    setSeconds: (value: string) => void;
+}) {
+    return (
+        <section className="mt-5 dd-surface-soft rounded-2xl border p-5">
+            <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
+                {emoji} {title}
+            </h2>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={distanceKm}
+                    onChange={(event) => setDistanceKm(event.target.value)}
+                    placeholder="Distance KM"
+                    className="w-full rounded-xl border px-4 py-3 dark:border-slate-700 dark:bg-slate-950"
+                />
+
+                <input
+                    type="number"
+                    min={0}
+                    step="1"
+                    value={minutes}
+                    onChange={(event) => setMinutes(event.target.value)}
+                    placeholder="Minutes"
+                    className="w-full rounded-xl border px-4 py-3 dark:border-slate-700 dark:bg-slate-950"
+                />
+
+                <input
+                    type="number"
+                    min={0}
+                    max={59}
+                    step="1"
+                    value={seconds}
+                    onChange={(event) => setSeconds(event.target.value)}
+                    placeholder="Seconds"
+                    className="w-full rounded-xl border px-4 py-3 dark:border-slate-700 dark:bg-slate-950"
+                />
+            </div>
+        </section>
     );
 }

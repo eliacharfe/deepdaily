@@ -13,23 +13,39 @@ export type TrainingExerciseInput = {
     notes?: string;
 };
 
-export type RunningInput = {
+export type DistanceActivityInput = {
     distanceKm: number;
     timeMinutes: number;
+};
+
+export type MobilityInput = {
+    timeMinutes: number;
+    notes?: string;
 };
 
 export type TrainingLog = {
     id: string;
     date: string;
     exercises: TrainingExerciseInput[];
-    running?: RunningInput | null;
+
+    running?: DistanceActivityInput | null;
+    walking?: DistanceActivityInput | null;
+    swimming?: DistanceActivityInput | null;
+    cycling?: DistanceActivityInput | null;
+    mobility?: MobilityInput | null;
+
     createdAt: string;
     updatedAt: string;
 };
 
 export type TrainingLogUpsertRequest = {
     exercises: TrainingExerciseInput[];
-    running?: RunningInput | null;
+
+    running?: DistanceActivityInput | null;
+    walking?: DistanceActivityInput | null;
+    swimming?: DistanceActivityInput | null;
+    cycling?: DistanceActivityInput | null;
+    mobility?: MobilityInput | null;
 };
 
 export async function getTrainingLog(date: string): Promise<TrainingLog | null> {
@@ -68,6 +84,13 @@ export type TrainingTemplate = {
     id: string;
     name: string;
     exercises: TrainingExerciseInput[];
+
+    running?: DistanceActivityInput | null;
+    walking?: DistanceActivityInput | null;
+    swimming?: DistanceActivityInput | null;
+    cycling?: DistanceActivityInput | null;
+    mobility?: MobilityInput | null;
+
     createdAt: string;
     updatedAt: string;
 };
@@ -75,6 +98,12 @@ export type TrainingTemplate = {
 export type TrainingTemplateCreateRequest = {
     name: string;
     exercises: TrainingExerciseInput[];
+
+    running?: DistanceActivityInput | null;
+    walking?: DistanceActivityInput | null;
+    swimming?: DistanceActivityInput | null;
+    cycling?: DistanceActivityInput | null;
+    mobility?: MobilityInput | null;
 };
 
 export async function getTrainingTemplates(): Promise<TrainingTemplate[]> {

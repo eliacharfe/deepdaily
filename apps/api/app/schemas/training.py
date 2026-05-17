@@ -18,17 +18,35 @@ class RunningInput(BaseModel):
     distanceKm: float = Field(ge=0)
     timeMinutes: float = Field(ge=0)
 
+class DistanceActivityInput(BaseModel):
+    distanceKm: float = Field(ge=0)
+    timeMinutes: float = Field(ge=0)
+
+
+class MobilityInput(BaseModel):
+    timeMinutes: float = Field(ge=0)
+    notes: str | None = None
+
 
 class TrainingLogUpsertRequest(BaseModel):
     exercises: list[TrainingExerciseInput] = []
-    running: RunningInput | None = None
+    running: DistanceActivityInput | None = None
+    walking: DistanceActivityInput | None = None
+    swimming: DistanceActivityInput | None = None
+    cycling: DistanceActivityInput | None = None
+    mobility: MobilityInput | None = None
 
 
 class TrainingLogResponse(BaseModel):
     id: str
     date: date
     exercises: list[TrainingExerciseInput]
-    running: RunningInput | None = None
+    running: DistanceActivityInput | None = None
+    walking: DistanceActivityInput | None = None
+    swimming: DistanceActivityInput | None = None
+    cycling: DistanceActivityInput | None = None
+    mobility: MobilityInput | None = None
+
     createdAt: datetime
     updatedAt: datetime
 
@@ -39,12 +57,24 @@ class TrainingLogResponse(BaseModel):
 
 class TrainingTemplateCreateRequest(BaseModel):
     name: str = Field(min_length=1, max_length=80)
-    exercises: list[TrainingExerciseInput]
+    exercises: list[TrainingExerciseInput] = []
+
+    running: DistanceActivityInput | None = None
+    walking: DistanceActivityInput | None = None
+    swimming: DistanceActivityInput | None = None
+    cycling: DistanceActivityInput | None = None
+    mobility: MobilityInput | None = None
 
 
 class TrainingTemplateResponse(BaseModel):
     id: str
     name: str
     exercises: list[TrainingExerciseInput]
+    running: DistanceActivityInput | None = None
+    walking: DistanceActivityInput | None = None
+    swimming: DistanceActivityInput | None = None
+    cycling: DistanceActivityInput | None = None
+    mobility: MobilityInput | None = None
+
     createdAt: datetime
     updatedAt: datetime
