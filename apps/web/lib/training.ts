@@ -51,6 +51,7 @@ export type TrainingLogUpsertRequest = {
 export async function getTrainingLog(date: string): Promise<TrainingLog | null> {
     const res = await fetch(`${config.apiBaseUrl}/training/logs/${date}`, {
         headers: await getAuthHeaders(),
+        cache: "no-store",
     });
 
     if (!res.ok) {
@@ -109,6 +110,7 @@ export type TrainingTemplateCreateRequest = {
 export async function getTrainingTemplates(): Promise<TrainingTemplate[]> {
     const res = await fetch(`${config.apiBaseUrl}/training/templates`, {
         headers: await getAuthHeaders(),
+        cache: "no-store",
     });
 
     if (!res.ok) {
@@ -153,6 +155,7 @@ export async function getTrainingLogsForMonth(
 ): Promise<TrainingLog[]> {
     const res = await fetch(`${config.apiBaseUrl}/training/logs?month=${month}`, {
         headers: await getAuthHeaders(),
+        cache: "no-store",
     });
 
     if (!res.ok) {
