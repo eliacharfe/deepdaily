@@ -639,7 +639,6 @@ export default function TrainingPageClient() {
                         className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
                         onClick={() => addExercise(HOME_EXERCISES)}
                     >
-                        <Plus size={16} />
                         Add home exercise
                     </button>
                 </div>
@@ -761,7 +760,6 @@ export default function TrainingPageClient() {
                         className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
                         onClick={() => addExercise(GYM_EXERCISES)}
                     >
-                        <Plus size={16} />
                         Add gym exercise
                     </button>
                 </div>
