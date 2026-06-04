@@ -19,9 +19,7 @@ import {
     TrainingTemplate,
 } from "@/lib/training";
 
-
-const EXERCISES = [
-    // Bodyweight / Calisthenics
+const HOME_EXERCISES = [
     "Push-ups",
     "Sit-ups",
     "Crunches",
@@ -42,15 +40,16 @@ const EXERCISES = [
     "Chin-ups",
     "Dips",
     "Superman hold",
+    "Tricep dips",
+];
 
-    // Strength / Gym
+const GYM_EXERCISES = [
     "Bench press",
     "Incline bench press",
     "Shoulder press",
     "Arnold press",
     "Bicep curls",
     "Hammer curls",
-    "Tricep dips",
     "Tricep extensions",
     "Deadlift",
     "Romanian deadlift",
@@ -262,9 +261,6 @@ export default function TrainingPageClient() {
                 const log = await getTrainingLog(selectedDate);
 
                 setExercises(log?.exercises ?? []);
-
-
-
                 setRunningDistanceKm(log?.running?.distanceKm?.toString() ?? "");
                 setWalkingDistanceKm(log?.walking?.distanceKm?.toString() ?? "");
                 setSwimmingDistanceKm(log?.swimming?.distanceKm?.toString() ?? "");
@@ -330,8 +326,8 @@ export default function TrainingPageClient() {
         setSeconds(seconds.toString());
     }
 
-    function addExercise() {
-        const name = EXERCISES[0];
+    function addExercise(exerciseList = HOME_EXERCISES) {
+        const name = exerciseList[0];
 
         setExercises((current) => [
             ...current,
@@ -475,6 +471,14 @@ export default function TrainingPageClient() {
             notes: mobilityNotes.trim() || undefined,
         };
     }
+
+    const homeExercises = exercises
+        .map((exercise, index) => ({ exercise, index }))
+        .filter(({ exercise }) => HOME_EXERCISES.includes(exercise.exerciseName));
+
+    const gymExercises = exercises
+        .map((exercise, index) => ({ exercise, index }))
+        .filter(({ exercise }) => GYM_EXERCISES.includes(exercise.exerciseName));
 
     return (
         <main className="mx-auto max-w-5xl px-4 py-8">
@@ -627,31 +631,28 @@ export default function TrainingPageClient() {
 
             <section className="mt-5 dd-surface-soft rounded-2xl border p-5">
                 <div className="mb-4 flex items-center justify-between gap-3">
-                    <h2 className="flex items-center gap-3 text-2xl font-semibold text-slate-950 dark:text-white">
-                        <span className="text-3xl">💪</span>
-                        <span>{selectedDate} workout</span>
-                    </h2>
+                    <h2>🏠 Home Workout</h2>
 
                     <button
                         type="button"
-                        onClick={addExercise}
                         disabled={loading}
                         className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
+                        onClick={() => addExercise(HOME_EXERCISES)}
                     >
                         <Plus size={16} />
-                        Add
+                        Add home exercise
                     </button>
                 </div>
 
                 {loading ? (
                     <p className="text-sm text-slate-500">Loading...</p>
-                ) : exercises.length === 0 ? (
+                ) : homeExercises.length === 0 ? (
                     <p className="rounded-xl border border-dashed p-4 text-sm text-slate-500 dark:border-slate-700">
                         No strength exercises logged for this day.
                     </p>
                 ) : (
                     <div className="space-y-4">
-                        {exercises.map((exercise, index) => {
+                        {homeExercises.map(({ exercise, index }) => {
                             const timed = isTimedExercise(exercise.exerciseName);
 
                             return (
@@ -678,7 +679,129 @@ export default function TrainingPageClient() {
                                                 }}
                                                 className="w-full rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
                                             >
-                                                {EXERCISES.map((name) => (
+                                                {HOME_EXERCISES.map((name) => (
+                                                    <option key={name}>{name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                                Sets
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                value={exercise.sets}
+                                                onChange={(event) =>
+                                                    updateExercise(index, {
+                                                        sets: Number(event.target.value),
+                                                    })
+                                                }
+                                                placeholder="Sets"
+                                                className="w-full rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                                {timed ? "Seconds" : "Reps"}
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                value={exercise.reps ?? ""}
+                                                onChange={(event) =>
+                                                    updateExercise(index, {
+                                                        reps: Number(event.target.value),
+                                                    })
+                                                }
+                                                placeholder={timed ? "Seconds" : "Reps"}
+                                                className="w-full rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+                                            />
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => removeExercise(index)}
+                                            aria-label="Remove exercise"
+                                            className="flex h-11 w-full items-center justify-center rounded-lg border px-3 py-2 text-red-500 hover:bg-red-50 dark:border-slate-700 dark:hover:bg-red-950/20 md:w-12"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+
+                                    {EXERCISE_VIDEOS[exercise.exerciseName] ? (
+                                        <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+                                            <iframe
+                                                className="aspect-video w-full"
+                                                src={`https://www.youtube.com/embed/${EXERCISE_VIDEOS[exercise.exerciseName]}`}
+                                                title={`${exercise.exerciseName} technique video`}
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            />
+                                        </div>
+                                    ) : null}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </section>
+
+            <section className="mt-5 dd-surface-soft rounded-2xl border p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                    <h2>🏋️ Dumbbell / Gym exercises / Cardio</h2>
+
+                    <button
+                        type="button"
+                        disabled={loading}
+                        className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
+                        onClick={() => addExercise(GYM_EXERCISES)}
+                    >
+                        <Plus size={16} />
+                        Add gym exercise
+                    </button>
+                </div>
+
+                {loading ? (
+                    <p className="text-sm text-slate-500">Loading...</p>
+                ) : gymExercises.length === 0 ? (
+                    <p className="rounded-xl border border-dashed p-4 text-sm text-slate-500 dark:border-slate-700">
+                        No strength exercises logged for this day.
+                    </p>
+                ) : (
+                    <div className="space-y-4">
+                        {gymExercises.map(({ exercise, index }) => {
+                            const timed = isTimedExercise(exercise.exerciseName);
+
+                            return (
+                                <div
+                                    key={index}
+                                    className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
+                                >
+                                    <div className="grid gap-3 md:grid-cols-[1.5fr_0.7fr_0.7fr_auto] md:items-end">
+                                        <div>
+                                            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                                Exercise
+                                            </label>
+
+                                            <select
+                                                value={exercise.exerciseName}
+                                                onChange={(event) => {
+                                                    const name = event.target.value;
+
+                                                    updateExercise(index, {
+                                                        exerciseName: name,
+                                                        exerciseId: name.toLowerCase().replaceAll(" ", "-"),
+                                                        reps: isTimedExercise(name) ? 60 : 10,
+                                                    });
+                                                }}
+                                                className="w-full rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+                                            >
+                                                {GYM_EXERCISES.map((name) => (
                                                     <option key={name}>{name}</option>
                                                 ))}
                                             </select>
